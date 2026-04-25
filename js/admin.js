@@ -183,6 +183,20 @@ function renderMenuItemsForOrder(catId) {
   `).join('');
 }
 
+function escapeHtml(value = '') {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function currentCategory() {
+  const selectedId = document.getElementById('menu-cat-select')?.value;
+  return categories.find(c => c.id === selectedId) || categories[0];
+}
+
 function addToDraft(id, name, price) {
   const existing = currentOrderDraft.find(i => i.menuItemId === id);
   if (existing) {
@@ -318,12 +332,83 @@ function renderMenuItemsAdmin(catId) {
       <td>${item.nameDe}</td>
       <td>${item.nameFa || '-'}</td>
       <td>€${item.price}</td>
-      <td>${item.isAvailable ? '<span style="color:var(--success)">Ja</span>' : '<span style="color:var(--danger)">Nein</span>'}</td>
+      <td><span class="chip" style="color:${item.isAvailable ? 'var(--success)' : 'var(--danger)'}">${item.isAvailable ? 'Verfügbar' : 'Ausverkauft'}</span></td>
       <td>
-        <button class="btn btn-outline" style="padding:4px 8px;font-size:12px;">Bearbeiten</button>
+        <button class="btn btn-outline btn-small" onclick="openMenuItemForm('${item.id}')">Bearbeiten</button>
+        <button class="btn btn-outline btn-small" onclick="toggleMenuItem('${item.id}', ${!item.isAvailable})">${item.isAvailable ? 'Ausverkauft' : 'Verfügbar'}</button>
+        <button class="btn btn-danger btn-small" onclick="deleteMenuItem('${item.id}')">Löschen</button>
       </td>
     </tr>
   `).join('');
+}
+
+function openCategoryForm(id, createNew = false) {
+  const selected = createNew ? {} : (id ? categories.find(c => c.id === id) : currentCategory()) || {};
+  openForm(createNew ? 'Neue Kategorie' : 'Kategorie bearbeiten', [
+    { name: 'nameDe', label: 'Name Deutsch', value: selected.nameDe, required: true },
+    { name: 'nameFa', label: 'Name Dari', value: selected.nameFa, required: true },
+    { name: 'slug', label: 'Slug', value: selected.slug, required: true },
+    { name: 'sortOrder', label: 'Sortierung', value: selected.sortOrder || 0, type: 'number' },
+    { name: 'isActive', label: 'Aktiv', value: selected.isActive === false ? 'false' : 'true', type: 'select', options: [{value:'true',label:'Ja'}, {value:'false',label:'Nein'}] }
+  ], async (data) => {
+    data.sortOrder = Number(data.sortOrder || 0);
+    data.isActive = data.isActive === 'true';
+    await apiFetch(createNew ? '/menu/categories' : `/menu/categories/${selected.id}`, {
+      method: createNew ? 'POST' : 'PATCH',
+      body: JSON.stringify(data)
+    });
+    loadMenu();
+  });
+}
+
+async function deleteCurrentCategory() {
+  const cat = currentCategory();
+  if (!cat) return;
+  if (cat.items.length > 0) {
+    alert('Diese Kategorie enthält noch Artikel. Bitte zuerst Artikel löschen oder verschieben.');
+    return;
+  }
+  if (!confirm(`Kategorie "${cat.nameDe}" wirklich löschen?`)) return;
+  await apiFetch(`/menu/categories/${cat.id}`, { method: 'DELETE' });
+  loadMenu();
+}
+
+function openMenuItemForm(id) {
+  const cat = currentCategory();
+  const item = cat?.items.find(i => i.id === id) || {};
+  openForm(id ? 'Menüartikel bearbeiten' : 'Neuer Menüartikel', [
+    { name: 'categoryId', label: 'Kategorie', value: item.categoryId || cat?.id, type: 'select', options: categories.map(c => ({ value: c.id, label: c.nameDe })) },
+    { name: 'nameDe', label: 'Name Deutsch', value: item.nameDe, required: true },
+    { name: 'nameFa', label: 'Name Dari', value: item.nameFa },
+    { name: 'descriptionDe', label: 'Beschreibung Deutsch', value: item.descriptionDe, type: 'textarea' },
+    { name: 'descriptionFa', label: 'Beschreibung Dari', value: item.descriptionFa, type: 'textarea' },
+    { name: 'price', label: 'Preis', value: item.price || '', type: 'number', required: true },
+    { name: 'sortOrder', label: 'Sortierung', value: item.sortOrder || 0, type: 'number' },
+    { name: 'isAvailable', label: 'Verfügbar', value: item.isAvailable === false ? 'false' : 'true', type: 'select', options: [{value:'true',label:'Ja'}, {value:'false',label:'Nein'}] }
+  ], async (data) => {
+    data.price = Number(data.price || 0);
+    data.sortOrder = Number(data.sortOrder || 0);
+    data.isAvailable = data.isAvailable === 'true';
+    await apiFetch(id ? `/menu/items/${id}` : '/menu/items', {
+      method: id ? 'PATCH' : 'POST',
+      body: JSON.stringify(data)
+    });
+    loadMenu();
+  });
+}
+
+async function toggleMenuItem(id, isAvailable) {
+  await apiFetch(`/menu/items/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ isAvailable })
+  });
+  loadMenu();
+}
+
+async function deleteMenuItem(id) {
+  if (!confirm('Menüartikel wirklich löschen?')) return;
+  await apiFetch(`/menu/items/${id}`, { method: 'DELETE' });
+  loadMenu();
 }
 
 /* ================= RESERVATIONS ================= */
@@ -350,7 +435,10 @@ async function loadReservations() {
           <option value="CANCELLED" ${r.status==='CANCELLED'?'selected':''}>Storniert</option>
         </select>
       </td>
-      <td>-</td>
+      <td>
+        <button class="btn btn-outline btn-small" onclick="openReservationDetails('${r.id}')">Details</button>
+        <button class="btn btn-outline btn-small" onclick="openAssignTable('${r.id}')">Tisch</button>
+      </td>
     </tr>
   `).join('');
 }
@@ -361,6 +449,36 @@ async function updateResStatus(id, status) {
     body: JSON.stringify({ status })
   });
   loadReservations();
+}
+
+function openReservationDetails(id) {
+  const r = reservations.find(x => x.id === id);
+  if (!r) return;
+  openForm('Reservierung', [
+    { name: 'name', label: 'Name', value: r.name, required: true },
+    { name: 'email', label: 'E-Mail', value: r.email, type: 'email' },
+    { name: 'phone', label: 'Telefon', value: r.phone },
+    { name: 'date', label: 'Datum', value: r.date?.slice(0, 10), type: 'date' },
+    { name: 'time', label: 'Uhrzeit', value: r.time },
+    { name: 'guests', label: 'Gäste', value: r.guests, type: 'number' },
+    { name: 'specialRequests', label: 'Wünsche', value: r.specialRequests, type: 'textarea' },
+    { name: 'status', label: 'Status', value: r.status, type: 'select', options: [{value:'PENDING',label:'Ausstehend'}, {value:'CONFIRMED',label:'Bestätigt'}, {value:'CANCELLED',label:'Storniert'}] }
+  ], async (data) => {
+    data.date = data.date ? new Date(data.date).toISOString() : r.date;
+    data.guests = Number(data.guests || 1);
+    await apiFetch(`/reservations/${id}`, { method: 'PATCH', body: JSON.stringify(data) });
+    loadReservations();
+  });
+}
+
+function openAssignTable(id) {
+  const reservation = reservations.find(x => x.id === id);
+  openForm('Tisch zuweisen', [
+    { name: 'tableId', label: 'Tisch', value: reservation?.tableId || '', type: 'select', options: [{value:'', label:'Kein Tisch'}].concat(tables.map(t => ({ value: t.id, label: `${t.label || `Tisch ${t.number}`} · ${t.status}` }))) }
+  ], async (data) => {
+    await apiFetch(`/reservations/${id}`, { method: 'PATCH', body: JSON.stringify({ tableId: data.tableId || null, status: data.tableId ? 'CONFIRMED' : reservation.status }) });
+    loadReservations();
+  });
 }
 
 /* ================= EVENTS ================= */
@@ -389,7 +507,7 @@ async function loadEvents() {
           <option value="CANCELLED" ${e.status==='CANCELLED'?'selected':''}>Abgesagt</option>
         </select>
       </td>
-      <td><button class="btn btn-outline" style="padding:4px 8px;font-size:12px;" onclick="alert('Details: ${e.otherNotes || 'Keine'}')">Details</button></td>
+      <td><button class="btn btn-outline btn-small" onclick="openEventInquiryDetails('${e.id}')">Details</button></td>
     </tr>
   `).join('');
 }
@@ -400,6 +518,32 @@ async function updateEvStatus(id, status) {
     body: JSON.stringify({ status })
   });
   loadEvents();
+}
+
+function openEventInquiryDetails(id) {
+  const e = events.find(x => x.id === id);
+  if (!e) return;
+  openForm('Event-Anfrage', [
+    { name: 'name', label: 'Name', value: e.name, required: true },
+    { name: 'email', label: 'E-Mail', value: e.email, type: 'email' },
+    { name: 'phone', label: 'Telefon', value: e.phone },
+    { name: 'eventDate', label: 'Datum', value: e.eventDate?.slice(0, 10), type: 'date' },
+    { name: 'eventTiming', label: 'Zeit/Dauer', value: e.eventTiming },
+    { name: 'numberOfPeople', label: 'Gäste', value: e.numberOfPeople, type: 'number' },
+    { name: 'eventType', label: 'Typ', value: e.eventType },
+    { name: 'drinks', label: 'Getränke', value: e.drinks },
+    { name: 'cakes', label: 'Kuchen', value: e.cakes },
+    { name: 'food', label: 'Speisen', value: e.food },
+    { name: 'equipment', label: 'Ausstattung', value: e.equipment },
+    { name: 'decor', label: 'Dekoration', value: e.decor },
+    { name: 'otherNotes', label: 'Notizen', value: e.otherNotes, type: 'textarea' },
+    { name: 'status', label: 'Status', value: e.status, type: 'select', options: [{value:'PENDING',label:'Neu'}, {value:'REVIEWED',label:'In Prüfung'}, {value:'QUOTED',label:'Angebot'}, {value:'CONFIRMED',label:'Bestätigt'}, {value:'CANCELLED',label:'Abgesagt'}] }
+  ], async (data) => {
+    data.eventDate = data.eventDate ? new Date(data.eventDate).toISOString() : e.eventDate;
+    data.numberOfPeople = Number(data.numberOfPeople || 1);
+    await apiFetch(`/events/${id}`, { method: 'PATCH', body: JSON.stringify(data) });
+    loadEvents();
+  });
 }
 
 /* ================= GENERIC FORM MODAL ================= */

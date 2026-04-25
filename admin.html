@@ -32,6 +32,7 @@
   .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-main); }
   .btn-outline:hover { background: var(--bg-hover); }
   .btn-danger { background: var(--danger); color: #fff; }
+  .btn-small { padding: 5px 9px; font-size: 12px; }
   
   /* Login Screen */
   #login-screen { position: fixed; inset: 0; background: var(--bg-dark); display: flex; align-items: center; justify-content: center; z-index: 1000; }
@@ -92,7 +93,10 @@
   .data-table th, .data-table td { padding: 14px; text-align: left; border-bottom: 1px solid var(--border); }
   .data-table th { color: var(--text-muted); font-weight: 500; font-size: 14px; }
   .data-table tr:hover { background: var(--bg-panel); }
-  .toolbar { display: flex; gap: 12px; justify-content: flex-end; margin-bottom: 18px; flex-wrap: wrap; }
+  .toolbar { display: flex; gap: 12px; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; }
+  .toolbar-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+  .section-note { color: var(--text-muted); font-size: 13px; line-height: 1.5; max-width: 620px; }
+  .chip { display: inline-flex; align-items: center; border: 1px solid var(--border); border-radius: 999px; padding: 4px 9px; font-size: 12px; color: var(--text-muted); }
   .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
   .muted { color: var(--text-muted); font-size: 13px; }
 
@@ -164,6 +168,10 @@
       <div class="content">
         <!-- TABLES VIEW -->
         <div id="view-tables" class="view-section active">
+          <div class="toolbar">
+            <div class="section-note">Tisch anklicken, um Bestellungen aufzunehmen, Rechnung zu sehen oder den Status zu ändern.</div>
+            <div class="toolbar-actions"><button class="btn btn-outline" onclick="loadTables()">Aktualisieren</button></div>
+          </div>
           <div class="tables-grid" id="tables-grid">
             <!-- Rendered by JS -->
           </div>
@@ -171,6 +179,10 @@
 
         <!-- ORDERS VIEW -->
         <div id="view-orders" class="view-section">
+          <div class="toolbar">
+            <div class="section-note">Bestellungen laufen von links nach rechts. Status mit einem Klick weiterführen.</div>
+            <div class="toolbar-actions"><button class="btn btn-outline" onclick="loadOrders()">Aktualisieren</button></div>
+          </div>
           <div class="kanban-board">
             <div class="kanban-col">
               <div class="kanban-header" style="border-bottom: 2px solid var(--danger);">NEU</div>
@@ -189,10 +201,18 @@
 
         <!-- MENU VIEW -->
         <div id="view-menu" class="view-section">
-          <div style="display: flex; gap: 20px; margin-bottom: 20px;">
-            <select id="menu-cat-select" class="form-group" style="padding: 8px; width: 200px; background: var(--bg-panel); color: white; border: 1px solid var(--border);">
-              <!-- Categories -->
-            </select>
+          <div class="toolbar">
+            <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+              <select id="menu-cat-select" class="form-group" style="padding: 8px; width: 220px; background: var(--bg-panel); color: white; border: 1px solid var(--border);">
+                <!-- Categories -->
+              </select>
+              <button class="btn btn-outline btn-small" onclick="openCategoryForm()">Kategorie bearbeiten</button>
+              <button class="btn btn-danger btn-small" onclick="deleteCurrentCategory()">Kategorie löschen</button>
+            </div>
+            <div class="toolbar-actions">
+              <button class="btn btn-outline" onclick="openCategoryForm(null, true)">Neue Kategorie</button>
+              <button class="btn" onclick="openMenuItemForm()">Neuer Artikel</button>
+            </div>
           </div>
           <table class="data-table">
             <thead>
@@ -212,6 +232,10 @@
 
         <!-- RESERVATIONS VIEW -->
         <div id="view-reservations" class="view-section">
+          <div class="toolbar">
+            <div class="section-note">Reservierungen bestätigen, stornieren oder einem Tisch zuweisen.</div>
+            <div class="toolbar-actions"><button class="btn btn-outline" onclick="loadReservations()">Aktualisieren</button></div>
+          </div>
           <table class="data-table">
             <thead>
               <tr>
@@ -229,6 +253,10 @@
 
         <!-- EVENTS VIEW -->
         <div id="view-events" class="view-section">
+          <div class="toolbar">
+            <div class="section-note">Eingehende Event-Anfragen prüfen, Status setzen und Details öffnen.</div>
+            <div class="toolbar-actions"><button class="btn btn-outline" onclick="loadEvents()">Aktualisieren</button></div>
+          </div>
           <table class="data-table">
             <thead>
               <tr>
@@ -247,7 +275,10 @@
 
         <!-- EVENT LISTINGS VIEW -->
         <div id="view-event-listings" class="view-section">
-          <div class="toolbar"><button class="btn" onclick="openEventListingForm()">Neues Event</button></div>
+          <div class="toolbar">
+            <div class="section-note">Diese Events erscheinen auf der öffentlichen Website im Bereich Veranstaltungen.</div>
+            <div class="toolbar-actions"><button class="btn" onclick="openEventListingForm()">Neues Event</button></div>
+          </div>
           <table class="data-table">
             <thead><tr><th>Datum</th><th>Titel</th><th>Zeit</th><th>Sichtbar</th><th>Aktionen</th></tr></thead>
             <tbody id="event-listings-tbody"></tbody>
@@ -257,8 +288,11 @@
         <!-- CUSTOMERS / DISCOUNTS VIEW -->
         <div id="view-customers" class="view-section">
           <div class="toolbar">
-            <button class="btn" onclick="openCustomerForm()">Kunde hinzufügen</button>
-            <button class="btn btn-outline" onclick="openDiscountForm()">Rabatt erstellen</button>
+            <div class="section-note">Treuepunkte und Rabattcodes für Stammkunden verwalten.</div>
+            <div class="toolbar-actions">
+              <button class="btn" onclick="openCustomerForm()">Kunde hinzufügen</button>
+              <button class="btn btn-outline" onclick="openDiscountForm()">Rabatt erstellen</button>
+            </div>
           </div>
           <h3 style="margin-bottom:12px;">Treuekunden</h3>
           <table class="data-table" style="margin-bottom:32px;">
@@ -274,7 +308,10 @@
 
         <!-- USERS VIEW -->
         <div id="view-users" class="view-section">
-          <div class="toolbar"><button class="btn" onclick="openUserForm()">Teamkonto erstellen</button></div>
+          <div class="toolbar">
+            <div class="section-note">Owner haben Vollzugriff. Manager verwalten Menü, Events und Rabatte. Waiter arbeiten mit Tischen, Bestellungen und Rechnungen.</div>
+            <div class="toolbar-actions"><button class="btn" onclick="openUserForm()">Teamkonto erstellen</button></div>
+          </div>
           <table class="data-table">
             <thead><tr><th>Benutzername</th><th>Rolle</th><th>Aktiv</th><th>Erstellt</th><th>Aktionen</th></tr></thead>
             <tbody id="users-tbody"></tbody>
