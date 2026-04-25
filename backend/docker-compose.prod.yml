@@ -1,5 +1,7 @@
 # No 'version:' key — Compose v2 standard (per VPS-SOP.md §12)
 
+name: diwanberlin
+
 services:
   api:
     build:
