@@ -6,8 +6,8 @@
 *.key
 secrets/
 credentials/
-prisma/dev.db
-prisma/*.db
+backend/prisma/dev.db
+backend/prisma/*.db
 
 # Runtime
 node_modules/

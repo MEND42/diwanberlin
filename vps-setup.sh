@@ -62,12 +62,12 @@ POSTGRES_DB=diwandb
 # JWT — generate with: openssl rand -hex 64
 JWT_SECRET=CHANGE_ME_JWT_SECRET
 
-# Email (Hostinger SMTP)
-SMTP_HOST=smtp.hostinger.com
-SMTP_PORT=465
-SMTP_USER=info@diwanberlin.com
+# Email (Brevo SMTP)
+SMTP_HOST=smtp-relay.brevo.com
+SMTP_PORT=587
+SMTP_USER=CHANGE_ME_BREVO_SMTP_USER
 SMTP_PASS=CHANGE_ME_EMAIL_PASS
-SMTP_FROM=Cafe Diwan <info@diwanberlin.com>
+SMTP_FROM=Diwan Cafe Berlin <hello@diwanberlin.com>
 ENVEOF
 
   chmod 600 /opt/diwanberlin/backend/.env
