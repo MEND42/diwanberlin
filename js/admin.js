@@ -23,13 +23,19 @@ let selectedTableId = null;
 const loginScreen = document.getElementById('login-screen');
 const appContainer = document.getElementById('app-container');
 const loginForm = document.getElementById('login-form');
-const navItems = document.querySelectorAll('.nav-item');
-const views = document.querySelectorAll('.view-section');
+const navMenu = document.querySelector('.nav-menu');
 
 // Init
 document.addEventListener('DOMContentLoaded', () => {
   if (token) {
-    showApp();
+    const sessionUser = getStoredUser();
+    if (sessionUser?.role) {
+      currentUser = sessionUser;
+      showApp();
+    } else {
+      logout(false);
+      showLoginMessage('Bitte erneut anmelden. Die alte Sitzung wurde erneuert.');
+    }
   }
 
   loginForm.addEventListener('submit', async (e) => {
@@ -60,24 +66,14 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   document.getElementById('logout-btn').addEventListener('click', () => {
-    localStorage.removeItem('diwanAdminToken');
-    token = null;
-    appContainer.classList.add('hidden');
-    loginScreen.classList.remove('hidden');
-    if (socket) socket.disconnect();
+    logout();
   });
 
   // Navigation
-  navItems.forEach(item => {
-    item.addEventListener('click', () => {
-      navItems.forEach(n => n.classList.remove('active'));
-      item.classList.add('active');
-      const viewId = item.dataset.view;
-      
-      views.forEach(v => v.classList.remove('active'));
-      document.getElementById('view-' + viewId).classList.add('active');
-      document.getElementById('view-title').innerText = item.innerText.split(' 0')[0].trim();
-    });
+  navMenu?.addEventListener('click', (event) => {
+    const item = event.target.closest('.nav-item');
+    if (!item || item.classList.contains('owner-only') && currentUser.role !== 'OWNER') return;
+    activateView(item.dataset.view);
   });
 });
 
@@ -86,17 +82,104 @@ async function apiFetch(endpoint, options = {}) {
   if (options.body) headers['Content-Type'] = 'application/json';
   
   const res = await fetch(`${API_URL}${endpoint}`, { ...options, headers });
-  if (res.status === 401 || res.status === 403) {
-    localStorage.removeItem('diwanAdminToken');
-    location.reload();
+  let body = null;
+  try {
+    body = await res.json();
+  } catch (_) {
+    body = {};
   }
-  return res.json();
+  if (res.status === 401) {
+    logout();
+    showLoginMessage('Sitzung abgelaufen. Bitte erneut anmelden.');
+    throw new Error(body.error || 'Nicht angemeldet');
+  }
+  if (res.status === 403) {
+    throw new Error(body.error || 'Keine Berechtigung für diese Aktion');
+  }
+  if (!res.ok) throw new Error(body.error || `Request failed: ${res.status}`);
+  return body;
+}
+
+function showLoginMessage(message) {
+  const error = document.getElementById('login-error');
+  if (!error) return;
+  error.innerText = message;
+  error.style.display = 'block';
+}
+
+function parseJwt(value) {
+  try {
+    const payload = value.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    return JSON.parse(atob(payload));
+  } catch (_) {
+    return null;
+  }
+}
+
+function getStoredUser() {
+  try {
+    const stored = JSON.parse(localStorage.getItem('diwanAdminUser'));
+    if (stored?.role) return stored;
+  } catch (_) {}
+  const decoded = token ? parseJwt(token) : null;
+  if (!decoded?.role) return null;
+  return { username: decoded.username || 'admin', role: decoded.role };
+}
+
+function logout(revealLogin = true) {
+  localStorage.removeItem('diwanAdminToken');
+  localStorage.removeItem('diwanAdminUser');
+  token = null;
+  appContainer.classList.add('hidden');
+  if (revealLogin) loginScreen.classList.remove('hidden');
+  if (socket) {
+    socket.disconnect();
+    socket = null;
+  }
+}
+
+function activateView(viewId) {
+  const target = document.getElementById(`view-${viewId}`);
+  const navItem = document.querySelector(`.nav-item[data-view="${viewId}"]`);
+  if (!target || !navItem) return;
+  if (navItem.classList.contains('owner-only') && currentUser.role !== 'OWNER') return;
+
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
+  navItem.classList.add('active');
+  target.classList.add('active');
+  document.getElementById('view-title').innerText = navItem.dataset.title || navItem.querySelector('.nav-title')?.innerText || 'Dashboard';
+  const subtitle = {
+    tables: 'Service floor, order entry and billing',
+    orders: 'Kitchen status board for live tickets',
+    menu: 'Categories, prices and availability',
+    reservations: 'Incoming table bookings and assignments',
+    events: 'Private event inquiry pipeline',
+    'event-listings': 'Public website event calendar',
+    customers: 'Loyalty customers and discount codes',
+    users: 'Staff accounts and role access'
+  };
+  document.getElementById('view-subtitle').innerText = subtitle[viewId] || 'Diwan Berlin operations';
+}
+
+function renderOpsSummary() {
+  const activeOrders = orders.filter(o => !['PAID', 'SERVED'].includes(o.status));
+  const occupiedTables = tables.filter(t => t.status === 'OCCUPIED').length;
+  const pendingReservations = reservations.filter(r => r.status === 'PENDING').length;
+  const pendingEvents = events.filter(e => e.status === 'PENDING').length;
+
+  const metricOrders = document.getElementById('metric-orders');
+  const metricTables = document.getElementById('metric-tables');
+  const metricReservations = document.getElementById('metric-reservations');
+  const metricEvents = document.getElementById('metric-events');
+  if (metricOrders) metricOrders.innerText = activeOrders.length;
+  if (metricTables) metricTables.innerText = occupiedTables;
+  if (metricReservations) metricReservations.innerText = pendingReservations;
+  if (metricEvents) metricEvents.innerText = pendingEvents;
 }
 
 function showApp() {
-  try {
-    currentUser = JSON.parse(localStorage.getItem('diwanAdminUser')) || currentUser;
-  } catch (_) {}
+  currentUser = getStoredUser() || currentUser;
   loginScreen.classList.add('hidden');
   appContainer.classList.remove('hidden');
   document.querySelector('.user-box span').innerText = `${currentUser.username} · ${currentUser.role}`;
@@ -114,27 +197,48 @@ function showApp() {
   socket.on('event:new', () => loadEvents());
 
   // Load Data
-  loadTables();
-  loadOrders();
-  loadMenu();
-  loadReservations();
-  loadEvents();
-  loadEventListings();
-  loadCustomers();
-  loadDiscounts();
-  if (currentUser.role === 'OWNER') loadUsers();
+  Promise.allSettled([
+    loadTables(),
+    loadOrders(),
+    loadMenu(),
+    loadReservations(),
+    loadEvents(),
+    loadEventListings(),
+    loadCustomers(),
+    loadDiscounts(),
+    currentUser.role === 'OWNER' ? loadUsers() : Promise.resolve()
+  ]).then(() => renderOpsSummary());
+  activateView(document.querySelector('.nav-item.active')?.dataset.view || 'tables');
 }
 
 /* ================= TABLES & POS ================= */
 async function loadTables() {
   tables = await apiFetch('/tables');
   const grid = document.getElementById('tables-grid');
-  grid.innerHTML = tables.map(t => `
-    <div class="table-card ${t.status.toLowerCase()}" onclick="openTableModal('${t.id}', '${t.label}')">
-      <h3>${t.number}</h3>
-      <div class="status">${t.status === 'AVAILABLE' ? 'FREI' : 'BESETZT'}</div>
+  grid.innerHTML = tables.map(t => {
+    const label = t.label || `Tisch ${t.number}`;
+    return `
+    <div class="table-card ${t.status.toLowerCase()}" onclick='openTableModal("${t.id}", ${JSON.stringify(label)})'>
+      <div>
+        <div class="status">${statusLabel(t.status)}</div>
+        <h3>${t.number}</h3>
+      </div>
+      <div class="table-meta">
+        ${escapeHtml(label)}<br>
+        ${t.seats || 4} Sitzplätze
+      </div>
     </div>
-  `).join('');
+  `;
+  }).join('');
+  renderOpsSummary();
+}
+
+function statusLabel(status) {
+  return {
+    AVAILABLE: 'Frei',
+    OCCUPIED: 'Besetzt',
+    RESERVED: 'Reserviert'
+  }[status] || status;
 }
 
 async function openTableModal(tableId, label) {
@@ -190,6 +294,10 @@ function escapeHtml(value = '') {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
+}
+
+function escapeAttr(value = '') {
+  return escapeHtml(value);
 }
 
 function currentCategory() {
@@ -302,6 +410,7 @@ async function loadOrders() {
     if (order.status === 'PREPARING') kbPrep.innerHTML += html;
     if (order.status === 'READY') kbReady.innerHTML += html;
   });
+  renderOpsSummary();
 }
 
 async function updateOrderStatus(id, status) {
@@ -441,6 +550,7 @@ async function loadReservations() {
       </td>
     </tr>
   `).join('');
+  renderOpsSummary();
 }
 
 async function updateResStatus(id, status) {
@@ -510,6 +620,7 @@ async function loadEvents() {
       <td><button class="btn btn-outline btn-small" onclick="openEventInquiryDetails('${e.id}')">Details</button></td>
     </tr>
   `).join('');
+  renderOpsSummary();
 }
 
 async function updateEvStatus(id, status) {
@@ -554,12 +665,12 @@ function openForm(title, fields, onSubmit) {
   document.getElementById('form-body').innerHTML = fields.map(field => {
     const value = field.value ?? '';
     if (field.type === 'select') {
-      return `<div class="form-group"><label>${field.label}</label><select name="${field.name}">${field.options.map(o => `<option value="${o.value}" ${String(value) === String(o.value) ? 'selected' : ''}>${o.label}</option>`).join('')}</select></div>`;
+      return `<div class="form-group"><label>${escapeHtml(field.label)}</label><select name="${escapeAttr(field.name)}">${field.options.map(o => `<option value="${escapeAttr(o.value)}" ${String(value) === String(o.value) ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('')}</select></div>`;
     }
     if (field.type === 'textarea') {
-      return `<div class="form-group"><label>${field.label}</label><textarea name="${field.name}">${value}</textarea></div>`;
+      return `<div class="form-group"><label>${escapeHtml(field.label)}</label><textarea name="${escapeAttr(field.name)}">${escapeHtml(value)}</textarea></div>`;
     }
-    return `<div class="form-group"><label>${field.label}</label><input type="${field.type || 'text'}" name="${field.name}" value="${value}" ${field.required ? 'required' : ''}></div>`;
+    return `<div class="form-group"><label>${escapeHtml(field.label)}</label><input type="${field.type || 'text'}" name="${escapeAttr(field.name)}" value="${escapeAttr(value)}" ${field.required ? 'required' : ''}></div>`;
   }).join('');
   formSubmitHandler = onSubmit;
   document.getElementById('form-modal').classList.remove('hidden');

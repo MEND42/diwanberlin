@@ -3,41 +3,47 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cafe Diwan - Admin Dashboard</title>
+<title>Diwan Berlin - Admin Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <!-- Socket.io client -->
 <script src="/socket.io/socket.io.js"></script>
 <style>
   :root {
-    --bg-dark: #121212;
-    --bg-panel: #1e1e1e;
-    --bg-hover: #2a2a2a;
-    --border: #333333;
-    --text-main: #f5f5f5;
-    --text-muted: #a0a0a0;
+    --bg-dark: #0d0f13;
+    --bg-panel: #151922;
+    --bg-panel-2: #1b202b;
+    --bg-hover: #242b38;
+    --border: #2b3240;
+    --border-strong: #394252;
+    --text-main: #f5efe4;
+    --text-muted: #9aa4b3;
+    --text-soft: #c9c0b2;
     --gold: #c8922a;
-    --gold-hover: #e0ae55;
+    --gold-hover: #d8a643;
     --danger: #ef4444;
-    --success: #10b981;
+    --success: #22c55e;
     --warning: #f59e0b;
-    --info: #3b82f6;
+    --info: #38bdf8;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg-dark); color: var(--text-main); font-family: 'Inter', sans-serif; overflow: hidden; height: 100vh; }
+  body { background: var(--bg-dark); color: var(--text-main); font-family: 'Inter', sans-serif; overflow: hidden; height: 100vh; font-size: 14px; }
   
   /* Utilities */
   .hidden { display: none !important; }
-  .btn { padding: 8px 16px; background: var(--gold); color: #000; border: none; border-radius: 6px; font-weight: 500; cursor: pointer; transition: background 0.2s; }
-  .btn:hover { background: var(--gold-hover); }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 36px; padding: 8px 14px; background: var(--gold); color: #120d04; border: 1px solid transparent; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.2s, border-color 0.2s, transform 0.2s; white-space: nowrap; }
+  .btn:hover { background: var(--gold-hover); transform: translateY(-1px); }
   .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-main); }
-  .btn-outline:hover { background: var(--bg-hover); }
+  .btn-outline:hover { background: var(--bg-hover); border-color: var(--border-strong); }
   .btn-danger { background: var(--danger); color: #fff; }
-  .btn-small { padding: 5px 9px; font-size: 12px; }
+  .btn-small { min-height: 30px; padding: 5px 9px; font-size: 12px; }
+  .stack { display: flex; flex-direction: column; gap: 4px; }
+  .mono { font-variant-numeric: tabular-nums; }
   
   /* Login Screen */
   #login-screen { position: fixed; inset: 0; background: var(--bg-dark); display: flex; align-items: center; justify-content: center; z-index: 1000; }
-  .login-box { background: var(--bg-panel); padding: 40px; border-radius: 12px; border: 1px solid var(--border); width: 100%; max-width: 400px; text-align: center; }
-  .login-box h2 { margin-bottom: 24px; color: var(--gold); }
+  .login-box { background: var(--bg-panel); padding: 36px; border-radius: 8px; border: 1px solid var(--border); width: 100%; max-width: 400px; text-align: left; box-shadow: 0 24px 80px rgba(0,0,0,0.32); }
+  .login-box h2 { margin-bottom: 8px; color: var(--text-main); font-size: 24px; }
+  .login-box::before { content: "Operations Console"; display: block; color: var(--gold); text-transform: uppercase; letter-spacing: .14em; font-size: 11px; margin-bottom: 10px; }
   .login-box input { width: 100%; padding: 12px; margin-bottom: 16px; background: var(--bg-dark); border: 1px solid var(--border); color: #fff; border-radius: 6px; }
   .login-box button { width: 100%; padding: 12px; }
   
@@ -45,42 +51,57 @@
   #app-container { display: flex; height: 100vh; }
   
   /* Sidebar */
-  aside { width: 260px; background: var(--bg-panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; }
-  .brand { padding: 24px; font-size: 20px; font-weight: 600; color: var(--gold); border-bottom: 1px solid var(--border); }
-  .nav-menu { padding: 16px 0; flex: 1; }
-  .nav-item { padding: 12px 24px; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; gap: 12px; transition: all 0.2s; }
+  aside { width: 276px; background: #11151d; border-right: 1px solid var(--border); display: flex; flex-direction: column; }
+  .brand { padding: 24px; border-bottom: 1px solid var(--border); }
+  .brand-title { font-size: 18px; font-weight: 700; color: var(--text-main); letter-spacing: .01em; }
+  .brand-subtitle { margin-top: 5px; color: var(--text-muted); font-size: 12px; }
+  .nav-menu { padding: 18px 12px; flex: 1; overflow-y: auto; }
+  .nav-section-label { margin: 18px 10px 8px; color: #6f7a8c; font-size: 11px; text-transform: uppercase; letter-spacing: .13em; }
+  .nav-item { min-height: 44px; padding: 8px 10px; border-radius: 6px; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; gap: 10px; transition: all 0.2s; border: 1px solid transparent; }
   .nav-item:hover { color: var(--text-main); background: var(--bg-hover); }
-  .nav-item.active { color: var(--gold); border-right: 3px solid var(--gold); background: rgba(200, 146, 42, 0.1); }
+  .nav-item.active { color: var(--text-main); border-color: rgba(200, 146, 42, 0.45); background: rgba(200, 146, 42, 0.11); }
+  .nav-icon { width: 34px; height: 28px; border: 1px solid var(--border); border-radius: 5px; display: inline-flex; align-items: center; justify-content: center; color: var(--gold); font-size: 10px; font-weight: 700; letter-spacing: .08em; flex: 0 0 auto; }
+  .nav-copy { min-width: 0; }
+  .nav-title { display: block; color: inherit; font-weight: 600; line-height: 1.2; }
+  .nav-meta { display: block; margin-top: 2px; color: #778193; font-size: 11px; line-height: 1.2; }
   .nav-item .badge { background: var(--danger); color: white; font-size: 11px; padding: 2px 6px; border-radius: 10px; margin-left: auto; display: none; }
-  .user-box { padding: 20px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .user-box { padding: 16px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 10px; }
   
   /* Main Content */
   main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-  header { height: 70px; padding: 0 32px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
-  header h1 { font-size: 22px; font-weight: 500; }
-  .content { flex: 1; overflow-y: auto; padding: 32px; }
+  header { min-height: 78px; padding: 0 28px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 20px; background: rgba(13,15,19,0.9); }
+  header h1 { font-size: 24px; font-weight: 650; }
+  .header-kicker { color: var(--text-muted); font-size: 12px; margin-top: 5px; }
+  .content { flex: 1; overflow-y: auto; padding: 24px 28px 32px; }
   .view-section { display: none; }
-  .view-section.active { display: block; animation: fadeIn 0.3s; }
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  .view-section.active { display: block; }
+  .ops-summary { display: grid; grid-template-columns: repeat(4, minmax(150px, 1fr)); gap: 12px; margin-bottom: 18px; }
+  .metric-card { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; padding: 14px; }
+  .metric-label { color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: .09em; }
+  .metric-value { margin-top: 8px; font-size: 26px; font-weight: 700; color: var(--text-main); }
+  .metric-foot { margin-top: 4px; color: var(--text-muted); font-size: 12px; }
 
   /* Tables Grid */
-  .tables-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 20px; }
-  .table-card { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: transform 0.2s; }
-  .table-card:hover { transform: translateY(-4px); }
+  .tables-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(156px, 1fr)); gap: 14px; }
+  .table-card { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; padding: 16px; cursor: pointer; transition: transform 0.2s, border-color 0.2s, background 0.2s; min-height: 134px; display: flex; flex-direction: column; justify-content: space-between; }
+  .table-card:hover { transform: translateY(-2px); border-color: var(--border-strong); background: var(--bg-panel-2); }
   .table-card.available { border-color: var(--success); }
   .table-card.occupied { border-color: var(--warning); background: rgba(245, 158, 11, 0.05); }
-  .table-card h3 { font-size: 24px; margin-bottom: 8px; }
-  .table-card .status { font-size: 12px; font-weight: 500; text-transform: uppercase; }
+  .table-card.reserved { border-color: var(--info); background: rgba(56, 189, 248, 0.05); }
+  .table-card h3 { font-size: 28px; margin-bottom: 6px; }
+  .table-card .status { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .12em; }
   .table-card.available .status { color: var(--success); }
   .table-card.occupied .status { color: var(--warning); }
+  .table-card.reserved .status { color: var(--info); }
+  .table-meta { color: var(--text-muted); font-size: 12px; line-height: 1.5; }
 
   /* Kanban Board */
-  .kanban-board { display: flex; gap: 20px; height: 100%; min-height: 500px; }
-  .kanban-col { flex: 1; background: var(--bg-panel); border-radius: 10px; border: 1px solid var(--border); display: flex; flex-direction: column; }
-  .kanban-header { padding: 16px; border-bottom: 1px solid var(--border); font-weight: 600; text-align: center; }
+  .kanban-board { display: grid; grid-template-columns: repeat(3, minmax(260px, 1fr)); gap: 16px; height: 100%; min-height: 520px; }
+  .kanban-col { background: var(--bg-panel); border-radius: 8px; border: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
+  .kanban-header { padding: 14px 16px; border-bottom: 1px solid var(--border); font-weight: 700; text-transform: uppercase; letter-spacing: .08em; font-size: 12px; display: flex; justify-content: space-between; }
   .kanban-items { flex: 1; padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
   
-  .order-card { background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; padding: 14px; }
+  .order-card { background: #10141b; border: 1px solid var(--border); border-radius: 8px; padding: 14px; }
   .order-header { display: flex; justify-content: space-between; margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
   .order-table { font-weight: 600; color: var(--gold); }
   .order-time { font-size: 12px; color: var(--text-muted); }
@@ -89,10 +110,11 @@
   .order-actions button { flex: 1; font-size: 12px; padding: 6px; }
 
   /* Lists (Menu, Reservations, Events) */
-  .data-table { width: 100%; border-collapse: collapse; }
-  .data-table th, .data-table td { padding: 14px; text-align: left; border-bottom: 1px solid var(--border); }
-  .data-table th { color: var(--text-muted); font-weight: 500; font-size: 14px; }
-  .data-table tr:hover { background: var(--bg-panel); }
+  .data-table { width: 100%; border-collapse: separate; border-spacing: 0; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .data-table th, .data-table td { padding: 13px 14px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  .data-table th { color: var(--text-muted); font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; background: #11151d; }
+  .data-table tr:last-child td { border-bottom: 0; }
+  .data-table tr:hover td { background: rgba(255,255,255,0.025); }
   .toolbar { display: flex; gap: 12px; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; }
   .toolbar-actions { display: flex; gap: 10px; flex-wrap: wrap; }
   .section-note { color: var(--text-muted); font-size: 13px; line-height: 1.5; max-width: 620px; }
@@ -102,7 +124,7 @@
 
   /* Modals */
   .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 2000; }
-  .modal-content { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; width: 100%; max-width: 600px; max-height: 90vh; display: flex; flex-direction: column; }
+  .modal-content { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; width: 100%; max-width: 720px; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 24px 90px rgba(0,0,0,.48); }
   .modal-header { padding: 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
   .modal-body { padding: 20px; overflow-y: auto; }
   .modal-footer { padding: 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 12px; }
@@ -122,6 +144,13 @@
   
   .current-order-list { margin-top: 20px; }
   .order-line { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed var(--border); }
+  @media (max-width: 960px) {
+    body { overflow: auto; }
+    #app-container { min-height: 100vh; height: auto; }
+    aside { width: 232px; }
+    .ops-summary { grid-template-columns: repeat(2, minmax(140px, 1fr)); }
+    .kanban-board { grid-template-columns: 1fr; }
+  }
 </style>
 </head>
 <body>
@@ -142,16 +171,38 @@
   <!-- Main App -->
   <div id="app-container" class="hidden">
     <aside>
-      <div class="brand">Cafe Diwan</div>
+      <div class="brand">
+        <div class="brand-title">Diwan Berlin</div>
+        <div class="brand-subtitle">Restaurant Operations</div>
+      </div>
       <div class="nav-menu">
-        <div class="nav-item active" data-view="tables">🪑 Tische & POS</div>
-        <div class="nav-item" data-view="orders">🍳 Küchen-Kanban</div>
-        <div class="nav-item" data-view="menu">📋 Speisekarte</div>
-        <div class="nav-item" data-view="reservations">📅 Reservierungen <span class="badge" id="badge-res">0</span></div>
-        <div class="nav-item" data-view="events">🎉 Events <span class="badge" id="badge-ev">0</span></div>
-        <div class="nav-item" data-view="event-listings">🗓️ Eventkalender</div>
-        <div class="nav-item" data-view="customers">⭐ Kunden & Rabatte</div>
-        <div class="nav-item owner-only" data-view="users">👤 Teamkonten</div>
+        <div class="nav-section-label">Service</div>
+        <div class="nav-item active" data-view="tables" data-title="Tische & POS">
+          <span class="nav-icon">POS</span><span class="nav-copy"><span class="nav-title">Tische & POS</span><span class="nav-meta">Bestellen und kassieren</span></span>
+        </div>
+        <div class="nav-item" data-view="orders" data-title="Küchen-Kanban">
+          <span class="nav-icon">KDS</span><span class="nav-copy"><span class="nav-title">Küchen-Kanban</span><span class="nav-meta">Live Bestellungen</span></span>
+        </div>
+        <div class="nav-item" data-view="menu" data-title="Speisekarte">
+          <span class="nav-icon">MEN</span><span class="nav-copy"><span class="nav-title">Speisekarte</span><span class="nav-meta">Kategorien und Artikel</span></span>
+        </div>
+        <div class="nav-section-label">Planung</div>
+        <div class="nav-item" data-view="reservations" data-title="Reservierungen">
+          <span class="nav-icon">RES</span><span class="nav-copy"><span class="nav-title">Reservierungen</span><span class="nav-meta">Tische zuweisen</span></span><span class="badge" id="badge-res">0</span>
+        </div>
+        <div class="nav-item" data-view="events" data-title="Event-Anfragen">
+          <span class="nav-icon">INQ</span><span class="nav-copy"><span class="nav-title">Event-Anfragen</span><span class="nav-meta">Anfragen bearbeiten</span></span><span class="badge" id="badge-ev">0</span>
+        </div>
+        <div class="nav-item" data-view="event-listings" data-title="Eventkalender">
+          <span class="nav-icon">CAL</span><span class="nav-copy"><span class="nav-title">Eventkalender</span><span class="nav-meta">Website Events</span></span>
+        </div>
+        <div class="nav-section-label">Verwaltung</div>
+        <div class="nav-item" data-view="customers" data-title="Kunden & Rabatte">
+          <span class="nav-icon">CRM</span><span class="nav-copy"><span class="nav-title">Kunden & Rabatte</span><span class="nav-meta">Treue und Codes</span></span>
+        </div>
+        <div class="nav-item owner-only" data-view="users" data-title="Teamkonten">
+          <span class="nav-icon">USR</span><span class="nav-copy"><span class="nav-title">Teamkonten</span><span class="nav-meta">Rollen und Zugriff</span></span>
+        </div>
       </div>
       <div class="user-box">
         <span style="font-size: 14px; color: var(--text-muted);">Angemeldet als Admin</span>
@@ -161,11 +212,21 @@
 
     <main>
       <header>
-        <h1 id="view-title">Tische & POS</h1>
+        <div>
+          <h1 id="view-title">Tische & POS</h1>
+          <div class="header-kicker" id="view-subtitle">Live service, billing and kitchen flow</div>
+        </div>
         <div class="header-actions" id="header-actions"></div>
       </header>
 
       <div class="content">
+        <div class="ops-summary" id="ops-summary">
+          <div class="metric-card"><div class="metric-label">Aktive Bestellungen</div><div class="metric-value mono" id="metric-orders">0</div><div class="metric-foot">Nicht bezahlt</div></div>
+          <div class="metric-card"><div class="metric-label">Belegte Tische</div><div class="metric-value mono" id="metric-tables">0</div><div class="metric-foot">Von 30 Tischen</div></div>
+          <div class="metric-card"><div class="metric-label">Reservierungen</div><div class="metric-value mono" id="metric-reservations">0</div><div class="metric-foot">Ausstehend</div></div>
+          <div class="metric-card"><div class="metric-label">Event-Anfragen</div><div class="metric-value mono" id="metric-events">0</div><div class="metric-foot">Ausstehend</div></div>
+        </div>
+
         <!-- TABLES VIEW -->
         <div id="view-tables" class="view-section active">
           <div class="toolbar">
