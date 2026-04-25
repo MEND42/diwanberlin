@@ -187,14 +187,17 @@ function showApp() {
     el.style.display = currentUser.role === 'OWNER' ? 'flex' : 'none';
   });
   
-  // Init Socket
-  socket = io();
-  
-  socket.on('table:updated', () => loadTables());
-  socket.on('order:new', () => { loadOrders(); loadTables(); });
-  socket.on('order:updated', () => { loadOrders(); loadTables(); });
-  socket.on('reservation:new', () => loadReservations());
-  socket.on('event:new', () => loadEvents());
+  // Init Socket. The dashboard must remain usable even if the proxy script is unavailable.
+  if (typeof io === 'function') {
+    socket = io();
+    socket.on('table:updated', () => loadTables());
+    socket.on('order:new', () => { loadOrders(); loadTables(); });
+    socket.on('order:updated', () => { loadOrders(); loadTables(); });
+    socket.on('reservation:new', () => loadReservations());
+    socket.on('event:new', () => loadEvents());
+  } else {
+    console.warn('Socket.IO client unavailable; dashboard will use manual refresh.');
+  }
 
   // Load Data
   Promise.allSettled([
