@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+const socketService = require('../../services/socket');
 
 // GET all reservations
 router.get('/', async (req, res) => {
@@ -24,6 +25,7 @@ router.patch('/:id', async (req, res) => {
       where: { id },
       data: req.body
     });
+    try { socketService.getIO().emit('reservation:updated', reservation); } catch (_) {}
     res.json(reservation);
   } catch (error) {
     res.status(500).json({ error: 'Failed to update reservation' });

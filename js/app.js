@@ -104,10 +104,31 @@ async function renderPublicEvents() {
   }
 }
 
+async function renderSiteContent() {
+  try {
+    const res = await fetch(`${API_URL}/site-content`);
+    if (!res.ok) return;
+    const content = await res.json();
+    Object.entries(content).forEach(([key, block]) => {
+      const value = currentLang === 'fa' ? (block.valueFa || block.valueDe) : (block.valueDe || block.valueFa);
+      if (!value) return;
+      document.querySelectorAll(`[data-content-key="${key}"]`).forEach(el => {
+        el.innerHTML = value;
+      });
+      document.querySelectorAll(`[data-i18n="${key}"]`).forEach(el => {
+        el.innerHTML = value;
+      });
+    });
+  } catch (error) {
+    console.error('Failed to load site content:', error);
+  }
+}
+
 // Handle Forms
 document.addEventListener('DOMContentLoaded', () => {
   renderMenu();
   renderPublicEvents();
+  renderSiteContent();
 
   const resForm = document.getElementById('reservationForm');
   if (resForm) {

@@ -2,9 +2,12 @@ const express = require('express');
 const router = express.Router();
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+const socketService = require('../../services/socket');
+const authMiddleware = require('../../middleware/auth');
+const managers = authMiddleware.requireRole('OWNER', 'MANAGER');
 
 // GET all event inquiries
-router.get('/', async (req, res) => {
+router.get('/', managers, async (req, res) => {
   try {
     const events = await prisma.eventInquiry.findMany({
       orderBy: { createdAt: 'desc' }
@@ -16,13 +19,14 @@ router.get('/', async (req, res) => {
 });
 
 // PATCH event inquiry status
-router.patch('/:id', async (req, res) => {
+router.patch('/:id', managers, async (req, res) => {
   try {
     const { id } = req.params;
     const event = await prisma.eventInquiry.update({
       where: { id },
       data: req.body
     });
+    try { socketService.getIO().emit('event:updated', event); } catch (_) {}
     res.json(event);
   } catch (error) {
     res.status(500).json({ error: 'Failed to update event inquiry' });

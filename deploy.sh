@@ -30,8 +30,10 @@ echo "[deploy] Syncing frontend to /var/www/diwanberlin..."
 rsync -av --delete \
   --include index.html \
   --include admin.html \
+  --include admin.css \
   --include robots.txt \
   --include sitemap.xml \
+  --include 'icons/***' \
   --include 'js/***' \
   --include 'uploads/***' \
   --exclude '*' \

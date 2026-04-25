@@ -14,7 +14,14 @@ let eventListings = [];
 let users = [];
 let customers = [];
 let discounts = [];
+let staff = [];
+let availability = [];
+let shifts = [];
+let timeEntries = [];
+let siteContent = [];
 let currentUser = { username: 'admin', role: 'OWNER' };
+let currentMode = 'service';
+let currentWeekStart = getWeekStart(new Date());
 
 let currentOrderDraft = [];
 let selectedTableId = null;
@@ -24,6 +31,25 @@ const loginScreen = document.getElementById('login-screen');
 const appContainer = document.getElementById('app-container');
 const loginForm = document.getElementById('login-form');
 const navMenu = document.querySelector('.nav-menu');
+
+const NAV_ITEMS = [
+  { view: 'tables', title: 'Tische & POS', meta: 'Bestellen und kassieren', mode: 'service', roles: ['OWNER', 'MANAGER', 'WAITER'], icon: 'Tische & POS.png' },
+  { view: 'orders', title: 'Küchen-Kanban', meta: 'Live Bestellungen', mode: 'kitchen', roles: ['OWNER', 'MANAGER', 'WAITER', 'KITCHEN'], icon: 'Kuchen-Kanban.png' },
+  { view: 'menu', title: 'Speisekarte', meta: 'Kategorien und Artikel', mode: 'management', roles: ['OWNER', 'MANAGER'], icon: 'Speiskarte.png' },
+  { view: 'reservations', title: 'Reservierungen', meta: 'Tische zuweisen', mode: 'management', roles: ['OWNER', 'MANAGER', 'WAITER'], icon: 'Reservierung.png', badge: 'badge-res' },
+  { view: 'events', title: 'Event-Anfragen', meta: 'Anfragen bearbeiten', mode: 'management', roles: ['OWNER', 'MANAGER'], icon: 'Event-Anfragen.png', badge: 'badge-ev' },
+  { view: 'event-listings', title: 'Eventkalender', meta: 'Website Events', mode: 'management', roles: ['OWNER', 'MANAGER'], icon: 'Eventkalender.png' },
+  { view: 'site', title: 'Website', meta: 'Texte ohne Code', mode: 'management', roles: ['OWNER', 'MANAGER'], icon: 'Eventkalender.png' },
+  { view: 'staff', title: 'Team & Zeiten', meta: 'Planung und Zeiterfassung', mode: 'management', roles: ['OWNER', 'MANAGER', 'WAITER', 'KITCHEN'], icon: 'teamkonten.png' },
+  { view: 'customers', title: 'Kunden & Rabatte', meta: 'Treue und Codes', mode: 'management', roles: ['OWNER', 'MANAGER', 'WAITER'], icon: 'Kunden & Rabatte.png' },
+  { view: 'users', title: 'Teamkonten', meta: 'Rollen und Zugriff', mode: 'management', roles: ['OWNER'], icon: 'teamkonten.png' }
+];
+
+const MODE_LABELS = {
+  service: 'Service',
+  kitchen: 'Küche',
+  management: 'Management'
+};
 
 // Init
 document.addEventListener('DOMContentLoaded', () => {
@@ -42,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
     e.preventDefault();
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
-    
+
     try {
       const res = await fetch(`${API_URL}/login`, {
         method: 'POST',
@@ -52,7 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (res.ok) {
         const data = await res.json();
         token = data.token;
-        currentUser = { username: data.username, role: data.role || 'OWNER' };
+        currentUser = { id: data.id, username: data.username, role: data.role || 'OWNER' };
         localStorage.setItem('diwanAdminUser', JSON.stringify(currentUser));
         localStorage.setItem('diwanAdminToken', token);
         document.getElementById('login-error').style.display = 'none';
@@ -69,10 +95,19 @@ document.addEventListener('DOMContentLoaded', () => {
     logout();
   });
 
+  document.getElementById('header-actions')?.addEventListener('click', (event) => {
+    const modeButton = event.target.closest('[data-mode]');
+    if (!modeButton) return;
+    currentMode = modeButton.dataset.mode;
+    renderNavigation();
+    const first = firstAllowedNavItem(currentMode);
+    if (first) activateView(first.view);
+  });
+
   // Navigation
   navMenu?.addEventListener('click', (event) => {
     const item = event.target.closest('.nav-item');
-    if (!item || item.classList.contains('owner-only') && currentUser.role !== 'OWNER') return;
+    if (!item) return;
     activateView(item.dataset.view);
   });
 });
@@ -80,7 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
 async function apiFetch(endpoint, options = {}) {
   const headers = { 'Authorization': `Bearer ${token}` };
   if (options.body) headers['Content-Type'] = 'application/json';
-  
+
   const res = await fetch(`${API_URL}${endpoint}`, { ...options, headers });
   let body = null;
   try {
@@ -123,7 +158,53 @@ function getStoredUser() {
   } catch (_) {}
   const decoded = token ? parseJwt(token) : null;
   if (!decoded?.role) return null;
-  return { username: decoded.username || 'admin', role: decoded.role };
+  return { id: decoded.id, username: decoded.username || 'admin', role: decoded.role };
+}
+
+function canAccess(item) {
+  return Boolean(item?.roles?.includes(currentUser.role));
+}
+
+function firstAllowedNavItem(mode = currentMode) {
+  return NAV_ITEMS.find(item => item.mode === mode && canAccess(item)) || NAV_ITEMS.find(canAccess);
+}
+
+function iconPath(fileName) {
+  return `icons/${encodeURIComponent(fileName).replace(/%2F/g, '/')}`;
+}
+
+function renderModeSwitcher() {
+  const headerActions = document.getElementById('header-actions');
+  if (!headerActions) return;
+  headerActions.innerHTML = `
+    <div class="live-pill offline" id="live-status"><span class="live-dot"></span><span>Offline</span></div>
+    <div class="mode-switcher">
+      ${Object.entries(MODE_LABELS).map(([mode, label]) => `
+        <button class="mode-btn ${mode === currentMode ? 'active' : ''}" data-mode="${mode}">${label}</button>
+      `).join('')}
+    </div>
+  `;
+}
+
+function renderNavigation() {
+  renderModeSwitcher();
+  if (!navMenu) return;
+  const visible = NAV_ITEMS.filter(item => item.mode === currentMode && canAccess(item));
+  navMenu.innerHTML = visible.map(item => `
+    <div class="nav-item" data-view="${item.view}" data-title="${item.title}">
+      <span class="nav-icon"><img src="${iconPath(item.icon)}" alt=""></span>
+      <span class="nav-copy"><span class="nav-title">${item.title}</span><span class="nav-meta">${item.meta}</span></span>
+      ${item.badge ? `<span class="badge" id="${item.badge}">0</span>` : ''}
+    </div>
+  `).join('');
+}
+
+function setLiveStatus(status) {
+  const pill = document.getElementById('live-status');
+  if (!pill) return;
+  const label = status === 'live' ? 'Live' : status === 'reconnecting' ? 'Reconnecting' : 'Offline';
+  pill.className = `live-pill ${status}`;
+  pill.querySelector('span:last-child').innerText = label;
 }
 
 function logout(revealLogin = true) {
@@ -139,10 +220,15 @@ function logout(revealLogin = true) {
 }
 
 function activateView(viewId) {
+  const config = NAV_ITEMS.find(item => item.view === viewId);
+  if (!config || !canAccess(config)) return;
+  if (config.mode !== currentMode) {
+    currentMode = config.mode;
+    renderNavigation();
+  }
   const target = document.getElementById(`view-${viewId}`);
   const navItem = document.querySelector(`.nav-item[data-view="${viewId}"]`);
   if (!target || !navItem) return;
-  if (navItem.classList.contains('owner-only') && currentUser.role !== 'OWNER') return;
 
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
@@ -157,7 +243,9 @@ function activateView(viewId) {
     events: 'Private event inquiry pipeline',
     'event-listings': 'Public website event calendar',
     customers: 'Loyalty customers and discount codes',
-    users: 'Staff accounts and role access'
+    users: 'Staff accounts and role access',
+    staff: 'Weekly planning, shift approval and timesheets',
+    site: 'Controlled no-code website content'
   };
   document.getElementById('view-subtitle').innerText = subtitle[viewId] || 'Diwan Berlin operations';
 }
@@ -183,19 +271,33 @@ function showApp() {
   loginScreen.classList.add('hidden');
   appContainer.classList.remove('hidden');
   document.querySelector('.user-box span').innerText = `${currentUser.username} · ${currentUser.role}`;
-  document.querySelectorAll('.owner-only').forEach(el => {
-    el.style.display = currentUser.role === 'OWNER' ? 'flex' : 'none';
+  document.querySelectorAll('.manager-only').forEach(el => {
+    el.style.display = ['OWNER', 'MANAGER'].includes(currentUser.role) ? '' : 'none';
   });
-  
+  currentMode = firstAllowedNavItem(currentMode)?.mode || 'service';
+  renderNavigation();
+
   // Init Socket. The dashboard must remain usable even if the proxy script is unavailable.
   if (typeof io === 'function') {
     socket = io();
+    socket.on('connect', () => setLiveStatus('live'));
+    socket.on('disconnect', () => setLiveStatus('offline'));
+    socket.io?.on('reconnect_attempt', () => setLiveStatus('reconnecting'));
     socket.on('table:updated', () => loadTables());
     socket.on('order:new', () => { loadOrders(); loadTables(); });
     socket.on('order:updated', () => { loadOrders(); loadTables(); });
     socket.on('reservation:new', () => loadReservations());
+    socket.on('reservation:updated', () => loadReservations());
     socket.on('event:new', () => loadEvents());
+    socket.on('event:updated', () => loadEvents());
+    socket.on('menu:updated', () => loadMenu());
+    socket.on('event-listings:updated', () => loadEventListings());
+    socket.on('staff:availability-updated', () => loadHr());
+    socket.on('staff:shift-updated', () => loadHr());
+    socket.on('staff:time-updated', () => loadHr());
+    socket.on('site-content:updated', () => loadSiteContent());
   } else {
+    setLiveStatus('offline');
     console.warn('Socket.IO client unavailable; dashboard will use manual refresh.');
   }
 
@@ -203,15 +305,17 @@ function showApp() {
   Promise.allSettled([
     loadTables(),
     loadOrders(),
-    loadMenu(),
-    loadReservations(),
-    loadEvents(),
-    loadEventListings(),
-    loadCustomers(),
-    loadDiscounts(),
+    canAccess(NAV_ITEMS.find(i => i.view === 'menu')) ? loadMenu() : Promise.resolve(),
+    canAccess(NAV_ITEMS.find(i => i.view === 'reservations')) ? loadReservations() : Promise.resolve(),
+    canAccess(NAV_ITEMS.find(i => i.view === 'events')) ? loadEvents() : Promise.resolve(),
+    canAccess(NAV_ITEMS.find(i => i.view === 'event-listings')) ? loadEventListings() : Promise.resolve(),
+    canAccess(NAV_ITEMS.find(i => i.view === 'customers')) ? loadCustomers() : Promise.resolve(),
+    canAccess(NAV_ITEMS.find(i => i.view === 'customers')) ? loadDiscounts() : Promise.resolve(),
+    canAccess(NAV_ITEMS.find(i => i.view === 'staff')) ? loadHr() : Promise.resolve(),
+    canAccess(NAV_ITEMS.find(i => i.view === 'site')) ? loadSiteContent() : Promise.resolve(),
     currentUser.role === 'OWNER' ? loadUsers() : Promise.resolve()
   ]).then(() => renderOpsSummary());
-  activateView(document.querySelector('.nav-item.active')?.dataset.view || 'tables');
+  activateView(firstAllowedNavItem(currentMode)?.view || 'tables');
 }
 
 /* ================= TABLES & POS ================= */
@@ -248,7 +352,7 @@ async function openTableModal(tableId, label) {
   selectedTableId = tableId;
   currentOrderDraft = [];
   document.getElementById('tm-title').innerText = label;
-  
+
   // Load Bill
   const bill = await apiFetch(`/tables/${tableId}/bill`);
   const billContainer = document.getElementById('tm-bill-items');
@@ -269,11 +373,11 @@ async function openTableModal(tableId, label) {
   // Populate Categories Dropdown
   const catSelect = document.getElementById('tm-cat');
   catSelect.innerHTML = categories.map(c => `<option value="${c.id}">${c.nameDe}</option>`).join('');
-  
+
   renderMenuItemsForOrder(categories[0]?.id);
-  
+
   catSelect.onchange = (e) => renderMenuItemsForOrder(e.target.value);
-  
+
   renderDraftOrder();
   document.getElementById('table-modal').classList.remove('hidden');
 }
@@ -339,7 +443,7 @@ function removeFromDraft(idx) {
 
 async function submitOrder() {
   if (currentOrderDraft.length === 0) return alert('Bitte Artikel hinzufügen');
-  
+
   await apiFetch('/orders', {
     method: 'POST',
     body: JSON.stringify({
@@ -347,7 +451,7 @@ async function submitOrder() {
       items: currentOrderDraft.map(i => ({ menuItemId: i.menuItemId, quantity: i.quantity, unitPrice: i.unitPrice }))
     })
   });
-  
+
   closeModal('table-modal');
   loadTables();
   loadOrders();
@@ -356,14 +460,14 @@ async function submitOrder() {
 async function payBill() {
   if(!confirm('Rechnung als bezahlt markieren?')) return;
   const bill = await apiFetch(`/tables/${selectedTableId}/bill`);
-  
+
   for (let orderId of bill.orders) {
     await apiFetch(`/orders/${orderId}`, {
       method: 'PATCH',
       body: JSON.stringify({ status: 'PAID' })
     });
   }
-  
+
   closeModal('table-modal');
   loadTables();
   loadOrders();
@@ -376,11 +480,11 @@ function closeModal(id) {
 /* ================= KANBAN ORDERS ================= */
 async function loadOrders() {
   orders = await apiFetch('/orders');
-  
+
   const kbNew = document.getElementById('kb-new');
   const kbPrep = document.getElementById('kb-preparing');
   const kbReady = document.getElementById('kb-ready');
-  
+
   kbNew.innerHTML = '';
   kbPrep.innerHTML = '';
   kbReady.innerHTML = '';
@@ -388,7 +492,7 @@ async function loadOrders() {
   orders.filter(o => o.status !== 'PAID' && o.status !== 'SERVED').forEach(order => {
     const timeStr = new Date(order.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
     const itemsHtml = order.items.map(i => `<div class="order-item"><span>${i.quantity}x ${i.menuItem.nameDe}</span></div>`).join('');
-    
+
     let actions = '';
     if (order.status === 'NEW') {
       actions = `<button class="btn" style="background:var(--warning)" onclick="updateOrderStatus('${order.id}', 'PREPARING')">Zubereiten</button>`;
@@ -429,7 +533,7 @@ async function loadMenu() {
   categories = await apiFetch('/menu');
   const catSelect = document.getElementById('menu-cat-select');
   catSelect.innerHTML = categories.map(c => `<option value="${c.id}">${c.nameDe}</option>`).join('');
-  
+
   catSelect.onchange = () => renderMenuItemsAdmin(catSelect.value);
   if(categories.length > 0) renderMenuItemsAdmin(categories[0].id);
 }
@@ -458,7 +562,7 @@ function openCategoryForm(id, createNew = false) {
   const selected = createNew ? {} : (id ? categories.find(c => c.id === id) : currentCategory()) || {};
   openForm(createNew ? 'Neue Kategorie' : 'Kategorie bearbeiten', [
     { name: 'nameDe', label: 'Name Deutsch', value: selected.nameDe, required: true },
-    { name: 'nameFa', label: 'Name Dari', value: selected.nameFa, required: true },
+    { name: 'nameFa', label: 'Name Persisch', value: selected.nameFa, required: true },
     { name: 'slug', label: 'Slug', value: selected.slug, required: true },
     { name: 'sortOrder', label: 'Sortierung', value: selected.sortOrder || 0, type: 'number' },
     { name: 'isActive', label: 'Aktiv', value: selected.isActive === false ? 'false' : 'true', type: 'select', options: [{value:'true',label:'Ja'}, {value:'false',label:'Nein'}] }
@@ -491,9 +595,9 @@ function openMenuItemForm(id) {
   openForm(id ? 'Menüartikel bearbeiten' : 'Neuer Menüartikel', [
     { name: 'categoryId', label: 'Kategorie', value: item.categoryId || cat?.id, type: 'select', options: categories.map(c => ({ value: c.id, label: c.nameDe })) },
     { name: 'nameDe', label: 'Name Deutsch', value: item.nameDe, required: true },
-    { name: 'nameFa', label: 'Name Dari', value: item.nameFa },
+    { name: 'nameFa', label: 'Name Persisch', value: item.nameFa },
     { name: 'descriptionDe', label: 'Beschreibung Deutsch', value: item.descriptionDe, type: 'textarea' },
-    { name: 'descriptionFa', label: 'Beschreibung Dari', value: item.descriptionFa, type: 'textarea' },
+    { name: 'descriptionFa', label: 'Beschreibung Persisch', value: item.descriptionFa, type: 'textarea' },
     { name: 'price', label: 'Preis', value: item.price || '', type: 'number', required: true },
     { name: 'sortOrder', label: 'Sortierung', value: item.sortOrder || 0, type: 'number' },
     { name: 'isAvailable', label: 'Verfügbar', value: item.isAvailable === false ? 'false' : 'true', type: 'select', options: [{value:'true',label:'Ja'}, {value:'false',label:'Nein'}] }
@@ -527,12 +631,12 @@ async function deleteMenuItem(id) {
 async function loadReservations() {
   reservations = await apiFetch('/reservations');
   const tbody = document.getElementById('res-tbody');
-  
+
   // Update badge
   const pending = reservations.filter(r => r.status === 'PENDING').length;
   const badge = document.getElementById('badge-res');
-  if(pending > 0) { badge.style.display = 'inline-block'; badge.innerText = pending; } 
-  else { badge.style.display = 'none'; }
+  if (badge && pending > 0) { badge.style.display = 'inline-block'; badge.innerText = pending; }
+  else if (badge) { badge.style.display = 'none'; }
 
   tbody.innerHTML = reservations.map(r => `
     <tr>
@@ -598,11 +702,11 @@ function openAssignTable(id) {
 async function loadEvents() {
   events = await apiFetch('/events');
   const tbody = document.getElementById('ev-tbody');
-  
+
   const pending = events.filter(e => e.status === 'PENDING').length;
   const badge = document.getElementById('badge-ev');
-  if(pending > 0) { badge.style.display = 'inline-block'; badge.innerText = pending; } 
-  else { badge.style.display = 'none'; }
+  if (badge && pending > 0) { badge.style.display = 'inline-block'; badge.innerText = pending; }
+  else if (badge) { badge.style.display = 'none'; }
 
   tbody.innerHTML = events.map(e => `
     <tr>
@@ -709,7 +813,7 @@ function openEventListingForm(id) {
   const event = eventListings.find(e => e.id === id) || {};
   openForm(id ? 'Event bearbeiten' : 'Neues Event', [
     { name: 'titleDe', label: 'Titel Deutsch', value: event.titleDe, required: true },
-    { name: 'titleFa', label: 'Titel Dari', value: event.titleFa },
+    { name: 'titleFa', label: 'Titel Persisch', value: event.titleFa },
     { name: 'description', label: 'Beschreibung', value: event.description, type: 'textarea' },
     { name: 'eventDate', label: 'Datum', value: event.eventDate ? event.eventDate.slice(0, 10) : '', type: 'date', required: true },
     { name: 'eventTime', label: 'Uhrzeit', value: event.eventTime || '', required: true },
@@ -748,7 +852,7 @@ function openUserForm(id) {
   openForm(id ? 'Teamkonto bearbeiten' : 'Teamkonto erstellen', [
     { name: 'username', label: 'Benutzername', value: user.username, required: true },
     { name: 'password', label: id ? 'Neues Passwort (optional)' : 'Passwort', type: 'password', required: !id },
-    { name: 'role', label: 'Rolle', value: user.role || 'WAITER', type: 'select', options: [{value:'OWNER',label:'Owner'}, {value:'MANAGER',label:'Manager'}, {value:'WAITER',label:'Waiter'}] },
+    { name: 'role', label: 'Rolle', value: user.role || 'WAITER', type: 'select', options: [{value:'OWNER',label:'Owner'}, {value:'MANAGER',label:'Manager'}, {value:'WAITER',label:'Waiter'}, {value:'KITCHEN',label:'Kitchen'}] },
     { name: 'isActive', label: 'Aktiv', value: user.isActive === false ? 'false' : 'true', type: 'select', options: [{value:'true',label:'Ja'}, {value:'false',label:'Nein'}] }
   ], async (data) => {
     data.isActive = data.isActive === 'true';
@@ -820,5 +924,272 @@ function openDiscountForm(id) {
     data.isActive = data.isActive === 'true';
     await apiFetch(id ? `/discounts/${id}` : '/discounts', { method: id ? 'PATCH' : 'POST', body: JSON.stringify(data) });
     loadDiscounts();
+  });
+}
+
+/* ================= STAFF / HR ================= */
+const dayNames = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+
+function getWeekStart(date) {
+  const d = new Date(date);
+  const day = d.getDay() || 7;
+  d.setDate(d.getDate() - day + 1);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function isoDate(date) {
+  return date.toISOString().slice(0, 10);
+}
+
+function formatStaffName(user) {
+  return user?.staffProfile?.fullName || user?.username || 'Mitarbeiter';
+}
+
+function changeHrWeek(offset) {
+  currentWeekStart.setDate(currentWeekStart.getDate() + offset * 7);
+  loadHr();
+}
+
+async function loadHr() {
+  if (!canAccess(NAV_ITEMS.find(i => i.view === 'staff'))) return;
+  const weekStart = isoDate(currentWeekStart);
+  const requests = [
+    apiFetch(`/hr/availability?weekStart=${weekStart}`),
+    apiFetch(`/hr/shifts?weekStart=${weekStart}`),
+    apiFetch(`/hr/time-entries?weekStart=${weekStart}`)
+  ];
+  if (['OWNER', 'MANAGER'].includes(currentUser.role)) requests.push(apiFetch('/hr/staff'));
+  const [availabilityResult, shiftsResult, timeResult, staffResult] = await Promise.allSettled(requests);
+  availability = availabilityResult.value || [];
+  shifts = shiftsResult.value || [];
+  timeEntries = timeResult.value || [];
+  if (staffResult?.value) staff = staffResult.value;
+  renderHr();
+}
+
+function renderHr() {
+  const label = document.getElementById('hr-week-label');
+  if (label) {
+    const end = new Date(currentWeekStart);
+    end.setDate(end.getDate() + 6);
+    label.innerText = `Woche ${currentWeekStart.toLocaleDateString()} - ${end.toLocaleDateString()} · Öffnungszeiten 07:00-21:00`;
+  }
+  renderHrGrid();
+  renderAvailabilityTable();
+  renderTimeEntries();
+}
+
+function renderHrGrid() {
+  const grid = document.getElementById('hr-grid');
+  if (!grid) return;
+  grid.innerHTML = dayNames.map((day, index) => {
+    const dayShifts = shifts.filter(s => s.dayOfWeek === index + 1 && s.status !== 'CANCELLED');
+    const dayAvailability = availability.filter(a => a.dayOfWeek === index + 1 && a.status === 'PENDING');
+    return `
+      <div class="hr-day">
+        <strong>${day}</strong>
+        ${dayShifts.map(shift => `
+          <div class="shift-card">
+            <b>${escapeHtml(formatStaffName(shift.adminUser))}</b><br>
+            ${escapeHtml(shift.startTime)}-${escapeHtml(shift.endTime)}
+            ${['OWNER', 'MANAGER'].includes(currentUser.role) ? `<button class="btn btn-outline btn-small" onclick="openShiftForm('${shift.id}')">Edit</button>` : ''}
+          </div>
+        `).join('') || '<div class="muted">Noch keine Schicht</div>'}
+        ${dayAvailability.map(item => `
+          <div class="availability-card">
+            Vorschlag: ${escapeHtml(formatStaffName(item.adminUser))}<br>${escapeHtml(item.startTime)}-${escapeHtml(item.endTime)}
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }).join('');
+  renderCoverageWarnings();
+}
+
+function renderCoverageWarnings() {
+  const c = document.getElementById('coverage-warnings');
+  if (!c) return;
+  const warnings = [];
+  for (let day = 1; day <= 7; day++) {
+    const dayShifts = shifts.filter(s => s.dayOfWeek === day && s.status !== 'CANCELLED');
+    const morning = dayShifts.filter(s => s.startTime <= '12:00' && s.endTime > '07:00').length;
+    const afternoon = dayShifts.filter(s => s.startTime < '17:00' && s.endTime >= '14:00').length;
+    const evening = dayShifts.filter(s => s.startTime < '21:00' && s.endTime >= '18:00').length;
+    if (morning < 2) warnings.push(`${dayNames[day - 1]} 07:00-12:00: nur ${morning} Person(en) geplant`);
+    if (afternoon < 2) warnings.push(`${dayNames[day - 1]} 14:00-17:00: nur ${afternoon} Person(en) geplant`);
+    if (evening < 2) warnings.push(`${dayNames[day - 1]} 18:00-21:00: nur ${evening} Person(en) geplant`);
+  }
+  c.innerHTML = warnings.slice(0, 8).map(w => `<div class="warning-item">${escapeHtml(w)}</div>`).join('');
+}
+
+function renderAvailabilityTable() {
+  const tbody = document.getElementById('availability-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = availability.map(item => `
+    <tr>
+      <td>${dayNames[item.dayOfWeek - 1]}</td>
+      <td>${escapeHtml(formatStaffName(item.adminUser))}</td>
+      <td>${escapeHtml(item.startTime)}-${escapeHtml(item.endTime)}</td>
+      <td>${escapeHtml(item.status)}</td>
+      <td>
+        ${['OWNER', 'MANAGER'].includes(currentUser.role) ? `
+          <button class="btn btn-outline btn-small" onclick="approveAvailability('${item.id}')">Genehmigen</button>
+          <button class="btn btn-danger btn-small" onclick="rejectAvailability('${item.id}')">Ablehnen</button>
+        ` : '-'}
+      </td>
+    </tr>
+  `).join('');
+}
+
+function renderTimeEntries() {
+  const tbody = document.getElementById('time-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = timeEntries.map(entry => `
+    <tr>
+      <td>${escapeHtml(formatStaffName(entry.adminUser))}</td>
+      <td>${new Date(entry.clockIn).toLocaleString()}</td>
+      <td>${entry.clockOut ? new Date(entry.clockOut).toLocaleString() : '-'}</td>
+      <td>${entry.breakMinutes || 0} Min.</td>
+      <td>${escapeHtml(entry.status)}</td>
+    </tr>
+  `).join('');
+}
+
+function staffOptions() {
+  const list = staff.length ? staff : [{ id: currentUser.id, username: currentUser.username, role: currentUser.role }];
+  return list.map(u => ({ value: u.id, label: `${formatStaffName(u)} · ${u.role}` }));
+}
+
+function openStaffProfileForm(adminUserId) {
+  const selected = staff.find(s => s.id === adminUserId) || staff[0];
+  if (!selected) return alert('Bitte zuerst ein Teamkonto erstellen.');
+  const profile = selected.staffProfile || {};
+  openForm('Mitarbeiterprofil', [
+    { name: 'adminUserId', label: 'Teamkonto', value: selected.id, type: 'select', options: staffOptions() },
+    { name: 'fullName', label: 'Vollständiger Name', value: profile.fullName || selected.username, required: true },
+    { name: 'phone', label: 'Telefon', value: profile.phone },
+    { name: 'email', label: 'E-Mail', value: profile.email, type: 'email' },
+    { name: 'position', label: 'Position', value: profile.position || selected.role },
+    { name: 'notes', label: 'Notizen', value: profile.notes, type: 'textarea' },
+    { name: 'isActive', label: 'Aktiv', value: profile.isActive === false ? 'false' : 'true', type: 'select', options: [{ value: 'true', label: 'Ja' }, { value: 'false', label: 'Nein' }] }
+  ], async (data) => {
+    const id = data.adminUserId;
+    delete data.adminUserId;
+    data.isActive = data.isActive === 'true';
+    await apiFetch(`/hr/staff/${id}/profile`, { method: 'PUT', body: JSON.stringify(data) });
+    loadHr();
+  });
+}
+
+function openAvailabilityForm() {
+  openForm('Arbeitszeit vorschlagen', [
+    { name: 'adminUserId', label: 'Mitarbeiter', value: currentUser.id, type: 'select', options: staffOptions() },
+    { name: 'weekStart', label: 'Woche ab', value: isoDate(currentWeekStart), type: 'date', required: true },
+    { name: 'dayOfWeek', label: 'Tag', value: '1', type: 'select', options: dayNames.map((d, i) => ({ value: String(i + 1), label: d })) },
+    { name: 'startTime', label: 'Start', value: '07:00', required: true },
+    { name: 'endTime', label: 'Ende', value: '15:00', required: true },
+    { name: 'note', label: 'Notiz', value: '', type: 'textarea' }
+  ], async (data) => {
+    await apiFetch('/hr/availability', { method: 'POST', body: JSON.stringify(data) });
+    loadHr();
+  });
+}
+
+async function approveAvailability(id) {
+  const item = availability.find(a => a.id === id);
+  if (!item) return;
+  await apiFetch(`/hr/availability/${id}`, { method: 'PATCH', body: JSON.stringify({ status: 'APPROVED' }) });
+  await apiFetch('/hr/shifts', {
+    method: 'POST',
+    body: JSON.stringify({
+      adminUserId: item.adminUserId,
+      weekStart: isoDate(currentWeekStart),
+      dayOfWeek: item.dayOfWeek,
+      startTime: item.startTime,
+      endTime: item.endTime,
+      note: item.note
+    })
+  });
+  loadHr();
+}
+
+async function rejectAvailability(id) {
+  await apiFetch(`/hr/availability/${id}`, { method: 'PATCH', body: JSON.stringify({ status: 'REJECTED' }) });
+  loadHr();
+}
+
+function openShiftForm(id) {
+  const shift = shifts.find(s => s.id === id) || {};
+  openForm(id ? 'Schicht bearbeiten' : 'Schicht eintragen', [
+    { name: 'adminUserId', label: 'Mitarbeiter', value: shift.adminUserId || staffOptions()[0]?.value, type: 'select', options: staffOptions() },
+    { name: 'weekStart', label: 'Woche ab', value: isoDate(currentWeekStart), type: 'date', required: true },
+    { name: 'dayOfWeek', label: 'Tag', value: shift.dayOfWeek || '1', type: 'select', options: dayNames.map((d, i) => ({ value: String(i + 1), label: d })) },
+    { name: 'startTime', label: 'Start', value: shift.startTime || '07:00', required: true },
+    { name: 'endTime', label: 'Ende', value: shift.endTime || '15:00', required: true },
+    { name: 'note', label: 'Notiz', value: shift.note, type: 'textarea' },
+    { name: 'status', label: 'Status', value: shift.status || 'APPROVED', type: 'select', options: [{ value: 'APPROVED', label: 'Aktiv' }, { value: 'CANCELLED', label: 'Storniert' }] }
+  ], async (data) => {
+    await apiFetch(id ? `/hr/shifts/${id}` : '/hr/shifts', { method: id ? 'PATCH' : 'POST', body: JSON.stringify(data) });
+    loadHr();
+  });
+}
+
+async function clockIn() {
+  await apiFetch('/hr/clock-in', { method: 'POST', body: JSON.stringify({}) });
+  loadHr();
+}
+
+function openClockOutForm() {
+  const open = timeEntries.find(e => e.adminUser?.id === currentUser.id && e.status === 'OPEN') || timeEntries.find(e => e.status === 'OPEN');
+  if (!open) return alert('Keine offene Zeiterfassung gefunden.');
+  openForm('Ausstempeln', [
+    { name: 'breakMinutes', label: 'Pause in Minuten', value: open.breakMinutes || 0, type: 'number' }
+  ], async (data) => {
+    await apiFetch(`/hr/clock-out/${open.id}`, { method: 'POST', body: JSON.stringify({ breakMinutes: Number(data.breakMinutes || 0) }) });
+    loadHr();
+  });
+}
+
+/* ================= WEBSITE CMS ================= */
+async function loadSiteContent() {
+  if (!canAccess(NAV_ITEMS.find(i => i.view === 'site'))) return;
+  siteContent = await apiFetch('/site-content');
+  renderSiteContent();
+}
+
+function renderSiteContent() {
+  const tbody = document.getElementById('site-content-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = siteContent.map(block => `
+    <tr onclick="previewSiteBlock('${block.id}')">
+      <td>${escapeHtml(block.label)}</td>
+      <td>${escapeHtml((block.valueDe || '').slice(0, 80))}</td>
+      <td>${escapeHtml((block.valueFa || '').slice(0, 80))}</td>
+      <td>${block.isPublished ? 'Live' : 'Entwurf'}</td>
+      <td><button class="btn btn-outline btn-small" onclick="event.stopPropagation();openSiteContentForm('${block.id}')">Bearbeiten</button></td>
+    </tr>
+  `).join('');
+}
+
+function previewSiteBlock(id) {
+  const block = siteContent.find(b => b.id === id);
+  const preview = document.getElementById('cms-preview-text');
+  if (block && preview) preview.innerText = block.valueDe || block.valueFa || 'Kein Text gesetzt.';
+}
+
+function openSiteContentForm(id) {
+  const block = siteContent.find(b => b.id === id) || {};
+  openForm(id ? 'Website Text bearbeiten' : 'Website Textblock hinzufügen', [
+    { name: 'key', label: 'Technischer Schlüssel', value: block.key, required: true },
+    { name: 'label', label: 'Name im Dashboard', value: block.label, required: true },
+    { name: 'type', label: 'Typ', value: block.type || 'TEXTAREA', type: 'select', options: [{ value: 'TEXT', label: 'Kurzer Text' }, { value: 'TEXTAREA', label: 'Langer Text' }, { value: 'URL', label: 'Link' }] },
+    { name: 'valueDe', label: 'Deutsch', value: block.valueDe, type: 'textarea' },
+    { name: 'valueFa', label: 'Persisch', value: block.valueFa, type: 'textarea' },
+    { name: 'isPublished', label: 'Sichtbar', value: block.isPublished === false ? 'false' : 'true', type: 'select', options: [{ value: 'true', label: 'Ja' }, { value: 'false', label: 'Nein' }] }
+  ], async (data) => {
+    data.isPublished = data.isPublished === 'true';
+    await apiFetch(id ? `/site-content/${id}` : '/site-content', { method: id ? 'PATCH' : 'POST', body: JSON.stringify(data) });
+    loadSiteContent();
   });
 }

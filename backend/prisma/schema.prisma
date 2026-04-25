@@ -120,9 +120,13 @@ model AdminUser {
   id           String   @id @default(uuid()) @db.Uuid
   username     String   @unique
   passwordHash String
-  role         String   @default("OWNER") // OWNER, MANAGER, WAITER
+  role         String   @default("OWNER") // OWNER, MANAGER, WAITER, KITCHEN
   isActive     Boolean  @default(true)
   createdAt    DateTime @default(now())
+  staffProfile StaffProfile?
+  availability StaffAvailability[]
+  shifts       ShiftAssignment[]
+  timeEntries  TimeEntry[]
 }
 
 model Customer {
@@ -148,4 +152,70 @@ model Discount {
   isActive    Boolean   @default(true)
   expiresAt   DateTime?
   createdAt   DateTime  @default(now())
+}
+
+model StaffProfile {
+  id          String    @id @default(uuid()) @db.Uuid
+  adminUserId String    @unique @db.Uuid
+  adminUser   AdminUser @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
+  fullName    String
+  phone       String?
+  email       String?
+  position    String?
+  notes       String?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model StaffAvailability {
+  id          String    @id @default(uuid()) @db.Uuid
+  adminUserId String    @db.Uuid
+  adminUser   AdminUser @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
+  weekStart   DateTime
+  dayOfWeek   Int
+  startTime   String
+  endTime     String
+  note        String?
+  status      String    @default("PENDING") // PENDING, APPROVED, REJECTED
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model ShiftAssignment {
+  id          String    @id @default(uuid()) @db.Uuid
+  adminUserId String    @db.Uuid
+  adminUser   AdminUser @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
+  weekStart   DateTime
+  dayOfWeek   Int
+  startTime   String
+  endTime     String
+  note        String?
+  status      String    @default("APPROVED") // APPROVED, CANCELLED
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model TimeEntry {
+  id          String    @id @default(uuid()) @db.Uuid
+  adminUserId String    @db.Uuid
+  adminUser   AdminUser @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
+  clockIn     DateTime
+  clockOut    DateTime?
+  breakMinutes Int      @default(0)
+  note        String?
+  status      String    @default("OPEN") // OPEN, SUBMITTED, APPROVED
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model SiteContentBlock {
+  id          String   @id @default(uuid()) @db.Uuid
+  key         String   @unique
+  label       String
+  type        String   @default("TEXT") // TEXT, TEXTAREA, URL, BOOLEAN
+  valueDe     String?
+  valueFa     String?
+  isPublished Boolean  @default(true)
+  updatedAt   DateTime @updatedAt
 }

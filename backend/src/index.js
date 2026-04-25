@@ -10,6 +10,7 @@ const menuRoutes = require('./routes/menu');
 const reservationsRoutes = require('./routes/reservations');
 const eventsRoutes = require('./routes/events');
 const eventListingsRoutes = require('./routes/eventListings');
+const siteContentRoutes = require('./routes/siteContent');
 
 const adminAuthRoutes = require('./routes/admin/auth');
 const adminMenuRoutes = require('./routes/admin/menu');
@@ -21,6 +22,8 @@ const adminEventListingsRoutes = require('./routes/admin/eventListings');
 const adminUsersRoutes = require('./routes/admin/users');
 const adminCustomersRoutes = require('./routes/admin/customers');
 const adminDiscountsRoutes = require('./routes/admin/discounts');
+const adminHrRoutes = require('./routes/admin/hr');
+const adminSiteContentRoutes = require('./routes/admin/siteContent');
 
 const app = express();
 const server = http.createServer(app);
@@ -45,6 +48,7 @@ app.use('/api/menu', menuRoutes);
 app.use('/api/reservations', reservationsRoutes);
 app.use('/api/events', eventsRoutes);
 app.use('/api/event-listings', eventListingsRoutes);
+app.use('/api/site-content', siteContentRoutes);
 
 // Admin Routes (Auth)
 app.use('/api/admin', adminAuthRoutes);
@@ -59,6 +63,8 @@ app.use('/api/admin/event-listings', authMiddleware, adminEventListingsRoutes);
 app.use('/api/admin/users', authMiddleware, adminUsersRoutes);
 app.use('/api/admin/customers', authMiddleware, adminCustomersRoutes);
 app.use('/api/admin/discounts', authMiddleware, adminDiscountsRoutes);
+app.use('/api/admin/hr', authMiddleware, adminHrRoutes);
+app.use('/api/admin/site-content', authMiddleware, adminSiteContentRoutes);
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {

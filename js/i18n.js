@@ -7,18 +7,18 @@ const translations = {
     navReserve: "Reservieren <span class='arr'>↗</span>",
     heroTitle1: "Wo Geschichten",
     heroTitle2: "beginnen.",
-    heroSub: "Ein afghanisches Kulturcafé im Herzen Berlins — wo warme Gastfreundschaft auf echte Kaffekultur trifft.",
+    heroSub: "Ein Kulturcafé im Herzen Berlins — wo warme Gastfreundschaft auf echte Kaffeekultur trifft.",
     heroBtnMenu: "Speisekarte <span class='ac'>↗</span>",
     heroBtnReserve: "<span class='pl'>▶</span>Reservieren",
     aboutTitle: "Unsere <em>Geschichte</em>",
-    aboutDesc1: "Cafe Diwan ist mehr als nur ein Ort zum Kaffeetrinken. Es ist ein lebendiger Treffpunkt, an dem die reiche afghanische Kultur auf das moderne Berlin trifft.",
+    aboutDesc1: "Cafe Diwan ist mehr als nur ein Ort zum Kaffeetrinken. Es ist ein lebendiger Treffpunkt, an dem Kultur, Gespräch und das moderne Berlin zusammenkommen.",
     aboutDesc2: "Wir glauben an die Kraft der Gemeinschaft. Bei einer Tasse frisch gebrühtem Kardamom-Kaffee und traditionellem Gebäck entstehen hier neue Freundschaften und unvergessliche Momente.",
     aboutDesc3: "Egal ob Sie für ein ruhiges Frühstück, ein geschäftliches Treffen oder eine unserer kulturellen Abendveranstaltungen kommen — bei uns sind Sie immer ein willkommener Gast.",
     aboutSloganDe: "Wo Gastfreundschaft eine Kunst ist.",
     feat1Title: "Kaffee & Tee",
-    feat1Desc: "Sorgfältig ausgewählte Bohnen und traditionelle afghanische Teezeremonien.",
+    feat1Desc: "Sorgfältig ausgewählte Bohnen, feiner Tee und warme Gastfreundschaft.",
     feat2Title: "Kultur",
-    feat2Desc: "Regelmäßige Veranstaltungen, Lesungen und Live-Musik aus Afghanistan.",
+    feat2Desc: "Regelmäßige Veranstaltungen, Lesungen und Live-Musik.",
     feat3Title: "Gemeinschaft",
     feat3Desc: "Ein offener Ort für Begegnungen, Dialog und gemeinsames Wachsen.",
     menuEyebrow: "منوی ما · Unsere Karte",
@@ -66,18 +66,18 @@ const translations = {
     navReserve: "رزرو میز <span class='arr'>↗</span>",
     heroTitle1: "جایی که قصه‌ها",
     heroTitle2: "آغاز می‌شوند.",
-    heroSub: "کافه فرهنگی افغان در قلب برلین — جایی که مهمان‌نوازی گرم با فرهنگ اصیل قهوه پیوند می‌خورد.",
+    heroSub: "کافه‌ای فرهنگی در قلب برلین؛ جایی برای مهمان‌نوازی گرم و فرهنگ قهوه.",
     heroBtnMenu: "منو <span class='ac'>↗</span>",
     heroBtnReserve: "<span class='pl'>▶</span>رزرو میز",
     aboutTitle: "داستان <em>ما</em>",
-    aboutDesc1: "کافه دیوان چیزی فراتر از یک مکان برای نوشیدن قهوه است. اینجا نقطه تلاقی پر جنب و جوشی است که در آن فرهنگ غنی افغانستان با برلین مدرن پیوند می‌خورد.",
+    aboutDesc1: "کافه دیوان چیزی فراتر از یک مکان برای نوشیدن قهوه است. اینجا فضایی زنده برای فرهنگ، گفتگو و زندگی مدرن برلین است.",
     aboutDesc2: "ما به قدرت جامعه باور داریم. با یک فنجان قهوه تازه دم هل و شیرینی‌های سنتی، دوستی‌های جدید و لحظات فراموش‌نشدنی شکل می‌گیرند.",
     aboutDesc3: "چه برای یک صبحانه آرام بیایید، چه برای یک جلسه کاری یا یکی از برنامه‌های فرهنگی شبانه ما — شما همیشه مهمان عزیز ما هستید.",
     aboutSloganDe: "جایی که مهمان‌نوازی یک هنر است.",
     feat1Title: "قهوه و چای",
-    feat1Desc: "دانه‌های با دقت انتخاب شده و مراسم سنتی چای افغان.",
+    feat1Desc: "دانه‌های با دقت انتخاب شده، چای خوش‌طعم و مهمان‌نوازی گرم.",
     feat2Title: "فرهنگ",
-    feat2Desc: "رویدادهای منظم، شعرخوانی و موسیقی زنده از افغانستان.",
+    feat2Desc: "رویدادهای منظم، شعرخوانی و موسیقی زنده.",
     feat3Title: "جامعه",
     feat3Desc: "فضایی باز برای دیدار، گفتگو و رشد مشترک.",
     menuEyebrow: "منوی ما · Unsere Karte",
@@ -141,7 +141,7 @@ function setLanguage(lang) {
 
   const toggleBtn = document.getElementById('langToggle');
   if (toggleBtn) {
-    toggleBtn.innerHTML = lang === 'de' ? '🇦🇫 دری' : '🇩🇪 DE';
+    toggleBtn.innerHTML = lang === 'de' ? 'Persian' : 'Deutsch';
   }
 
   // Force re-render of menu if it exists
@@ -150,6 +150,9 @@ function setLanguage(lang) {
   }
   if (typeof renderPublicEvents === 'function') {
     renderPublicEvents();
+  }
+  if (typeof renderSiteContent === 'function') {
+    renderSiteContent();
   }
 }
 
