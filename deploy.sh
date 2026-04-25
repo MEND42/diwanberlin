@@ -28,12 +28,19 @@ git -C "$PROJECT_DIR" reset --hard origin/main
 # 2. Copy frontend to nginx web root (static site)
 echo "[deploy] Syncing frontend to /var/www/diwanberlin..."
 rsync -av --delete \
-  --exclude backend/ \
-  --exclude .git/ \
-  --exclude .github/ \
-  --exclude node_modules/ \
+  --include index.html \
+  --include admin.html \
+  --include robots.txt \
+  --include sitemap.xml \
+  --include 'js/***' \
+  --include 'uploads/***' \
+  --exclude '*' \
   "$PROJECT_DIR/" /var/www/diwanberlin/
-chown -R www-data:www-data /var/www/diwanberlin
+
+if [ "$(id -u)" -eq 0 ]; then
+  chown -R diwanberlin:www-data /var/www/diwanberlin
+  chmod -R g+rX /var/www/diwanberlin
+fi
 
 # 3. Build Docker image
 echo "[deploy] Building backend image..."
