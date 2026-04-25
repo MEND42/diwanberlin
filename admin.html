@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cafe Diwan - Admin Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<!-- Socket.io client -->
+<script src="/socket.io/socket.io.js"></script>
+<script>const socket = io();</script>
+<style>
+  :root {
+    --bg-dark: #121212;
+    --bg-panel: #1e1e1e;
+    --bg-hover: #2a2a2a;
+    --border: #333333;
+    --text-main: #f5f5f5;
+    --text-muted: #a0a0a0;
+    --gold: #c8922a;
+    --gold-hover: #e0ae55;
+    --danger: #ef4444;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --info: #3b82f6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg-dark); color: var(--text-main); font-family: 'Inter', sans-serif; overflow: hidden; height: 100vh; }
+  
+  /* Utilities */
+  .hidden { display: none !important; }
+  .btn { padding: 8px 16px; background: var(--gold); color: #000; border: none; border-radius: 6px; font-weight: 500; cursor: pointer; transition: background 0.2s; }
+  .btn:hover { background: var(--gold-hover); }
+  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-main); }
+  .btn-outline:hover { background: var(--bg-hover); }
+  .btn-danger { background: var(--danger); color: #fff; }
+  
+  /* Login Screen */
+  #login-screen { position: fixed; inset: 0; background: var(--bg-dark); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+  .login-box { background: var(--bg-panel); padding: 40px; border-radius: 12px; border: 1px solid var(--border); width: 100%; max-width: 400px; text-align: center; }
+  .login-box h2 { margin-bottom: 24px; color: var(--gold); }
+  .login-box input { width: 100%; padding: 12px; margin-bottom: 16px; background: var(--bg-dark); border: 1px solid var(--border); color: #fff; border-radius: 6px; }
+  .login-box button { width: 100%; padding: 12px; }
+  
+  /* Layout */
+  #app-container { display: flex; height: 100vh; }
+  
+  /* Sidebar */
+  aside { width: 260px; background: var(--bg-panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; }
+  .brand { padding: 24px; font-size: 20px; font-weight: 600; color: var(--gold); border-bottom: 1px solid var(--border); }
+  .nav-menu { padding: 16px 0; flex: 1; }
+  .nav-item { padding: 12px 24px; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; gap: 12px; transition: all 0.2s; }
+  .nav-item:hover { color: var(--text-main); background: var(--bg-hover); }
+  .nav-item.active { color: var(--gold); border-right: 3px solid var(--gold); background: rgba(200, 146, 42, 0.1); }
+  .nav-item .badge { background: var(--danger); color: white; font-size: 11px; padding: 2px 6px; border-radius: 10px; margin-left: auto; display: none; }
+  .user-box { padding: 20px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  
+  /* Main Content */
+  main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  header { height: 70px; padding: 0 32px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  header h1 { font-size: 22px; font-weight: 500; }
+  .content { flex: 1; overflow-y: auto; padding: 32px; }
+  .view-section { display: none; }
+  .view-section.active { display: block; animation: fadeIn 0.3s; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* Tables Grid */
+  .tables-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 20px; }
+  .table-card { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: transform 0.2s; }
+  .table-card:hover { transform: translateY(-4px); }
+  .table-card.available { border-color: var(--success); }
+  .table-card.occupied { border-color: var(--warning); background: rgba(245, 158, 11, 0.05); }
+  .table-card h3 { font-size: 24px; margin-bottom: 8px; }
+  .table-card .status { font-size: 12px; font-weight: 500; text-transform: uppercase; }
+  .table-card.available .status { color: var(--success); }
+  .table-card.occupied .status { color: var(--warning); }
+
+  /* Kanban Board */
+  .kanban-board { display: flex; gap: 20px; height: 100%; min-height: 500px; }
+  .kanban-col { flex: 1; background: var(--bg-panel); border-radius: 10px; border: 1px solid var(--border); display: flex; flex-direction: column; }
+  .kanban-header { padding: 16px; border-bottom: 1px solid var(--border); font-weight: 600; text-align: center; }
+  .kanban-items { flex: 1; padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+  
+  .order-card { background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; padding: 14px; }
+  .order-header { display: flex; justify-content: space-between; margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+  .order-table { font-weight: 600; color: var(--gold); }
+  .order-time { font-size: 12px; color: var(--text-muted); }
+  .order-item { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 4px; }
+  .order-actions { margin-top: 12px; display: flex; gap: 8px; }
+  .order-actions button { flex: 1; font-size: 12px; padding: 6px; }
+
+  /* Lists (Menu, Reservations, Events) */
+  .data-table { width: 100%; border-collapse: collapse; }
+  .data-table th, .data-table td { padding: 14px; text-align: left; border-bottom: 1px solid var(--border); }
+  .data-table th { color: var(--text-muted); font-weight: 500; font-size: 14px; }
+  .data-table tr:hover { background: var(--bg-panel); }
+
+  /* Modals */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 2000; }
+  .modal-content { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; width: 100%; max-width: 600px; max-height: 90vh; display: flex; flex-direction: column; }
+  .modal-header { padding: 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+  .modal-body { padding: 20px; overflow-y: auto; }
+  .modal-footer { padding: 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 12px; }
+  .close-modal { background: none; border: none; color: var(--text-muted); font-size: 24px; cursor: pointer; }
+  .close-modal:hover { color: #fff; }
+
+  /* Forms in Modals */
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; margin-bottom: 6px; font-size: 13px; color: var(--text-muted); }
+  .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; background: var(--bg-dark); border: 1px solid var(--border); color: #fff; border-radius: 6px; font-family: 'Inter', sans-serif; }
+
+  /* Order Creation List */
+  .menu-list-select { max-height: 300px; overflow-y: auto; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-dark); }
+  .menu-list-item { padding: 10px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+  .menu-list-item:last-child { border-bottom: none; }
+  .add-to-order-btn { padding: 4px 8px; font-size: 12px; }
+  
+  .current-order-list { margin-top: 20px; }
+  .order-line { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed var(--border); }
+</style>
+</head>
+<body>
+
+  <!-- Login Screen -->
+  <div id="login-screen">
+    <div class="login-box">
+      <h2>Diwan Admin</h2>
+      <form id="login-form">
+        <input type="text" id="username" placeholder="Benutzername" required>
+        <input type="password" id="password" placeholder="Passwort" required>
+        <button type="submit" class="btn">Anmelden</button>
+        <p id="login-error" style="color: var(--danger); margin-top: 16px; font-size: 14px; display: none;">Falsche Zugangsdaten</p>
+      </form>
+    </div>
+  </div>
+
+  <!-- Main App -->
+  <div id="app-container" class="hidden">
+    <aside>
+      <div class="brand">Cafe Diwan</div>
+      <div class="nav-menu">
+        <div class="nav-item active" data-view="tables">🪑 Tische & POS</div>
+        <div class="nav-item" data-view="orders">🍳 Küchen-Kanban</div>
+        <div class="nav-item" data-view="menu">📋 Speisekarte</div>
+        <div class="nav-item" data-view="reservations">📅 Reservierungen <span class="badge" id="badge-res">0</span></div>
+        <div class="nav-item" data-view="events">🎉 Events <span class="badge" id="badge-ev">0</span></div>
+      </div>
+      <div class="user-box">
+        <span style="font-size: 14px; color: var(--text-muted);">Angemeldet als Admin</span>
+        <button id="logout-btn" class="btn btn-outline" style="padding: 4px 10px; font-size: 12px;">Logout</button>
+      </div>
+    </aside>
+
+    <main>
+      <header>
+        <h1 id="view-title">Tische & POS</h1>
+        <div class="header-actions" id="header-actions"></div>
+      </header>
+
+      <div class="content">
+        <!-- TABLES VIEW -->
+        <div id="view-tables" class="view-section active">
+          <div class="tables-grid" id="tables-grid">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
+        <!-- ORDERS VIEW -->
+        <div id="view-orders" class="view-section">
+          <div class="kanban-board">
+            <div class="kanban-col">
+              <div class="kanban-header" style="border-bottom: 2px solid var(--danger);">NEU</div>
+              <div class="kanban-items" id="kb-new"></div>
+            </div>
+            <div class="kanban-col">
+              <div class="kanban-header" style="border-bottom: 2px solid var(--warning);">IN ZUBEREITUNG</div>
+              <div class="kanban-items" id="kb-preparing"></div>
+            </div>
+            <div class="kanban-col">
+              <div class="kanban-header" style="border-bottom: 2px solid var(--info);">BEREIT</div>
+              <div class="kanban-items" id="kb-ready"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- MENU VIEW -->
+        <div id="view-menu" class="view-section">
+          <div style="display: flex; gap: 20px; margin-bottom: 20px;">
+            <select id="menu-cat-select" class="form-group" style="padding: 8px; width: 200px; background: var(--bg-panel); color: white; border: 1px solid var(--border);">
+              <!-- Categories -->
+            </select>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Name (DE)</th>
+                <th>Name (FA)</th>
+                <th>Preis</th>
+                <th>Verfügbar</th>
+                <th>Aktionen</th>
+              </tr>
+            </thead>
+            <tbody id="menu-tbody">
+              <!-- Items -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- RESERVATIONS VIEW -->
+        <div id="view-reservations" class="view-section">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Datum & Zeit</th>
+                <th>Name</th>
+                <th>Gäste</th>
+                <th>Kontakt</th>
+                <th>Status</th>
+                <th>Aktionen</th>
+              </tr>
+            </thead>
+            <tbody id="res-tbody"></tbody>
+          </table>
+        </div>
+
+        <!-- EVENTS VIEW -->
+        <div id="view-events" class="view-section">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Erstellt am</th>
+                <th>Datum</th>
+                <th>Name</th>
+                <th>Typ</th>
+                <th>Gäste</th>
+                <th>Status</th>
+                <th>Aktionen</th>
+              </tr>
+            </thead>
+            <tbody id="ev-tbody"></tbody>
+          </table>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- MODALS -->
+
+  <!-- Order / Bill Modal -->
+  <div id="table-modal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="tm-title">Tisch 1</h2>
+        <button class="close-modal" onclick="closeModal('table-modal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="display: flex; gap: 20px;">
+          <!-- Left: New Order -->
+          <div style="flex: 1; border-right: 1px solid var(--border); padding-right: 20px;">
+            <h3 style="margin-bottom: 16px;">Neue Bestellung</h3>
+            <select id="tm-cat" style="width: 100%; padding: 8px; margin-bottom: 12px; background: var(--bg-dark); color: white; border: 1px solid var(--border);">
+            </select>
+            <div class="menu-list-select" id="tm-menu-list">
+              <!-- Menu items to add -->
+            </div>
+            
+            <div class="current-order-list" id="tm-current-order">
+              <!-- Added items -->
+            </div>
+          </div>
+          
+          <!-- Right: Current Bill -->
+          <div style="flex: 1;">
+            <h3 style="margin-bottom: 16px;">Aktuelle Rechnung</h3>
+            <div id="tm-bill-items" style="max-height: 300px; overflow-y: auto; margin-bottom: 20px;">
+              <!-- Unpaid items -->
+            </div>
+            <div style="font-size: 20px; font-weight: 600; text-align: right; border-top: 1px solid var(--border); padding-top: 10px;">
+              Total: <span id="tm-bill-total" style="color: var(--gold);">€ 0.00</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" id="tm-btn-pay" onclick="payBill()">Rechnung begleichen</button>
+        <button class="btn" id="tm-btn-order" onclick="submitOrder()">Bestellung abschicken</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/admin.js"></script>
+</body>
+</html>

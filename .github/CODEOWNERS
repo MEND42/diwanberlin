@@ -1,0 +1,6 @@
+# Changes to these files require your review regardless of who opens the PR
+/.github/workflows/   @MEND42
+/backend/docker-compose*.yml  @MEND42
+/backend/Dockerfile   @MEND42
+/deploy.sh            @MEND42
+/backend/.env.example @MEND42

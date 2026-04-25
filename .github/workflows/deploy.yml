@@ -1,0 +1,28 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:   # allows manual trigger from GitHub UI
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false   # never cancel a deploy in progress
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, diwanberlin-vps]   # VPS runner label
+    environment: production                    # requires your approval in GitHub UI
+
+    steps:
+      - name: Deploy Cafe Diwan
+        run: /opt/diwanberlin/deploy.sh
+        env:
+          COMPOSE_FILE: docker-compose.prod.yml
+          HEALTH_URL: http://127.0.0.1:3001/health
+
+      - name: Log failure
+        if: failure()
+        run: |
+          echo "DEPLOY FAILED for diwanberlin at $(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            >> /var/log/deployments/diwanberlin.log

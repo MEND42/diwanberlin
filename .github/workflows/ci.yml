@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [develop]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Security: scan for accidentally committed secrets
+      - name: Check for committed secrets (TruffleHog)
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+
+      # Verify .env was not committed
+      - name: Verify no .env files committed
+        run: |
+          if find . -name ".env" -not -path "./.git/*" | grep -q .; then
+            echo "ERROR: .env file found in repository!"
+            exit 1
+          fi
+
+      # Verify docker-compose has no hardcoded secret fallbacks
+      - name: Verify docker-compose has no hardcoded secrets
+        run: |
+          if grep -rE ":-[A-Za-z0-9+/]{16,}" backend/docker-compose*.yml 2>/dev/null; then
+            echo "ERROR: hardcoded secret fallbacks found in docker-compose file"
+            exit 1
+          fi
+
+      # Node.js backend checks
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: npm ci
+
+      - name: Validate Prisma schema
+        working-directory: backend
+        run: npx prisma validate

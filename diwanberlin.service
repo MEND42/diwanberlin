@@ -1,0 +1,23 @@
+[Unit]
+Description=Cafe Diwan Backend (Docker Compose)
+After=docker.service network-online.target
+Requires=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+User=diwanberlin
+Group=docker
+WorkingDirectory=/opt/diwanberlin/backend
+
+ExecStart=/usr/bin/docker compose -f docker-compose.prod.yml up -d --remove-orphans
+ExecStop=/usr/bin/docker compose -f docker-compose.prod.yml down
+ExecReload=/usr/bin/docker compose -f docker-compose.prod.yml pull && \
+           /usr/bin/docker compose -f docker-compose.prod.yml up -d --remove-orphans
+
+TimeoutStartSec=300
+Restart=on-failure
+RestartSec=10s
+
+[Install]
+WantedBy=multi-user.target

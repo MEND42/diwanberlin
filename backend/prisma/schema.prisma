@@ -1,0 +1,110 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  engineType = "library"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model MenuCategory {
+  id        String     @id @default(uuid())
+  nameDe    String
+  nameFa    String
+  slug      String     @unique
+  sortOrder Int        @default(0)
+  isActive  Boolean    @default(true)
+  items     MenuItem[]
+}
+
+model MenuItem {
+  id            String       @id @default(uuid())
+  categoryId    String
+  category      MenuCategory @relation(fields: [categoryId], references: [id])
+  nameDe        String
+  nameFa        String
+  descriptionDe String
+  descriptionFa String?
+  price         Decimal      
+  isAvailable   Boolean      @default(true)
+  sortOrder     Int          @default(0)
+  orderItems    OrderItem[]
+}
+
+model Table {
+  id           String             @id @default(uuid())
+  number       Int                @unique
+  label        String?
+  seats        Int                @default(4)
+  status       String             @default("AVAILABLE") // AVAILABLE, OCCUPIED, RESERVED
+  reservations TableReservation[]
+  orders       Order[]
+}
+
+model TableReservation {
+  id              String   @id @default(uuid())
+  name            String
+  email           String
+  phone           String?
+  date            DateTime 
+  time            String
+  guests          Int
+  tableId         String?
+  table           Table?   @relation(fields: [tableId], references: [id])
+  specialRequests String?
+  status          String   @default("PENDING") // PENDING, CONFIRMED, CANCELLED
+  createdAt       DateTime @default(now())
+}
+
+model EventInquiry {
+  id             String   @id @default(uuid())
+  name           String
+  email          String
+  phone          String
+  eventDate      DateTime 
+  eventTiming    String
+  numberOfPeople Int
+  eventType      String // ENGAGEMENT, WEDDING, BIRTHDAY, CULTURAL, MUSIC, OTHER
+  drinks         String?
+  cakes          String?
+  food           String?
+  equipment      String?
+  decor          String?
+  otherNotes     String?
+  status         String   @default("PENDING") // PENDING, REVIEWED, QUOTED, CONFIRMED, CANCELLED
+  createdAt      DateTime @default(now())
+}
+
+model Order {
+  id          String      @id @default(uuid())
+  orderNumber String?
+  tableId     String
+  table       Table       @relation(fields: [tableId], references: [id])
+  status      String      @default("NEW") // NEW, PREPARING, READY, SERVED, PAID
+  totalAmount Decimal     @default(0.00) 
+  notes       String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  items       OrderItem[]
+}
+
+model OrderItem {
+  id         String   @id @default(uuid())
+  orderId    String
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  menuItemId String
+  menuItem   MenuItem @relation(fields: [menuItemId], references: [id])
+  quantity   Int
+  unitPrice  Decimal  
+  notes      String?
+}
+
+model AdminUser {
+  id           String @id @default(uuid())
+  username     String @unique
+  passwordHash String
+}

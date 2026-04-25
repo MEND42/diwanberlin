@@ -1,0 +1,29 @@
+# Secrets — never commit
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+credentials/
+prisma/dev.db
+prisma/*.db
+
+# Runtime
+node_modules/
+__pycache__/
+*.pyc
+.next/
+dist/
+build/
+
+# Logs
+*.log
+logs/
+
+# Docker
+.docker/
+
+# OS
+.DS_Store
+.idea/
