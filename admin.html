@@ -7,7 +7,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <!-- Socket.io client -->
 <script src="/socket.io/socket.io.js"></script>
-<script>const socket = io();</script>
 <style>
   :root {
     --bg-dark: #121212;
@@ -93,6 +92,9 @@
   .data-table th, .data-table td { padding: 14px; text-align: left; border-bottom: 1px solid var(--border); }
   .data-table th { color: var(--text-muted); font-weight: 500; font-size: 14px; }
   .data-table tr:hover { background: var(--bg-panel); }
+  .toolbar { display: flex; gap: 12px; justify-content: flex-end; margin-bottom: 18px; flex-wrap: wrap; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .muted { color: var(--text-muted); font-size: 13px; }
 
   /* Modals */
   .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 2000; }
@@ -143,6 +145,9 @@
         <div class="nav-item" data-view="menu">📋 Speisekarte</div>
         <div class="nav-item" data-view="reservations">📅 Reservierungen <span class="badge" id="badge-res">0</span></div>
         <div class="nav-item" data-view="events">🎉 Events <span class="badge" id="badge-ev">0</span></div>
+        <div class="nav-item" data-view="event-listings">🗓️ Eventkalender</div>
+        <div class="nav-item" data-view="customers">⭐ Kunden & Rabatte</div>
+        <div class="nav-item owner-only" data-view="users">👤 Teamkonten</div>
       </div>
       <div class="user-box">
         <span style="font-size: 14px; color: var(--text-muted);">Angemeldet als Admin</span>
@@ -240,6 +245,42 @@
           </table>
         </div>
 
+        <!-- EVENT LISTINGS VIEW -->
+        <div id="view-event-listings" class="view-section">
+          <div class="toolbar"><button class="btn" onclick="openEventListingForm()">Neues Event</button></div>
+          <table class="data-table">
+            <thead><tr><th>Datum</th><th>Titel</th><th>Zeit</th><th>Sichtbar</th><th>Aktionen</th></tr></thead>
+            <tbody id="event-listings-tbody"></tbody>
+          </table>
+        </div>
+
+        <!-- CUSTOMERS / DISCOUNTS VIEW -->
+        <div id="view-customers" class="view-section">
+          <div class="toolbar">
+            <button class="btn" onclick="openCustomerForm()">Kunde hinzufügen</button>
+            <button class="btn btn-outline" onclick="openDiscountForm()">Rabatt erstellen</button>
+          </div>
+          <h3 style="margin-bottom:12px;">Treuekunden</h3>
+          <table class="data-table" style="margin-bottom:32px;">
+            <thead><tr><th>Name</th><th>Kontakt</th><th>Punkte</th><th>Umsatz</th><th>Aktionen</th></tr></thead>
+            <tbody id="customers-tbody"></tbody>
+          </table>
+          <h3 style="margin-bottom:12px;">Rabatte</h3>
+          <table class="data-table">
+            <thead><tr><th>Code</th><th>Typ</th><th>Wert</th><th>Punkte</th><th>Status</th><th>Aktionen</th></tr></thead>
+            <tbody id="discounts-tbody"></tbody>
+          </table>
+        </div>
+
+        <!-- USERS VIEW -->
+        <div id="view-users" class="view-section">
+          <div class="toolbar"><button class="btn" onclick="openUserForm()">Teamkonto erstellen</button></div>
+          <table class="data-table">
+            <thead><tr><th>Benutzername</th><th>Rolle</th><th>Aktiv</th><th>Erstellt</th><th>Aktionen</th></tr></thead>
+            <tbody id="users-tbody"></tbody>
+          </table>
+        </div>
+
       </div>
     </main>
   </div>
@@ -285,6 +326,23 @@
         <button class="btn btn-outline" id="tm-btn-pay" onclick="payBill()">Rechnung begleichen</button>
         <button class="btn" id="tm-btn-order" onclick="submitOrder()">Bestellung abschicken</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Generic Form Modal -->
+  <div id="form-modal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="form-title">Eintrag</h2>
+        <button class="close-modal" onclick="closeModal('form-modal')">&times;</button>
+      </div>
+      <form id="generic-form">
+        <div class="modal-body" id="form-body"></div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeModal('form-modal')">Abbrechen</button>
+          <button type="submit" class="btn">Speichern</button>
+        </div>
+      </form>
     </div>
   </div>
 

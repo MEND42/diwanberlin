@@ -10,6 +10,11 @@ let orders = [];
 let categories = [];
 let reservations = [];
 let events = [];
+let eventListings = [];
+let users = [];
+let customers = [];
+let discounts = [];
+let currentUser = { username: 'admin', role: 'OWNER' };
 
 let currentOrderDraft = [];
 let selectedTableId = null;
@@ -41,6 +46,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (res.ok) {
         const data = await res.json();
         token = data.token;
+        currentUser = { username: data.username, role: data.role || 'OWNER' };
+        localStorage.setItem('diwanAdminUser', JSON.stringify(currentUser));
         localStorage.setItem('diwanAdminToken', token);
         document.getElementById('login-error').style.display = 'none';
         showApp();
@@ -87,11 +94,18 @@ async function apiFetch(endpoint, options = {}) {
 }
 
 function showApp() {
+  try {
+    currentUser = JSON.parse(localStorage.getItem('diwanAdminUser')) || currentUser;
+  } catch (_) {}
   loginScreen.classList.add('hidden');
   appContainer.classList.remove('hidden');
+  document.querySelector('.user-box span').innerText = `${currentUser.username} · ${currentUser.role}`;
+  document.querySelectorAll('.owner-only').forEach(el => {
+    el.style.display = currentUser.role === 'OWNER' ? 'flex' : 'none';
+  });
   
   // Init Socket
-  socket = io('http://localhost:3000');
+  socket = io();
   
   socket.on('table:updated', () => loadTables());
   socket.on('order:new', () => { loadOrders(); loadTables(); });
@@ -105,6 +119,10 @@ function showApp() {
   loadMenu();
   loadReservations();
   loadEvents();
+  loadEventListings();
+  loadCustomers();
+  loadDiscounts();
+  if (currentUser.role === 'OWNER') loadUsers();
 }
 
 /* ================= TABLES & POS ================= */
@@ -350,7 +368,7 @@ async function loadEvents() {
   events = await apiFetch('/events');
   const tbody = document.getElementById('ev-tbody');
   
-  const pending = events.filter(e => e.status === 'NEW').length;
+  const pending = events.filter(e => e.status === 'PENDING').length;
   const badge = document.getElementById('badge-ev');
   if(pending > 0) { badge.style.display = 'inline-block'; badge.innerText = pending; } 
   else { badge.style.display = 'none'; }
@@ -364,8 +382,8 @@ async function loadEvents() {
       <td>${e.numberOfPeople}</td>
       <td>
         <select onchange="updateEvStatus('${e.id}', this.value)" style="background:var(--bg-dark);color:#fff;border:1px solid var(--border);padding:4px;">
-          <option value="NEW" ${e.status==='NEW'?'selected':''}>Neu</option>
-          <option value="REVIEWING" ${e.status==='REVIEWING'?'selected':''}>In Prüfung</option>
+          <option value="PENDING" ${e.status==='PENDING'?'selected':''}>Neu</option>
+          <option value="REVIEWED" ${e.status==='REVIEWED'?'selected':''}>In Prüfung</option>
           <option value="QUOTED" ${e.status==='QUOTED'?'selected':''}>Angebot gesendet</option>
           <option value="CONFIRMED" ${e.status==='CONFIRMED'?'selected':''}>Bestätigt</option>
           <option value="CANCELLED" ${e.status==='CANCELLED'?'selected':''}>Abgesagt</option>
@@ -382,4 +400,167 @@ async function updateEvStatus(id, status) {
     body: JSON.stringify({ status })
   });
   loadEvents();
+}
+
+/* ================= GENERIC FORM MODAL ================= */
+let formSubmitHandler = null;
+
+function openForm(title, fields, onSubmit) {
+  document.getElementById('form-title').innerText = title;
+  document.getElementById('form-body').innerHTML = fields.map(field => {
+    const value = field.value ?? '';
+    if (field.type === 'select') {
+      return `<div class="form-group"><label>${field.label}</label><select name="${field.name}">${field.options.map(o => `<option value="${o.value}" ${String(value) === String(o.value) ? 'selected' : ''}>${o.label}</option>`).join('')}</select></div>`;
+    }
+    if (field.type === 'textarea') {
+      return `<div class="form-group"><label>${field.label}</label><textarea name="${field.name}">${value}</textarea></div>`;
+    }
+    return `<div class="form-group"><label>${field.label}</label><input type="${field.type || 'text'}" name="${field.name}" value="${value}" ${field.required ? 'required' : ''}></div>`;
+  }).join('');
+  formSubmitHandler = onSubmit;
+  document.getElementById('form-modal').classList.remove('hidden');
+}
+
+document.getElementById('generic-form')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const data = Object.fromEntries(new FormData(e.target).entries());
+  if (formSubmitHandler) await formSubmitHandler(data);
+  closeModal('form-modal');
+});
+
+/* ================= EVENT CALENDAR CRUD ================= */
+async function loadEventListings() {
+  eventListings = await apiFetch('/event-listings');
+  const tbody = document.getElementById('event-listings-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = eventListings.map(e => `
+    <tr>
+      <td>${new Date(e.eventDate).toLocaleDateString()}</td>
+      <td>${e.titleDe}<div class="muted">${e.titleFa || ''}</div></td>
+      <td>${e.eventTime}</td>
+      <td>${e.isPublished ? 'Ja' : 'Nein'}</td>
+      <td>
+        <button class="btn btn-outline" onclick="openEventListingForm('${e.id}')">Bearbeiten</button>
+        <button class="btn btn-danger" onclick="deleteEventListing('${e.id}')">Löschen</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function openEventListingForm(id) {
+  const event = eventListings.find(e => e.id === id) || {};
+  openForm(id ? 'Event bearbeiten' : 'Neues Event', [
+    { name: 'titleDe', label: 'Titel Deutsch', value: event.titleDe, required: true },
+    { name: 'titleFa', label: 'Titel Dari', value: event.titleFa },
+    { name: 'description', label: 'Beschreibung', value: event.description, type: 'textarea' },
+    { name: 'eventDate', label: 'Datum', value: event.eventDate ? event.eventDate.slice(0, 10) : '', type: 'date', required: true },
+    { name: 'eventTime', label: 'Uhrzeit', value: event.eventTime || '', required: true },
+    { name: 'isPublished', label: 'Sichtbar', value: event.isPublished === false ? 'false' : 'true', type: 'select', options: [{value:'true',label:'Ja'}, {value:'false',label:'Nein'}] }
+  ], async (data) => {
+    data.isPublished = data.isPublished === 'true';
+    await apiFetch(id ? `/event-listings/${id}` : '/event-listings', { method: id ? 'PATCH' : 'POST', body: JSON.stringify(data) });
+    loadEventListings();
+  });
+}
+
+async function deleteEventListing(id) {
+  if (!confirm('Event wirklich löschen?')) return;
+  await apiFetch(`/event-listings/${id}`, { method: 'DELETE' });
+  loadEventListings();
+}
+
+/* ================= USERS ================= */
+async function loadUsers() {
+  users = await apiFetch('/users');
+  const tbody = document.getElementById('users-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = users.map(u => `
+    <tr>
+      <td>${u.username}</td>
+      <td>${u.role}</td>
+      <td>${u.isActive ? 'Ja' : 'Nein'}</td>
+      <td>${new Date(u.createdAt).toLocaleDateString()}</td>
+      <td><button class="btn btn-outline" onclick="openUserForm('${u.id}')">Bearbeiten</button></td>
+    </tr>
+  `).join('');
+}
+
+function openUserForm(id) {
+  const user = users.find(u => u.id === id) || {};
+  openForm(id ? 'Teamkonto bearbeiten' : 'Teamkonto erstellen', [
+    { name: 'username', label: 'Benutzername', value: user.username, required: true },
+    { name: 'password', label: id ? 'Neues Passwort (optional)' : 'Passwort', type: 'password', required: !id },
+    { name: 'role', label: 'Rolle', value: user.role || 'WAITER', type: 'select', options: [{value:'OWNER',label:'Owner'}, {value:'MANAGER',label:'Manager'}, {value:'WAITER',label:'Waiter'}] },
+    { name: 'isActive', label: 'Aktiv', value: user.isActive === false ? 'false' : 'true', type: 'select', options: [{value:'true',label:'Ja'}, {value:'false',label:'Nein'}] }
+  ], async (data) => {
+    data.isActive = data.isActive === 'true';
+    if (!data.password) delete data.password;
+    await apiFetch(id ? `/users/${id}` : '/users', { method: id ? 'PATCH' : 'POST', body: JSON.stringify(data) });
+    loadUsers();
+  });
+}
+
+/* ================= CUSTOMERS / DISCOUNTS ================= */
+async function loadCustomers() {
+  customers = await apiFetch('/customers');
+  const tbody = document.getElementById('customers-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = customers.map(c => `
+    <tr>
+      <td>${c.name}</td>
+      <td>${c.phone || c.email || '-'}</td>
+      <td>${c.points}</td>
+      <td>€${Number(c.totalSpend).toFixed(2)}</td>
+      <td><button class="btn btn-outline" onclick="openCustomerForm('${c.id}')">Bearbeiten</button></td>
+    </tr>
+  `).join('');
+}
+
+function openCustomerForm(id) {
+  const c = customers.find(x => x.id === id) || {};
+  openForm(id ? 'Kunde bearbeiten' : 'Kunde hinzufügen', [
+    { name: 'name', label: 'Name', value: c.name, required: true },
+    { name: 'email', label: 'E-Mail', value: c.email, type: 'email' },
+    { name: 'phone', label: 'Telefon', value: c.phone },
+    { name: 'points', label: 'Punkte', value: c.points || 0, type: 'number' },
+    { name: 'notes', label: 'Notizen', value: c.notes, type: 'textarea' }
+  ], async (data) => {
+    data.points = Number(data.points || 0);
+    await apiFetch(id ? `/customers/${id}` : '/customers', { method: id ? 'PATCH' : 'POST', body: JSON.stringify(data) });
+    loadCustomers();
+  });
+}
+
+async function loadDiscounts() {
+  discounts = await apiFetch('/discounts');
+  const tbody = document.getElementById('discounts-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = discounts.map(d => `
+    <tr>
+      <td>${d.code}</td>
+      <td>${d.type}</td>
+      <td>${d.type === 'PERCENT' ? `${d.value}%` : `€${d.value}`}</td>
+      <td>${d.pointsCost || '-'}</td>
+      <td>${d.isActive ? 'Aktiv' : 'Inaktiv'}</td>
+      <td><button class="btn btn-outline" onclick="openDiscountForm('${d.id}')">Bearbeiten</button></td>
+    </tr>
+  `).join('');
+}
+
+function openDiscountForm(id) {
+  const d = discounts.find(x => x.id === id) || {};
+  openForm(id ? 'Rabatt bearbeiten' : 'Rabatt erstellen', [
+    { name: 'code', label: 'Code', value: d.code, required: true },
+    { name: 'description', label: 'Beschreibung', value: d.description },
+    { name: 'type', label: 'Typ', value: d.type || 'PERCENT', type: 'select', options: [{value:'PERCENT',label:'Prozent'}, {value:'FIXED',label:'Fixbetrag'}] },
+    { name: 'value', label: 'Wert', value: d.value || '', type: 'number', required: true },
+    { name: 'pointsCost', label: 'Punktekosten', value: d.pointsCost || '', type: 'number' },
+    { name: 'isActive', label: 'Aktiv', value: d.isActive === false ? 'false' : 'true', type: 'select', options: [{value:'true',label:'Ja'}, {value:'false',label:'Nein'}] }
+  ], async (data) => {
+    data.value = Number(data.value || 0);
+    data.pointsCost = data.pointsCost ? Number(data.pointsCost) : null;
+    data.isActive = data.isActive === 'true';
+    await apiFetch(id ? `/discounts/${id}` : '/discounts', { method: id ? 'PATCH' : 'POST', body: JSON.stringify(data) });
+    loadDiscounts();
+  });
 }

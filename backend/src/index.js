@@ -9,6 +9,7 @@ const authMiddleware = require('./middleware/auth');
 const menuRoutes = require('./routes/menu');
 const reservationsRoutes = require('./routes/reservations');
 const eventsRoutes = require('./routes/events');
+const eventListingsRoutes = require('./routes/eventListings');
 
 const adminAuthRoutes = require('./routes/admin/auth');
 const adminMenuRoutes = require('./routes/admin/menu');
@@ -16,6 +17,10 @@ const adminTablesRoutes = require('./routes/admin/tables');
 const adminOrdersRoutes = require('./routes/admin/orders');
 const adminReservationsRoutes = require('./routes/admin/reservations');
 const adminEventsRoutes = require('./routes/admin/events');
+const adminEventListingsRoutes = require('./routes/admin/eventListings');
+const adminUsersRoutes = require('./routes/admin/users');
+const adminCustomersRoutes = require('./routes/admin/customers');
+const adminDiscountsRoutes = require('./routes/admin/discounts');
 
 const app = express();
 const server = http.createServer(app);
@@ -39,6 +44,7 @@ app.get('/health', (req, res) => {
 app.use('/api/menu', menuRoutes);
 app.use('/api/reservations', reservationsRoutes);
 app.use('/api/events', eventsRoutes);
+app.use('/api/event-listings', eventListingsRoutes);
 
 // Admin Routes (Auth)
 app.use('/api/admin', adminAuthRoutes);
@@ -49,6 +55,10 @@ app.use('/api/admin/tables', authMiddleware, adminTablesRoutes);
 app.use('/api/admin/orders', authMiddleware, adminOrdersRoutes);
 app.use('/api/admin/reservations', authMiddleware, adminReservationsRoutes);
 app.use('/api/admin/events', authMiddleware, adminEventsRoutes);
+app.use('/api/admin/event-listings', authMiddleware, adminEventListingsRoutes);
+app.use('/api/admin/users', authMiddleware, adminUsersRoutes);
+app.use('/api/admin/customers', authMiddleware, adminCustomersRoutes);
+app.use('/api/admin/discounts', authMiddleware, adminDiscountsRoutes);
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {

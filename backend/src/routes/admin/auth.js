@@ -14,7 +14,7 @@ router.post('/login', async (req, res) => {
       where: { username }
     });
 
-    if (!user) {
+    if (!user || !user.isActive) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
@@ -25,12 +25,12 @@ router.post('/login', async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id: user.id, username: user.username },
+      { id: user.id, username: user.username, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
 
-    res.json({ token, username: user.username });
+    res.json({ token, username: user.username, role: user.role });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Login failed' });

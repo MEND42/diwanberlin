@@ -81,9 +81,33 @@ async function renderMenu() {
   }
 }
 
+async function renderPublicEvents() {
+  const list = document.getElementById('public-events-list');
+  if (!list) return;
+  try {
+    const res = await fetch(`${API_URL}/event-listings`);
+    const events = await res.json();
+    if (!Array.isArray(events) || events.length === 0) return;
+    list.innerHTML = events.map((event, idx) => {
+      const date = new Date(event.eventDate);
+      const title = currentLang === 'fa' && event.titleFa ? event.titleFa : event.titleDe;
+      return `
+        <div class="ei r d${idx % 4}">
+          <div><div class="eday">${String(date.getDate()).padStart(2, '0')}</div><div class="emon">${date.toLocaleDateString(currentLang === 'fa' ? 'fa-IR' : 'de-DE', { month: 'short' })}</div></div>
+          <div><div class="ename">${title}</div><div class="edesc">${event.description || ''}</div></div>
+          <div class="etime">${event.eventTime}</div>
+        </div>
+      `;
+    }).join('');
+  } catch (error) {
+    console.error('Failed to load events:', error);
+  }
+}
+
 // Handle Forms
 document.addEventListener('DOMContentLoaded', () => {
   renderMenu();
+  renderPublicEvents();
 
   const resForm = document.getElementById('reservationForm');
   if (resForm) {
@@ -121,6 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const payload = {
         name: document.getElementById('evName').value,
         email: document.getElementById('evEmail').value,
+        phone: document.getElementById('evPhone').value,
         eventDate: document.getElementById('evDate').value,
         eventTiming: document.getElementById('evTiming').value,
         numberOfPeople: document.getElementById('evGuests').value,

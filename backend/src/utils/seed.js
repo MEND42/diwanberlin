@@ -66,6 +66,32 @@ async function main() {
     }
   }
 
+  const eventListings = [
+    {
+      titleDe: 'Dari Poesieabend',
+      titleFa: 'شب شعر دری',
+      description: 'Gedichte auf Dari und Deutsch in warmer Cafe-Atmosphäre',
+      eventDate: new Date('2026-05-24T19:00:00.000Z'),
+      eventTime: '19:00 Uhr',
+      sortOrder: 1
+    },
+    {
+      titleDe: 'Afghanischer Musikabend',
+      titleFa: 'شب موسیقی افغانی',
+      description: 'Live-Musik und kulturelle Begegnung bei Tee und Kaffee',
+      eventDate: new Date('2026-05-31T20:00:00.000Z'),
+      eventTime: '20:00 Uhr',
+      sortOrder: 2
+    }
+  ];
+
+  for (const event of eventListings) {
+    const exists = await prisma.eventListing.findFirst({
+      where: { titleDe: event.titleDe, eventDate: event.eventDate }
+    });
+    if (!exists) await prisma.eventListing.create({ data: event });
+  }
+
   console.log('Database seeded successfully!');
 }
 

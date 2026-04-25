@@ -5,7 +5,7 @@ const translations = {
     navEvents: "Veranstaltungen",
     navLocation: "Lage",
     navReserve: "Reservieren <span class='arr'>↗</span>",
-    heroLocation: "Kabul im Herzen Berlins · کابل در قلب برلین",
+    heroLocation: "Kabul im Herzen Berlins",
     heroTitle1: "Wo Geschichten",
     heroTitle2: "beginnen.",
     heroSub: "Ein afghanisches Kulturcafé im Herzen Berlins — wo warme Gastfreundschaft auf echte Kaffekultur trifft.",
@@ -149,6 +149,9 @@ function setLanguage(lang) {
   // Force re-render of menu if it exists
   if (typeof renderMenu === 'function') {
     renderMenu();
+  }
+  if (typeof renderPublicEvents === 'function') {
+    renderPublicEvents();
   }
 }
 
