@@ -10,13 +10,21 @@ const pushService = require('../services/push');
 router.post('/', async (req, res) => {
   try {
     const { name, email, phone, date, time, guests, specialRequests } = req.body;
+    const normalizedEmail = String(email || '').trim().toLowerCase();
+    const normalizedName = String(name || '').trim();
+    const parsedDate = new Date(date);
+    const parsedGuests = parseInt(guests, 10);
+
+    if (!normalizedName || !normalizedEmail || Number.isNaN(parsedDate.getTime()) || !time || !parsedGuests) {
+      return res.status(400).json({ error: 'Name, E-Mail, Datum, Zeit und Gäste sind erforderlich.' });
+    }
     
     // Check for duplicate: same email + same date + same time within last hour
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
     const existingReservation = await prisma.tableReservation.findFirst({
       where: {
-        email: email.toLowerCase(),
-        date: new Date(date),
+        email: normalizedEmail,
+        date: parsedDate,
         time,
         createdAt: { gte: oneHourAgo }
       }
@@ -29,12 +37,12 @@ router.post('/', async (req, res) => {
     // Create reservation
     const reservation = await prisma.tableReservation.create({
       data: {
-        name,
-        email,
+        name: normalizedName,
+        email: normalizedEmail,
         phone,
-        date: new Date(date),
+        date: parsedDate,
         time,
-        guests: parseInt(guests),
+        guests: parsedGuests,
         specialRequests,
       }
     });
@@ -44,7 +52,7 @@ router.post('/', async (req, res) => {
     io.emit('reservation:new', reservation);
     pushService.notifyRoles(['OWNER', 'MANAGER'], {
       title: 'Neue Reservierung',
-      body: `${name} · ${date} ${time} · ${guests} Gäste`,
+      body: `${normalizedName} · ${date} ${time} · ${parsedGuests} Gäste`,
       url: '/admin-v2/management/reservations',
       type: 'reservation',
     });
@@ -52,26 +60,26 @@ router.post('/', async (req, res) => {
     // Send email to owner
     await sendEmail({
       to: process.env.SMTP_USER, // send to the café
-      subject: `Neue Reservierung: ${name} am ${date} um ${time}`,
+      subject: `Neue Reservierung: ${normalizedName} am ${date} um ${time}`,
       html: `
         <h2>Neue Tischreservierung</h2>
-        <p><strong>Name:</strong> ${name}</p>
-        <p><strong>Email:</strong> ${email}</p>
+        <p><strong>Name:</strong> ${normalizedName}</p>
+        <p><strong>Email:</strong> ${normalizedEmail}</p>
         <p><strong>Telefon:</strong> ${phone || 'Nicht angegeben'}</p>
         <p><strong>Datum & Zeit:</strong> ${date} um ${time}</p>
-        <p><strong>Gäste:</strong> ${guests}</p>
+        <p><strong>Gäste:</strong> ${parsedGuests}</p>
         <p><strong>Wünsche:</strong> ${specialRequests || 'Keine'}</p>
       `
     });
 
     // Send confirmation email to customer
     await sendEmail({
-      to: email,
+      to: normalizedEmail,
       subject: `Ihre Reservierungsanfrage bei Cafe Diwan`,
       html: `
         <h2>Vielen Dank für Ihre Anfrage!</h2>
-        <p>Hallo ${name},</p>
-        <p>wir haben Ihre Reservierungsanfrage für den ${date} um ${time} für ${guests} Personen erhalten.</p>
+        <p>Hallo ${normalizedName},</p>
+        <p>wir haben Ihre Reservierungsanfrage für den ${date} um ${time} für ${parsedGuests} Personen erhalten.</p>
         <p>Wir werden uns in Kürze bei Ihnen melden, um die Reservierung zu bestätigen.</p>
         <br/>
         <p>Herzliche Grüße,<br/>Ihr Cafe Diwan Team</p>

@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { menuApi } from '@/lib/api';
 import { BottomSheet } from '@/components/primitives/BottomSheet';
+import { ConfirmDialog } from '@/components/primitives/ConfirmDialog';
 import { cn, springs, formatEur } from '@/lib/utils';
 import type { MenuCategory, MenuItem } from '@/types';
 
@@ -104,9 +105,13 @@ export function Menu() {
   const [editItem,    setEditItem]    = useState<MenuItem | null>(null);
   const [itemForm,    setItemForm]    = useState<ItemDraft>(ITEM_EMPTY);
   const [newCatName,  setNewCatName]  = useState('');
+  const [newCatNameFa, setNewCatNameFa] = useState('');
+  const [newCatNameEn, setNewCatNameEn] = useState('');
   const [newCatParentId, setNewCatParentId] = useState('');
   const [addingCat,   setAddingCat]   = useState(false);
-  const [deletingItem, setDeletingItem] = useState<string | null>(null);
+  const [deletingItem, setDeletingItem] = useState<MenuItem | null>(null);
+  const [deletingCategory, setDeletingCategory] = useState<MenuCategory | null>(null);
+  const [imageUploading, setImageUploading] = useState(false);
 
   const { data: categories = [], isLoading } = useQuery<MenuCategory[]>({
     queryKey: ['menu-categories'],
@@ -148,7 +153,8 @@ export function Menu() {
   const addCategory = useMutation({
     mutationFn: () => menuApi.createCategory({
       nameDe: newCatName,
-      nameFa: '',
+      nameFa: newCatNameFa,
+      nameEn: newCatNameEn,
       slug: newCatName.toLowerCase().trim().replace(/\s+/g, '-'),
       sortOrder: categories.length,
       isActive: true,
@@ -158,6 +164,8 @@ export function Menu() {
       qc.invalidateQueries({ queryKey: ['menu-categories'] });
       setActiveCatId(cat.id);
       setNewCatName('');
+      setNewCatNameFa('');
+      setNewCatNameEn('');
       setNewCatParentId('');
       setAddingCat(false);
     },
@@ -165,8 +173,20 @@ export function Menu() {
 
   const removeCategory = useMutation({
     mutationFn: (id: string) => menuApi.deleteCategory(id),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['menu-categories'] }); setActiveCatId(''); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['menu-categories'] }); setActiveCatId(''); setDeletingCategory(null); },
   });
+
+  async function uploadImage(file: File) {
+    if (!editItem) return;
+    setImageUploading(true);
+    try {
+      const item = await menuApi.uploadItemImage(editItem.id, file);
+      setItemForm(prev => ({ ...prev, imageUrl: item.imageUrl ?? '' }));
+      await qc.invalidateQueries({ queryKey: ['menu-categories'] });
+    } finally {
+      setImageUploading(false);
+    }
+  }
 
   function openNewItem() {
     setEditItem(null);
@@ -262,6 +282,19 @@ export function Menu() {
                 placeholder="Name…"
                 className="w-full px-3 py-2 text-sm rounded-xl bg-white border border-diwan-gold/30 text-ink outline-none focus:ring-2 focus:ring-diwan-gold/20"
               />
+              <input
+                value={newCatNameFa}
+                onChange={e => setNewCatNameFa(e.target.value)}
+                placeholder="نام فارسی…"
+                dir="rtl"
+                className="w-full px-3 py-2 text-sm rounded-xl bg-white border border-diwan-gold/20 text-ink outline-none focus:ring-2 focus:ring-diwan-gold/20"
+              />
+              <input
+                value={newCatNameEn}
+                onChange={e => setNewCatNameEn(e.target.value)}
+                placeholder="English name…"
+                className="w-full px-3 py-2 text-sm rounded-xl bg-white border border-diwan-gold/20 text-ink outline-none focus:ring-2 focus:ring-diwan-gold/20"
+              />
               <select
                 value={newCatParentId}
                 onChange={e => setNewCatParentId(e.target.value)}
@@ -309,7 +342,7 @@ export function Menu() {
                     <Plus size={12} /> Artikel
                   </button>
                   <button
-                    onClick={() => removeCategory.mutate(activeCat.id)}
+                    onClick={() => setDeletingCategory(activeCat)}
                     className="w-7 h-7 rounded-xl flex items-center justify-center hover:bg-red-50 text-ink2 hover:text-red-500 transition-colors"
                     title="Kategorie löschen"
                   >
@@ -366,19 +399,13 @@ export function Menu() {
                           >
                             <Pencil size={13} />
                           </button>
-                          {deletingItem === item.id ? (
-                            <div className="flex items-center gap-1 text-[11px]">
-                              <button onClick={() => removeItem.mutate(item.id)} className="text-red-600 font-bold hover:underline">Ja</button>
-                              <button onClick={() => setDeletingItem(null)} className="text-ink2 hover:underline">Nein</button>
-                            </div>
-                          ) : (
-                            <button
-                              onClick={() => setDeletingItem(item.id)}
-                              className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-red-50 hover:text-red-500 transition-colors text-ink2"
-                            >
-                              <Trash2 size={13} />
-                            </button>
-                          )}
+                          <button
+                            onClick={() => setDeletingItem(item)}
+                            className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-red-50 hover:text-red-500 transition-colors text-ink2"
+                            title="Artikel löschen"
+                          >
+                            <Trash2 size={13} />
+                          </button>
                         </div>
                       </motion.div>
                     ))}
@@ -398,6 +425,26 @@ export function Menu() {
       >
         <div className="px-5 pb-8 space-y-5">
           <ItemForm value={itemForm} onChange={setItemForm} />
+          {editItem && (
+            <label className="block rounded-xl border border-diwan-gold/15 bg-paper p-3">
+              <span className="block text-[10px] font-medium uppercase tracking-[0.14em] text-ink2 mb-2">
+                Bild hochladen
+              </span>
+              <input
+                type="file"
+                accept="image/*"
+                disabled={imageUploading}
+                onChange={(event) => {
+                  const file = event.currentTarget.files?.[0];
+                  if (file) uploadImage(file);
+                }}
+                className="block w-full text-xs text-ink2 file:mr-3 file:rounded-lg file:border-0 file:bg-diwan-gold file:px-3 file:py-2 file:text-xs file:font-bold file:text-diwan-bg"
+              />
+              <p className="mt-2 text-[10px] text-ink2/60">
+                {imageUploading ? 'Bild wird optimiert…' : 'Bilder werden als WebP optimiert und im Upload-Ordner gespeichert.'}
+              </p>
+            </label>
+          )}
           <button
             onClick={() => saveItem.mutate()}
             disabled={saveItem.isPending || !itemForm.nameDe || itemForm.price <= 0}
@@ -407,6 +454,22 @@ export function Menu() {
           </button>
         </div>
       </BottomSheet>
+      <ConfirmDialog
+        open={Boolean(deletingItem)}
+        title="Artikel löschen?"
+        description={deletingItem ? `${deletingItem.nameDe} wird dauerhaft aus der Speisekarte entfernt.` : ''}
+        loading={removeItem.isPending}
+        onCancel={() => setDeletingItem(null)}
+        onConfirm={() => deletingItem && removeItem.mutate(deletingItem.id)}
+      />
+      <ConfirmDialog
+        open={Boolean(deletingCategory)}
+        title="Kategorie löschen?"
+        description={deletingCategory ? `${deletingCategory.nameDe} wird dauerhaft entfernt. Kategorien mit Unterkategorien oder Artikeln können vom Server abgelehnt werden.` : ''}
+        loading={removeCategory.isPending}
+        onCancel={() => setDeletingCategory(null)}
+        onConfirm={() => deletingCategory && removeCategory.mutate(deletingCategory.id)}
+      />
     </div>
   );
 }

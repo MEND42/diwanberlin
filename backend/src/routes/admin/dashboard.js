@@ -54,13 +54,22 @@ router.get('/busy-hours', async (_req, res) => {
     startDate.setDate(startDate.getDate() - daysAgo);
     startDate.setHours(0, 0, 0, 0);
 
-    const reservations = await prisma.tableReservation.findMany({
-      where: {
-        date: { gte: startDate },
-        status: { in: ['PENDING', 'CONFIRMED'] },
-      },
-      select: { date: true, time: true, guests: true },
-    });
+    const [reservations, eventInquiries] = await Promise.all([
+      prisma.tableReservation.findMany({
+        where: {
+          date: { gte: startDate },
+          status: { in: ['PENDING', 'CONFIRMED'] },
+        },
+        select: { time: true, guests: true },
+      }),
+      prisma.eventInquiry.findMany({
+        where: {
+          eventDate: { gte: startDate },
+          status: { in: ['PENDING', 'REVIEWED', 'QUOTED', 'CONFIRMED'] },
+        },
+        select: { eventTiming: true, numberOfPeople: true },
+      }),
+    ]);
 
     const hourlyCounts = Array.from({ length: 14 }, (_, i) => ({
       hour: i + 8,
@@ -77,6 +86,20 @@ router.get('/busy-hours', async (_req, res) => {
           if (idx !== -1) {
             hourlyCounts[idx].count++;
             hourlyCounts[idx].guests += r.guests || 0;
+          }
+        }
+      }
+    });
+
+    eventInquiries.forEach(event => {
+      const hourMatch = event.eventTiming?.match(/(\d{1,2})(?::\d{2})?/);
+      if (hourMatch) {
+        const hour = parseInt(hourMatch[1], 10);
+        if (hour >= 8 && hour <= 21) {
+          const idx = hourlyCounts.findIndex(h => h.hour === hour);
+          if (idx !== -1) {
+            hourlyCounts[idx].count++;
+            hourlyCounts[idx].guests += event.numberOfPeople || 0;
           }
         }
       }

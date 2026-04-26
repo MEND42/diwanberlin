@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Download, QrCode, RefreshCw, Tag, Users, Clock } from 'lucide-react';
+import { Download, QrCode, RefreshCw, Tag, Users, Clock, Trash2 } from 'lucide-react';
 import { tablesApi, ordersApi } from '@/lib/api';
 import { cn, formatEur, formatRelativeTime, springs, haptic } from '@/lib/utils';
 import { BottomSheet } from '@/components/primitives/BottomSheet';
 import { HoldButton } from '@/components/primitives/HoldButton';
+import { ConfirmDialog } from '@/components/primitives/ConfirmDialog';
 import { useToast } from '@/components/Toast';
 import type { Table, Order } from '@/types';
 
@@ -71,6 +72,7 @@ function TableDetailSheet({
   const { showToast } = useToast();
   const [labelDraft, setLabelDraft] = useState('');
   const [billMode, setBillMode] = useState<'total' | 'split'>('total');
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   useEffect(() => {
     setLabelDraft(table?.label ?? '');
@@ -117,6 +119,19 @@ function TableDetailSheet({
       haptic('success');
     },
     onError: () => showToast('error', 'Fehler beim Generieren'),
+  });
+
+  const deleteMut = useMutation({
+    mutationFn: (id: string) => tablesApi.delete(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['tables'] });
+      showToast('success', 'Tisch gelöscht');
+      setConfirmDelete(false);
+      onClose();
+    },
+    onError: (error) => {
+      showToast('error', error instanceof Error ? error.message : 'Tisch konnte nicht gelöscht werden');
+    },
   });
 
   const activeOrders = orders.filter(o => o.status !== 'PAID');
@@ -173,21 +188,31 @@ function TableDetailSheet({
     <BottomSheet isOpen={Boolean(table)} onClose={onClose} title={`Tisch ${table.number}`}>
       <div className="px-5 py-4 space-y-5">
         {/* Status pills */}
-        <div className="flex gap-2 flex-wrap">
-          {(['AVAILABLE', 'OCCUPIED', 'RESERVED'] as Table['status'][]).map(s => (
-            <button
-              key={s}
-              onClick={() => statusMut.mutate({ id: table.id, status: s })}
-              className={cn(
-                'px-3 py-1.5 rounded-full text-xs font-semibold border transition-all',
-                table.status === s
-                  ? 'bg-diwan-gold text-diwan-bg border-diwan-gold'
-                  : 'border-diwan-gold/20 text-ink2 hover:border-diwan-gold/40',
-              )}
-            >
-              {STATUS_STYLES[s].label}
-            </button>
-          ))}
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex gap-2 flex-wrap">
+            {(['AVAILABLE', 'OCCUPIED', 'RESERVED'] as Table['status'][]).map(s => (
+              <button
+                key={s}
+                onClick={() => statusMut.mutate({ id: table.id, status: s })}
+                className={cn(
+                  'px-3 py-1.5 rounded-full text-xs font-semibold border transition-all',
+                  table.status === s
+                    ? 'bg-diwan-gold text-diwan-bg border-diwan-gold'
+                    : 'border-diwan-gold/20 text-ink2 hover:border-diwan-gold/40',
+                )}
+              >
+                {STATUS_STYLES[s].label}
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={() => setConfirmDelete(true)}
+            className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl border border-red-200 text-red-600 hover:bg-red-50"
+            title="Tisch löschen"
+          >
+            <Trash2 size={14} />
+          </button>
         </div>
 
         {/* Map annotation */}
@@ -356,6 +381,14 @@ function TableDetailSheet({
           </div>
         )}
       </div>
+      <ConfirmDialog
+        open={confirmDelete}
+        title={`Tisch ${table.number} löschen?`}
+        description="Der Tisch wird nur gelöscht, wenn keine Bestellungen oder Reservierungen damit verknüpft sind. Sonst lehnt der Server die Aktion ab."
+        loading={deleteMut.isPending}
+        onCancel={() => setConfirmDelete(false)}
+        onConfirm={() => deleteMut.mutate(table.id)}
+      />
     </BottomSheet>
   );
 }

@@ -119,6 +119,28 @@ router.post('/:id/regenerate-token', managerOnly, async (req, res) => {
   }
 });
 
+// DELETE table only when it has no operational history.
+router.delete('/:id', managerOnly, async (req, res) => {
+  try {
+    const [orders, reservations] = await Promise.all([
+      prisma.order.count({ where: { tableId: req.params.id } }),
+      prisma.tableReservation.count({ where: { tableId: req.params.id } }),
+    ]);
+
+    if (orders > 0 || reservations > 0) {
+      return res.status(409).json({
+        error: 'Dieser Tisch hat Bestellungen oder Reservierungen und kann nicht gelöscht werden. Setzen Sie ihn stattdessen auf Frei.',
+      });
+    }
+
+    await prisma.table.delete({ where: { id: req.params.id } });
+    socketService.getIO().emit('table:updated', { id: req.params.id, deleted: true });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete table' });
+  }
+});
+
 // GET downloadable QR code for the waiter-call page.
 router.get('/:id/qr', async (req, res) => {
   try {

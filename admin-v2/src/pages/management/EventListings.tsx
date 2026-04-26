@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { eventsApi } from '@/lib/api';
 import { BottomSheet } from '@/components/primitives/BottomSheet';
+import { ConfirmDialog } from '@/components/primitives/ConfirmDialog';
 import { cn, springs, formatEur } from '@/lib/utils';
 import type { EventListing, EventRegistration } from '@/types';
 
@@ -301,7 +302,7 @@ export function EventListings() {
   const [sheetOpen,   setSheetOpen]   = useState(false);
   const [editing,     setEditing]     = useState<EventListing | null>(null);
   const [form,        setForm]        = useState<Omit<EventListing, 'id'>>(EMPTY);
-  const [deleting,    setDeleting]    = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<EventListing | null>(null);
   const [regListing,  setRegListing]  = useState<EventListing | null>(null);
 
   const { data: listings = [], isLoading } = useQuery<EventListing[]>({
@@ -328,7 +329,7 @@ export function EventListings() {
 
   const remove = useMutation({
     mutationFn: (id: string) => eventsApi.deleteListing(id),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['event-listings'] }); setDeleting(null); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['event-listings'] }); setDeleteTarget(null); },
   });
 
   function openNew() {
@@ -457,19 +458,13 @@ export function EventListings() {
                     >
                       <Pencil size={14} />
                     </button>
-                    {deleting === ev.id ? (
-                      <div className="flex items-center gap-1">
-                        <button onClick={() => remove.mutate(ev.id)} className="text-[11px] text-red-600 font-bold hover:underline">Löschen</button>
-                        <button onClick={() => setDeleting(null)} className="text-[11px] text-ink2 hover:underline">Abbrechen</button>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={() => setDeleting(ev.id)}
-                        className="w-8 h-8 rounded-xl flex items-center justify-center hover:bg-red-50 transition-colors text-ink2 hover:text-red-500"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    )}
+                    <button
+                      onClick={() => setDeleteTarget(ev)}
+                      className="w-8 h-8 rounded-xl flex items-center justify-center hover:bg-red-50 transition-colors text-ink2 hover:text-red-500"
+                      title="Event löschen"
+                    >
+                      <Trash2 size={14} />
+                    </button>
                   </div>
                 </div>
 
@@ -519,6 +514,14 @@ export function EventListings() {
       <RegistrationsSheet
         listing={regListing}
         onClose={() => setRegListing(null)}
+      />
+      <ConfirmDialog
+        open={Boolean(deleteTarget)}
+        title="Event löschen?"
+        description={deleteTarget ? `${deleteTarget.titleDe} wird dauerhaft vom Eventkalender entfernt.` : ''}
+        loading={remove.isPending}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={() => deleteTarget && remove.mutate(deleteTarget.id)}
       />
     </div>
   );

@@ -13,13 +13,21 @@ router.post('/', async (req, res) => {
       name, email, phone, eventDate, eventTiming, numberOfPeople, eventType,
       drinks, cakes, food, equipment, decor, otherNotes 
     } = req.body;
+    const normalizedEmail = String(email || '').trim().toLowerCase();
+    const normalizedName = String(name || '').trim();
+    const parsedDate = new Date(eventDate);
+    const parsedPeople = parseInt(numberOfPeople, 10);
+
+    if (!normalizedName || !normalizedEmail || !phone || Number.isNaN(parsedDate.getTime()) || !eventTiming || !parsedPeople || !eventType) {
+      return res.status(400).json({ error: 'Name, E-Mail, Telefon, Datum, Zeitraum, Personen und Event-Typ sind erforderlich.' });
+    }
     
     // Check for duplicate: same email + same event date within last hour
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
     const existingEvent = await prisma.eventInquiry.findFirst({
       where: {
-        email: email.toLowerCase(),
-        eventDate: new Date(eventDate),
+        email: normalizedEmail,
+        eventDate: parsedDate,
         createdAt: { gte: oneHourAgo }
       }
     });
@@ -31,12 +39,12 @@ router.post('/', async (req, res) => {
     // Create event inquiry
     const event = await prisma.eventInquiry.create({
       data: {
-        name,
-        email,
+        name: normalizedName,
+        email: normalizedEmail,
         phone,
-        eventDate: new Date(eventDate),
+        eventDate: parsedDate,
         eventTiming,
-        numberOfPeople: parseInt(numberOfPeople),
+        numberOfPeople: parsedPeople,
         eventType,
         drinks,
         cakes,
@@ -52,7 +60,7 @@ router.post('/', async (req, res) => {
     io.emit('event:new', event);
     pushService.notifyRoles(['OWNER', 'MANAGER'], {
       title: 'Neue Event-Anfrage',
-      body: `${name} · ${eventType} · ${numberOfPeople} Gäste`,
+      body: `${normalizedName} · ${eventType} · ${parsedPeople} Gäste`,
       url: '/admin-v2/management/events',
       type: 'event',
     });
@@ -64,11 +72,11 @@ router.post('/', async (req, res) => {
       html: `
         <h2>Neue Event-Anfrage</h2>
         <p><strong>Typ:</strong> ${eventType}</p>
-        <p><strong>Name:</strong> ${name}</p>
-        <p><strong>Email:</strong> ${email}</p>
+        <p><strong>Name:</strong> ${normalizedName}</p>
+        <p><strong>Email:</strong> ${normalizedEmail}</p>
         <p><strong>Telefon:</strong> ${phone}</p>
         <p><strong>Datum & Zeit:</strong> ${eventDate} (${eventTiming})</p>
-        <p><strong>Gäste:</strong> ${numberOfPeople}</p>
+        <p><strong>Gäste:</strong> ${parsedPeople}</p>
         <hr/>
         <h3>Anforderungen:</h3>
         <p><strong>Getränke:</strong> ${drinks || '-'}</p>
@@ -82,11 +90,11 @@ router.post('/', async (req, res) => {
 
     // Send confirmation email to customer
     await sendEmail({
-      to: email,
+      to: normalizedEmail,
       subject: `Ihre Event-Anfrage bei Cafe Diwan`,
       html: `
         <h2>Vielen Dank für Ihre Anfrage!</h2>
-        <p>Hallo ${name},</p>
+        <p>Hallo ${normalizedName},</p>
         <p>wir haben Ihre Event-Anfrage für den ${eventDate} erhalten.</p>
         <p>Unser Team wird Ihre Anfrage prüfen und sich schnellstmöglich mit Ihnen in Verbindung setzen, um die Details zu besprechen und Ihnen ein Angebot zu erstellen.</p>
         <br/>

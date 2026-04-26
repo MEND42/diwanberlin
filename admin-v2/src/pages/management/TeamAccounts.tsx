@@ -3,10 +3,11 @@ import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   UserCog, Plus, RefreshCw, Copy, Check,
-  ShieldOff, Shield, ChevronRight,
+  ShieldOff, Shield, ChevronRight, Trash2,
 } from 'lucide-react';
 import { teamApi } from '@/lib/api';
 import { BottomSheet } from '@/components/primitives/BottomSheet';
+import { ConfirmDialog } from '@/components/primitives/ConfirmDialog';
 import { cn, springs, getInitials, ROLE_LABELS } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import type { TeamMember, Role } from '@/types';
@@ -48,6 +49,7 @@ export function TeamAccounts() {
   const [editMember, setEditMember] = useState<TeamMember | null>(null);
   const [tempPw,     setTempPw]     = useState('');
   const [resetResult, setResetResult] = useState<{ id: string; pw: string } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<TeamMember | null>(null);
 
   const [form, setForm] = useState({
     username:    '',
@@ -80,6 +82,14 @@ export function TeamAccounts() {
   const resetPassword = useMutation({
     mutationFn: (id: string) => teamApi.resetPassword(id),
     onSuccess: (res, id) => { setResetResult({ id, pw: res.tempPassword }); qc.invalidateQueries({ queryKey: ['team'] }); },
+  });
+
+  const deleteMember = useMutation({
+    mutationFn: (id: string) => teamApi.delete(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['team'] });
+      setDeleteTarget(null);
+    },
   });
 
   function openNew() {
@@ -201,6 +211,13 @@ export function TeamAccounts() {
                     >
                       {m.isActive ? <ShieldOff size={13} /> : <Shield size={13} />}
                     </button>
+                    <button
+                      onClick={() => setDeleteTarget(m)}
+                      className="w-8 h-8 rounded-xl flex items-center justify-center hover:bg-red-50 hover:text-red-600 transition-colors text-ink2"
+                      title="Konto löschen"
+                    >
+                      <Trash2 size={13} />
+                    </button>
                   </div>
                 )}
               </motion.div>
@@ -289,6 +306,14 @@ export function TeamAccounts() {
           </button>
         </div>
       </BottomSheet>
+      <ConfirmDialog
+        open={Boolean(deleteTarget)}
+        title="Teamkonto löschen?"
+        description={deleteTarget ? `${deleteTarget.displayName ?? deleteTarget.username} wird dauerhaft entfernt. Für ehemalige Mitarbeiter ist Deaktivieren meistens besser als Löschen.` : ''}
+        loading={deleteMember.isPending}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={() => deleteTarget && deleteMember.mutate(deleteTarget.id)}
+      />
     </div>
   );
 }

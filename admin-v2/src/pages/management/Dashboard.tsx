@@ -3,11 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { motion }    from 'framer-motion';
 import {
   ShoppingBag, Grid3X3, CalendarDays, Ticket,
-  TrendingUp, Users, ChefHat, ArrowRight,
+  Users, ChefHat, ArrowRight,
   type LucideIcon,
 } from 'lucide-react';
 import { dashboardApi } from '@/lib/api';
-import { formatEur, springs, cn } from '@/lib/utils';
+import { springs, cn } from '@/lib/utils';
 import { useAppStore }  from '@/store/appStore';
 import type { DashboardMetrics, BusyHour } from '@/types';
 
@@ -183,11 +183,12 @@ export function Dashboard() {
               onClick={() => navigate('/management/reservations')}
             />
             <MetricCard
-              label="Tagesumsatz" delay={0.15}
-              value={formatEur(metrics?.todayRevenue ?? 0)}
-              sub="Heute bezahlt"
-              icon={TrendingUp}
+              label="Event-Anfragen" delay={0.15}
+              value={metrics?.pendingEvents ?? 0}
+              sub="Ausstehend"
+              icon={Ticket}
               color="bg-green-50 text-green-700"
+              onClick={() => navigate('/management/events')}
             />
           </>
         )}

@@ -3,11 +3,12 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   CalendarDays, Check, X, Clock, Users, Phone,
-  Mail, ChevronRight, MessageSquare, type LucideIcon,
+  Mail, ChevronRight, MessageSquare, Trash2, type LucideIcon,
 } from 'lucide-react';
 import { reservationsApi, tablesApi } from '@/lib/api';
 import { BottomSheet } from '@/components/primitives/BottomSheet';
 import { SwipeRow } from '@/components/primitives/SwipeRow';
+import { ConfirmDialog } from '@/components/primitives/ConfirmDialog';
 import { cn, springs } from '@/lib/utils';
 import type { Reservation, Table } from '@/types';
 
@@ -63,6 +64,7 @@ export function Reservations() {
   const [filter,   setFilter]   = useState<DateFilter>('today');
   const [selected, setSelected] = useState<Reservation | null>(null);
   const [updating, setUpdating] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Reservation | null>(null);
 
   const { data: reservations = [], isLoading } = useQuery<Reservation[]>({
     queryKey: ['reservations'],
@@ -94,6 +96,19 @@ export function Reservations() {
     await reservationsApi.update(selected.id, { tableId });
     qc.invalidateQueries({ queryKey: ['reservations'] });
     setSelected(prev => prev ? { ...prev, tableId } : null);
+  }
+
+  async function deleteReservation() {
+    if (!deleteTarget) return;
+    setUpdating(true);
+    try {
+      await reservationsApi.delete(deleteTarget.id);
+      await qc.invalidateQueries({ queryKey: ['reservations'] });
+      setSelected(null);
+      setDeleteTarget(null);
+    } finally {
+      setUpdating(false);
+    }
   }
 
   return (
@@ -276,10 +291,25 @@ export function Reservations() {
                   Reservierung stornieren
                 </button>
               )}
+              <button
+                onClick={() => setDeleteTarget(selected)}
+                disabled={updating}
+                className="w-full py-3 rounded-xl border border-red-200 bg-white text-red-600 text-sm font-semibold hover:bg-red-50 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+              >
+                <Trash2 size={15} /> Reservierung löschen
+              </button>
             </div>
           );
         })()}
       </BottomSheet>
+      <ConfirmDialog
+        open={Boolean(deleteTarget)}
+        title="Reservierung löschen?"
+        description={deleteTarget ? `${deleteTarget.name} · ${deleteTarget.date} ${deleteTarget.time} wird dauerhaft entfernt.` : ''}
+        loading={updating}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={deleteReservation}
+      />
     </div>
   );
 }

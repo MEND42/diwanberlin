@@ -21,6 +21,11 @@ function eur(value) {
   return `€ ${Number(value || 0).toFixed(2).replace('.', ',')}`;
 }
 
+function localized(record, field, fallbackField) {
+  const suffix = lang() === 'fa' ? 'Fa' : lang() === 'en' ? 'En' : 'De';
+  return record?.[`${field}${suffix}`] || record?.[fallbackField] || record?.[`${field}De`] || '';
+}
+
 function flattenItems(category) {
   const direct = Array.isArray(category.items) ? category.items : [];
   const nested = Array.isArray(category.subcategories)
@@ -82,7 +87,7 @@ async function renderMenu() {
   }
 
   tabsContainer.innerHTML = visibleCategories.map((category, index) => {
-    const label = lang() === 'fa' ? (category.nameFa || category.nameDe) : category.nameDe;
+    const label = localized(category, 'name', 'nameDe');
     return `<button class="tab ${index === 0 ? 'active' : ''}" data-tab="${esc(category.slug)}">${esc(label)}</button>`;
   }).join('');
 
@@ -106,8 +111,8 @@ async function renderMenu() {
     panel.innerHTML = `
       <div class="sub-panel">
         ${category._items.map((item, itemIndex) => {
-          const title = lang() === 'fa' ? (item.nameFa || item.nameDe) : item.nameDe;
-          const desc = lang() === 'fa' ? (item.descriptionFa || item.descriptionDe || '') : (item.descriptionDe || '');
+          const title = localized(item, 'name', 'nameDe');
+          const desc = localized(item, 'description', 'descriptionDe');
           const faLine = lang() === 'de' && item.nameFa ? `<span class="mfa">${esc(item.nameFa)}</span>` : '';
           const image = item.imageUrl ? `<div class="mi-img"><img src="${esc(item.imageUrl)}" alt="${esc(item.nameDe)}" loading="lazy"></div>` : '';
           const badge = item.isSpecial ? '<span class="mi-badge">Empfehlung</span>' : '';
@@ -180,10 +185,12 @@ function openEventModal(eventData) {
   const modal = ensureEventModal();
   const content = modal.querySelector('#event-modal-content');
   const eventDate = new Date(eventData.eventDate);
-  const title = lang() === 'fa' && eventData.titleFa ? eventData.titleFa : eventData.titleDe;
+  const title = localized(eventData, 'title', 'titleDe');
   const description = lang() === 'fa'
     ? (eventData.descriptionFa || eventData.descriptionFull || eventData.description || '')
-    : (eventData.descriptionFull || eventData.description || '');
+    : lang() === 'en'
+      ? (eventData.descriptionEn || eventData.descriptionFull || eventData.description || '')
+      : (eventData.descriptionFull || eventData.description || '');
   const remaining = eventData.maxAttendees
     ? Math.max(0, Number(eventData.maxAttendees) - Number(eventData.registrationsCount || 0))
     : null;
@@ -213,9 +220,16 @@ function openEventModal(eventData) {
   const status = content.querySelector('.event-registration-status');
   form.addEventListener('submit', async submitEvent => {
     submitEvent.preventDefault();
+    const submitButton = form.querySelector('button[type="submit"]');
+    if (submitButton?.dataset.submitting === 'true') return;
+    if (submitButton) {
+      submitButton.dataset.submitting = 'true';
+      submitButton.disabled = true;
+      submitButton.textContent = lang() === 'fa' ? 'در حال ارسال...' : lang() === 'en' ? 'Submitting...' : 'Wird gesendet...';
+    }
     const payload = Object.fromEntries(new FormData(form).entries());
     payload.guests = Number(payload.guests || 1);
-    status.textContent = 'Wird gesendet...';
+    status.textContent = lang() === 'fa' ? 'در حال ارسال...' : lang() === 'en' ? 'Submitting...' : 'Wird gesendet...';
     status.classList.remove('error');
     try {
       const result = await fetchJson(`${API_URL}/public/events/${eventData.id}/register`, {
@@ -233,6 +247,15 @@ function openEventModal(eventData) {
     } catch (error) {
       status.textContent = error.message || 'Anmeldung konnte nicht gesendet werden.';
       status.classList.add('error');
+      if (submitButton) {
+        submitButton.dataset.submitting = 'false';
+        submitButton.disabled = false;
+        submitButton.innerHTML = lang() === 'fa'
+          ? 'ثبت نام <span class="ac">↗</span>'
+          : lang() === 'en'
+            ? 'Register <span class="ac">↗</span>'
+            : 'Anmelden <span class="ac">↗</span>';
+      }
     }
   });
 
@@ -252,10 +275,12 @@ async function renderPublicEvents() {
 
     list.innerHTML = events.map((eventData, idx) => {
       const date = new Date(eventData.eventDate);
-      const title = lang() === 'fa' && eventData.titleFa ? eventData.titleFa : eventData.titleDe;
+      const title = localized(eventData, 'title', 'titleDe');
       const desc = lang() === 'fa' && eventData.descriptionFa
         ? eventData.descriptionFa
-        : (eventData.description || eventData.descriptionFull || '');
+        : lang() === 'en' && eventData.descriptionEn
+          ? eventData.descriptionEn
+          : (eventData.description || eventData.descriptionFull || '');
       const soldOut = eventData.maxAttendees && Number(eventData.registrationsCount || 0) >= Number(eventData.maxAttendees);
       const canRegister = eventData.registrationOpen && !soldOut;
       return `
@@ -322,10 +347,6 @@ function initMobileNav() {
   });
   document.addEventListener('keydown', event => {
     if (event.key === 'Escape') setOpen(false);
-  });
-  mobileLang?.addEventListener('click', event => {
-    event.preventDefault();
-    if (typeof setLanguage === 'function') setLanguage(lang() === 'de' ? 'fa' : 'de');
   });
 }
 

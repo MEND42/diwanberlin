@@ -4,10 +4,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Ticket, Users, CalendarDays, Clock, Phone, Mail,
   ChevronRight, UtensilsCrossed, Wine, Cake, Mic2,
-  Flower2, FileText, type LucideIcon,
+  Flower2, FileText, Trash2, type LucideIcon,
 } from 'lucide-react';
 import { eventsApi } from '@/lib/api';
 import { BottomSheet } from '@/components/primitives/BottomSheet';
+import { ConfirmDialog } from '@/components/primitives/ConfirmDialog';
 import { cn, springs } from '@/lib/utils';
 import type { EventInquiry, EventStatus } from '@/types';
 
@@ -56,6 +57,7 @@ export function Events() {
   const [filter,   setFilter]   = useState<StatusFilter>('all');
   const [selected, setSelected] = useState<EventInquiry | null>(null);
   const [updating, setUpdating] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<EventInquiry | null>(null);
 
   const { data: inquiries = [], isLoading } = useQuery<EventInquiry[]>({
     queryKey: ['events-inquiries'],
@@ -75,6 +77,19 @@ export function Events() {
       await eventsApi.updateStatus(id, status);
       qc.invalidateQueries({ queryKey: ['events-inquiries'] });
       setSelected(prev => prev?.id === id ? { ...prev, status } : prev);
+    } finally {
+      setUpdating(false);
+    }
+  }
+
+  async function deleteInquiry() {
+    if (!deleteTarget) return;
+    setUpdating(true);
+    try {
+      await eventsApi.deleteInquiry(deleteTarget.id);
+      await qc.invalidateQueries({ queryKey: ['events-inquiries'] });
+      setSelected(null);
+      setDeleteTarget(null);
     } finally {
       setUpdating(false);
     }
@@ -248,11 +263,26 @@ export function Events() {
                     Anfrage ablehnen
                   </button>
                 )}
+                <button
+                  onClick={() => setDeleteTarget(selected)}
+                  disabled={updating}
+                  className="w-full py-3 rounded-xl border border-red-200 bg-white text-red-600 text-sm font-semibold hover:bg-red-50 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+                >
+                  <Trash2 size={15} /> Anfrage löschen
+                </button>
               </div>
             </div>
           );
         })()}
       </BottomSheet>
+      <ConfirmDialog
+        open={Boolean(deleteTarget)}
+        title="Event-Anfrage löschen?"
+        description={deleteTarget ? `${deleteTarget.name} · ${deleteTarget.eventDate} wird dauerhaft entfernt.` : ''}
+        loading={updating}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={deleteInquiry}
+      />
     </div>
   );
 }

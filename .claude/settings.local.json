@@ -1,7 +1,19 @@
 {
   "permissions": {
     "allow": [
-      "Bash(file /Users/alirezahussaini/Documents/diwanberlin/icons/*.png)"
+      "Bash(file /Users/alirezahussaini/Documents/diwanberlin/icons/*.png)",
+      "Bash(npm install *)",
+      "Bash(npx tsc *)",
+      "Bash(awk -F: '{print $1}')",
+      "Bash(npm run *)",
+      "Bash(./node_modules/.bin/tsc --noEmit)",
+      "Bash(node -e \"require\\('/Users/alirezahussaini/Documents/diwanberlin/backend/src/routes/publicTable.js'\\)\")",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(ssh root@72.62.46.132 ' *)",
+      "Bash(ping -c 3 72.62.46.132)",
+      "Bash(git status *)"
     ]
   }
 }

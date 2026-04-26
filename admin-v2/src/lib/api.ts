@@ -72,6 +72,7 @@ export const tablesApi = {
     request<import('@/types').Table>(`/tables/${id}/label`, 'PATCH', { label }),
   regenerateToken: (id: string) =>
     request<import('@/types').Table>(`/tables/${id}/regenerate-token`, 'POST'),
+  delete: (id: string) => request<{ success: boolean }>(`/tables/${id}`, 'DELETE'),
   qrUrl: (id: string) => `${BASE}/tables/${id}/qr`,
   qrOrderUrl: (id: string) => `${BASE}/tables/${id}/qr-order`,
 };
@@ -98,6 +99,20 @@ export const menuApi = {
   deleteItem:   (id: string)    => request<void>(`/menu/items/${id}`, 'DELETE'),
   toggleItem:   (id: string, isAvailable: boolean) =>
     request<import('@/types').MenuItem>(`/menu/items/${id}/availability`, 'PATCH', { isAvailable }),
+  uploadItemImage: async (id: string, file: File) => {
+    const token = localStorage.getItem('diwanAdminToken')
+      ?? sessionStorage.getItem('diwanAdminToken');
+    const form = new FormData();
+    form.append('image', file);
+    const res = await fetch(`${BASE}/menu/items/${id}/image`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token ?? ''}` },
+      body: form,
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new ApiError(res.status, data.error ?? `Request failed (${res.status})`);
+    return data as import('@/types').MenuItem;
+  },
 };
 
 // ── Reservations ──────────────────────────────────────────
@@ -106,6 +121,7 @@ export const reservationsApi = {
   update: (id: string, data: unknown) => request<import('@/types').Reservation>(`/reservations/${id}`, 'PUT', data),
   updateStatus: (id: string, status: string) =>
     request<import('@/types').Reservation>(`/reservations/${id}/status`, 'PATCH', { status }),
+  delete: (id: string) => request<{ success: boolean }>(`/reservations/${id}`, 'DELETE'),
 };
 
 // ── Events ────────────────────────────────────────────────
@@ -113,6 +129,7 @@ export const eventsApi = {
   inquiries:    ()               => request<import('@/types').EventInquiry[]>('/events'),
   updateStatus: (id: string, status: string) =>
     request<import('@/types').EventInquiry>(`/events/${id}/status`, 'PATCH', { status }),
+  deleteInquiry: (id: string) => request<{ success: boolean }>(`/events/${id}`, 'DELETE'),
   listings:     ()               => request<import('@/types').EventListing[]>('/event-listings'),
   createListing: (data: unknown) => request<import('@/types').EventListing>('/event-listings', 'POST', data),
   updateListing: (id: string, data: unknown) =>
@@ -141,6 +158,7 @@ export const teamApi = {
   create:   (data: unknown)  => request<import('@/types').TeamMember>('/users', 'POST', data),
   update:   (id: string, data: unknown) => request<import('@/types').TeamMember>(`/users/${id}`, 'PUT', data),
   deactivate: (id: string)   => request<void>(`/users/${id}/deactivate`, 'POST'),
+  delete: (id: string)       => request<{ success: boolean }>(`/users/${id}`, 'DELETE'),
   resetPassword: (id: string) =>
     request<{ tempPassword: string }>(`/users/${id}/reset-password`, 'POST'),
 };

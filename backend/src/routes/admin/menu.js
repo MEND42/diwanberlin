@@ -18,6 +18,21 @@ function emitMenuUpdated(payload) {
   } catch (_) {}
 }
 
+function touchSitemap() {
+  try {
+    const sitemapPath = path.join(__dirname, '../../../../sitemap.xml');
+    const today = new Date().toISOString().slice(0, 10);
+    if (!fs.existsSync(sitemapPath)) return;
+    const xml = fs.readFileSync(sitemapPath, 'utf8');
+    const updated = xml.includes('<lastmod>')
+      ? xml.replace(/<lastmod>[^<]*<\/lastmod>/, `<lastmod>${today}</lastmod>`)
+      : xml.replace('</url>', `  <lastmod>${today}</lastmod>\n  </url>`);
+    fs.writeFileSync(sitemapPath, updated);
+  } catch (_) {
+    // Sitemap updates are best-effort and must not block menu edits.
+  }
+}
+
 // GET all categories and items (including inactive)
 router.get('/', async (req, res) => {
   try {
@@ -54,10 +69,11 @@ router.get('/categories', async (req, res) => {
 // POST new category
 router.post('/categories', managers, async (req, res) => {
   try {
-    const { nameDe, nameFa, slug, sortOrder, isActive, parentId } = req.body;
+    const { nameDe, nameFa, nameEn, slug, sortOrder, isActive, parentId } = req.body;
     const category = await prisma.menuCategory.create({
-      data: { nameDe, nameFa, slug, sortOrder, isActive, parentId: parentId || null }
+      data: { nameDe, nameFa, nameEn: nameEn || null, slug, sortOrder, isActive, parentId: parentId || null }
     });
+    touchSitemap();
     emitMenuUpdated(category);
     res.status(201).json(category);
   } catch (error) {
@@ -73,6 +89,7 @@ router.patch('/categories/:id', managers, async (req, res) => {
       where: { id },
       data: req.body
     });
+    touchSitemap();
     emitMenuUpdated(category);
     res.json(category);
   } catch (error) {
@@ -87,6 +104,7 @@ router.put('/categories/:id', managers, async (req, res) => {
       where: { id },
       data: req.body
     });
+    touchSitemap();
     emitMenuUpdated(category);
     res.json(category);
   } catch (error) {
@@ -99,6 +117,7 @@ router.delete('/categories/:id', managers, async (req, res) => {
   try {
     const { id } = req.params;
     await prisma.menuCategory.delete({ where: { id } });
+    touchSitemap();
     emitMenuUpdated({ id, deleted: true });
     res.json({ success: true });
   } catch (error) {
@@ -112,6 +131,7 @@ router.post('/items', managers, async (req, res) => {
     const item = await prisma.menuItem.create({
       data: req.body
     });
+    touchSitemap();
     emitMenuUpdated(item);
     res.status(201).json(item);
   } catch (error) {
@@ -127,6 +147,7 @@ router.patch('/items/:id', managers, async (req, res) => {
       where: { id },
       data: req.body
     });
+    touchSitemap();
     emitMenuUpdated(item);
     res.json(item);
   } catch (error) {
@@ -141,6 +162,7 @@ router.put('/items/:id', managers, async (req, res) => {
       where: { id },
       data: req.body
     });
+    touchSitemap();
     emitMenuUpdated(item);
     res.json(item);
   } catch (error) {
@@ -154,6 +176,7 @@ router.patch('/items/:id/availability', managers, async (req, res) => {
       where: { id: req.params.id },
       data: { isAvailable: Boolean(req.body.isAvailable) }
     });
+    touchSitemap();
     emitMenuUpdated(item);
     res.json(item);
   } catch (error) {
@@ -166,6 +189,7 @@ router.delete('/items/:id', managers, async (req, res) => {
   try {
     const { id } = req.params;
     await prisma.menuItem.delete({ where: { id } });
+    touchSitemap();
     emitMenuUpdated({ id, deleted: true });
     res.json({ success: true });
   } catch (error) {
@@ -200,6 +224,7 @@ router.post('/items/:id/image', managers, upload.single('image'), async (req, re
       data: { imageUrl }
     });
 
+    touchSitemap();
     emitMenuUpdated(item);
     res.json(item);
   } catch (error) {

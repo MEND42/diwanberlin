@@ -74,10 +74,10 @@ export function ServiceShell() {
       <WaiterCallBanner />
 
       {/* Bottom tab bar */}
-      <nav className="flex-shrink-0 border-t border-diwan-gold/8 bg-diwan-bg px-2 py-2"
-        style={{ paddingBottom: 'max(8px, env(safe-area-inset-bottom))' }}
+      <nav className="flex-shrink-0 border-t border-diwan-gold/10 bg-diwan-bg px-2 py-3 shadow-[0_-12px_34px_rgba(0,0,0,0.18)]"
+        style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}
       >
-        <div className="flex items-center justify-around">
+        <div className="grid grid-cols-4 gap-1">
           {visibleTabs.map(tab => {
             const Icon    = tab.icon;
             const active  = location.pathname.startsWith(tab.path.split('/').slice(0, 3).join('/'));
@@ -87,24 +87,27 @@ export function ServiceShell() {
                 key={tab.path}
                 onClick={() => navigate(tab.path)}
                 whileTap={{ scale: 0.9 }}
-                className="flex flex-col items-center gap-1 px-4 py-1.5 rounded-xl relative"
+                className={cn(
+                  'relative flex min-h-[64px] flex-col items-center justify-center gap-1.5 rounded-2xl px-2 py-2',
+                  active ? 'bg-diwan-gold/12' : 'hover:bg-white/5',
+                )}
               >
                 <div className="relative">
                   <Icon
-                    size={20}
+                    size={24}
                     className={cn(
                       'transition-colors',
                       active ? 'text-diwan-gold' : 'text-diwan-dim',
                     )}
                   />
                   {badge > 0 && (
-                    <span className="absolute -top-1.5 -right-1.5 w-4 h-4 text-[9px] font-bold bg-red-500 text-white rounded-full flex items-center justify-center">
+                    <span className="absolute -top-2 -right-2 min-w-5 h-5 px-1 text-[10px] font-bold bg-red-500 text-white rounded-full flex items-center justify-center">
                       {badge > 9 ? '9+' : badge}
                     </span>
                   )}
                 </div>
                 <span className={cn(
-                  'text-[9px] font-medium transition-colors',
+                  'text-[10px] font-bold transition-colors leading-tight',
                   active ? 'text-diwan-gold' : 'text-diwan-dim/60',
                 )}>
                   {tab.label}
