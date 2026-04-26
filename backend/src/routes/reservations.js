@@ -6,6 +6,14 @@ const socketService = require('../services/socket');
 const { sendEmail } = require('../services/email');
 const pushService = require('../services/push');
 
+async function sendOptionalEmail(payload) {
+  try {
+    await sendEmail(payload);
+  } catch (error) {
+    console.error('Reservation email notification failed:', error.message);
+  }
+}
+
 // POST a new table reservation
 router.post('/', async (req, res) => {
   try {
@@ -32,7 +40,11 @@ router.post('/', async (req, res) => {
     });
     
     if (existingReservation) {
-      return res.status(409).json({ error: 'Eine Reservierung mit diesen Daten existiert bereits. Bitte warten Sie oder kontaktieren Sie uns direkt.' });
+      return res.json({
+        message: 'Reservation already received',
+        duplicate: true,
+        reservation: existingReservation,
+      });
     }
     
     // Create reservation
@@ -59,8 +71,8 @@ router.post('/', async (req, res) => {
     });
 
     // Send email to owner
-    await sendEmail({
-      to: process.env.SMTP_USER, // send to the café
+    await sendOptionalEmail({
+      to: process.env.NOTIFY_EMAIL || process.env.SMTP_TO || process.env.SMTP_USER,
       subject: `Neue Reservierung: ${normalizedName}${date ? ` am ${date}` : ''}`,
       html: `
         <h2>Neue Tischreservierung</h2>
@@ -74,7 +86,7 @@ router.post('/', async (req, res) => {
     });
 
     // Send confirmation email to customer
-    await sendEmail({
+    await sendOptionalEmail({
       to: normalizedEmail,
       subject: `Ihre Reservierungsanfrage bei Cafe Diwan`,
       html: `

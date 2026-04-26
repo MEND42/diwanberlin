@@ -6,6 +6,14 @@ const socketService = require('../services/socket');
 const { sendEmail } = require('../services/email');
 const pushService = require('../services/push');
 
+async function sendOptionalEmail(payload) {
+  try {
+    await sendEmail(payload);
+  } catch (error) {
+    console.error('Event email notification failed:', error.message);
+  }
+}
+
 // POST a new event inquiry
 router.post('/', async (req, res) => {
   try {
@@ -36,7 +44,11 @@ router.post('/', async (req, res) => {
     });
     
     if (existingEvent) {
-      return res.status(409).json({ error: 'Eine Anfrage mit diesen Daten existiert bereits. Bitte warten Sie oder kontaktieren Sie uns direkt.' });
+      return res.json({
+        message: 'Event inquiry already received',
+        duplicate: true,
+        event: existingEvent,
+      });
     }
     
     // Create event inquiry
@@ -69,8 +81,8 @@ router.post('/', async (req, res) => {
     });
 
     // Send email to owner
-    await sendEmail({
-      to: process.env.SMTP_USER,
+    await sendOptionalEmail({
+      to: process.env.NOTIFY_EMAIL || process.env.SMTP_TO || process.env.SMTP_USER,
       subject: `Neue Event-Anfrage: ${safeEventType}${eventDate ? ` am ${eventDate}` : ''}`,
       html: `
         <h2>Neue Event-Anfrage</h2>
@@ -92,7 +104,7 @@ router.post('/', async (req, res) => {
     });
 
     // Send confirmation email to customer
-    await sendEmail({
+    await sendOptionalEmail({
       to: normalizedEmail,
       subject: `Ihre Event-Anfrage bei Cafe Diwan`,
       html: `

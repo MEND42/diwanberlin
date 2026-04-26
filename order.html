@@ -64,6 +64,7 @@
     <p id="orderError" class="error hidden"></p>
   </aside>
 
+  <script src="/socket.io/socket.io.min.js"></script>
   <script>
     const API = location.hostname === 'localhost' ? 'http://localhost:3000/api' : '/api';
     const token = new URLSearchParams(location.search).get('t') || location.pathname.split('/').filter(Boolean).pop();
@@ -238,6 +239,20 @@
     document.getElementById('closeSheet').addEventListener('click', () => openSheet(false));
     initHoldButton();
     init();
+
+    // Live menu refresh: when the owner edits the menu in admin, refresh the QR menu.
+    function initLiveRefresh() {
+      if (typeof io !== 'function') return;
+      try {
+        const socket = io({ transports: ['websocket', 'polling'], reconnectionDelay: 2000 });
+        let timer = null;
+        socket.on('menu:updated', () => {
+          clearTimeout(timer);
+          timer = setTimeout(() => init(), 600);
+        });
+      } catch (_) { /* socket optional */ }
+    }
+    initLiveRefresh();
   </script>
 </body>
 </html>

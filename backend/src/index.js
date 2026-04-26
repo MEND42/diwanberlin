@@ -62,6 +62,13 @@ const allowedOrigins = process.env.NODE_ENV === 'production'
 app.use(cors({ origin: allowedOrigins, credentials: true }));
 app.use(express.json());
 
+// Serve uploaded images (menu items, etc.) — nginx proxies /uploads/ here
+const path = require('path');
+app.use('/uploads', express.static(path.join(__dirname, '../../uploads'), {
+  maxAge: '7d',
+  fallthrough: false,
+}));
+
 // Health check — used by Docker HEALTHCHECK and deploy.sh
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'cafe-diwan-api', ts: new Date().toISOString() });

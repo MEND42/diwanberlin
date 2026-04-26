@@ -63,6 +63,11 @@ export function useSocket() {
       });
     });
 
+    // Menu changes → refresh categories everywhere in admin
+    socket.on('menu:updated', () => {
+      queryClient.invalidateQueries({ queryKey: ['menu-categories'] });
+    });
+
     socket.on('waiter:call', (call) => {
       queryClient.invalidateQueries({ queryKey: ['tables'] });
       window.dispatchEvent(new CustomEvent('diwan:waiter-call', { detail: call }));

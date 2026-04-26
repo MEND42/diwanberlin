@@ -1,6 +1,9 @@
-const API_URL = window.location.hostname === 'localhost'
-  ? 'http://localhost:3000/api'
-  : '/api';
+const API_URL = (() => {
+  if (window.DIWAN_API_URL) return window.DIWAN_API_URL;
+  if (window.location.protocol === 'file:') return 'https://diwanberlin.com/api';
+  if (['localhost', '127.0.0.1'].includes(window.location.hostname)) return 'http://localhost:3000/api';
+  return '/api';
+})();
 
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -618,7 +621,21 @@ document.addEventListener('DOMContentLoaded', () => {
   initMobileNav();
   initHeroMotion();
   initForms();
+  initLiveMenuRefresh();
 });
+
+// Listen for admin menu changes and refresh the public menu in real time.
+function initLiveMenuRefresh() {
+  if (typeof io !== 'function') return;
+  try {
+    const socket = io({ transports: ['websocket', 'polling'], reconnectionDelay: 2000 });
+    let refreshTimer = null;
+    socket.on('menu:updated', () => {
+      clearTimeout(refreshTimer);
+      refreshTimer = setTimeout(() => renderMenu(), 600);
+    });
+  } catch (_) { /* socket optional, fallback to manual reload */ }
+}
 
 async function renderCapacities() {
   try {
