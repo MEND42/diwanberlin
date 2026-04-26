@@ -2,8 +2,26 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const http = require('http');
+const rateLimit = require('express-rate-limit');
 const socketService = require('./services/socket');
 const authMiddleware = require('./middleware/auth');
+
+// Rate limiters for public forms
+const reservationLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10,
+  message: { error: 'Zu viele Anfragen. Bitte versuchen Sie es später erneut.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+const eventLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: { error: 'Zu viele Anfragen. Bitte versuchen Sie es später erneut.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 
 // Import routes
 const menuRoutes = require('./routes/menu');
@@ -45,10 +63,11 @@ app.get('/health', (req, res) => {
 
 // Public Routes
 app.use('/api/menu', menuRoutes);
-app.use('/api/reservations', reservationsRoutes);
-app.use('/api/events', eventsRoutes);
+app.use('/api/reservations', reservationLimiter, reservationsRoutes);
+app.use('/api/events', eventLimiter, eventsRoutes);
 app.use('/api/event-listings', eventListingsRoutes);
 app.use('/api/site-content', siteContentRoutes);
+
 
 // Admin Routes (Auth)
 app.use('/api/admin', adminAuthRoutes);

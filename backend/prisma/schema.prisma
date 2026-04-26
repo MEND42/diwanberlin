@@ -12,13 +12,16 @@ datasource db {
 }
 
 model MenuCategory {
-  id        String     @id @default(uuid()) @db.Uuid
-  nameDe    String
-  nameFa    String
-  slug      String     @unique
-  sortOrder Int        @default(0)
-  isActive  Boolean    @default(true)
-  items     MenuItem[]
+  id            String         @id @default(uuid()) @db.Uuid
+  parentId      String?        @db.Uuid
+  parent        MenuCategory?  @relation("CategoryToParent", fields: [parentId], references: [id])
+  subcategories MenuCategory[] @relation("CategoryToParent")
+  nameDe        String
+  nameFa        String
+  slug          String         @unique
+  sortOrder     Int            @default(0)
+  isActive      Boolean        @default(true)
+  items         MenuItem[]
 }
 
 model MenuItem {
@@ -30,6 +33,9 @@ model MenuItem {
   descriptionDe String
   descriptionFa String?
   price         Decimal      @db.Decimal(10, 2)
+  imageUrl      String?
+  isSpecial     Boolean      @default(false)
+  allergens     String?
   isAvailable   Boolean      @default(true)
   sortOrder     Int          @default(0)
   orderItems    OrderItem[]

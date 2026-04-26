@@ -28,34 +28,81 @@ async function main() {
   }
 
   // 3. Create Categories
-  const coffeeCat = await prisma.menuCategory.upsert({
-    where: { slug: 'coffee' },
+  const getraenke = await prisma.menuCategory.upsert({
+    where: { slug: 'getraenke' },
     update: {},
-    create: { nameDe: 'Kaffee', nameFa: 'قهوه', slug: 'coffee', sortOrder: 1 }
+    create: { nameDe: 'Getränke', nameFa: 'نوشیدنی‌ها', slug: 'getraenke', sortOrder: 1 }
   });
-  const teaCat = await prisma.menuCategory.upsert({
-    where: { slug: 'tea' },
-    update: {},
-    create: { nameDe: 'Tee', nameFa: 'چای', slug: 'tea', sortOrder: 2 }
+  const hotDrinks = await prisma.menuCategory.upsert({
+    where: { slug: 'hot-drinks' },
+    update: { parentId: getraenke.id },
+    create: { nameDe: 'Heiße Getränke', nameFa: 'نوشیدنی‌های گرم', slug: 'hot-drinks', sortOrder: 1, parentId: getraenke.id }
   });
-  const foodCat = await prisma.menuCategory.upsert({
-    where: { slug: 'food' },
-    update: {},
-    create: { nameDe: 'Kleine Speisen', nameFa: 'خوراکی‌ها', slug: 'food', sortOrder: 3 }
+  const coldDrinks = await prisma.menuCategory.upsert({
+    where: { slug: 'cold-drinks' },
+    update: { parentId: getraenke.id },
+    create: { nameDe: 'Kalte Getränke', nameFa: 'نوشیدنی‌های سرد', slug: 'cold-drinks', sortOrder: 2, parentId: getraenke.id }
   });
-  const sweetsCat = await prisma.menuCategory.upsert({
-    where: { slug: 'sweets' },
+  const seasonal = await prisma.menuCategory.upsert({
+    where: { slug: 'seasonal' },
+    update: { parentId: getraenke.id },
+    create: { nameDe: 'Saisonale Getränke', nameFa: 'نوشیدنی‌های فصلی', slug: 'seasonal', sortOrder: 3, parentId: getraenke.id }
+  });
+  const softDrinks = await prisma.menuCategory.upsert({
+    where: { slug: 'soft-drinks' },
+    update: { parentId: getraenke.id },
+    create: { nameDe: 'Alkoholfreie Getränke', nameFa: 'نوشیدنی‌های غیرالکلی', slug: 'soft-drinks', sortOrder: 4, parentId: getraenke.id }
+  });
+  const spirits = await prisma.menuCategory.upsert({
+    where: { slug: 'spirits' },
+    update: { parentId: getraenke.id },
+    create: { nameDe: 'Spirituosen & Cocktails', nameFa: 'مشروبات', slug: 'spirits', sortOrder: 5, parentId: getraenke.id }
+  });
+
+  const suesses = await prisma.menuCategory.upsert({
+    where: { slug: 'suesses' },
     update: {},
-    create: { nameDe: 'Kuchen & Süßes', nameFa: 'شیرینی', slug: 'sweets', sortOrder: 4 }
+    create: { nameDe: 'Süßes', nameFa: 'شیرینی‌جات', slug: 'suesses', sortOrder: 2 }
+  });
+  const cakes = await prisma.menuCategory.upsert({
+    where: { slug: 'cakes' },
+    update: { parentId: suesses.id },
+    create: { nameDe: 'Kuchen & Torten', nameFa: 'کیک', slug: 'cakes', sortOrder: 1, parentId: suesses.id }
+  });
+  const biscuits = await prisma.menuCategory.upsert({
+    where: { slug: 'biscuits' },
+    update: { parentId: suesses.id },
+    create: { nameDe: 'Kekse & Gebäck', nameFa: 'بیسکویت', slug: 'biscuits', sortOrder: 2, parentId: suesses.id }
+  });
+
+  const herzhaft = await prisma.menuCategory.upsert({
+    where: { slug: 'herzhaft' },
+    update: {},
+    create: { nameDe: 'Herzhafte Speisen', nameFa: 'غذاهای شور', slug: 'herzhaft', sortOrder: 3 }
+  });
+  const snacks = await prisma.menuCategory.upsert({
+    where: { slug: 'snacks' },
+    update: { parentId: herzhaft.id },
+    create: { nameDe: 'Snacks', nameFa: 'میان‌وعده', slug: 'snacks', sortOrder: 1, parentId: herzhaft.id }
+  });
+  const fingerFood = await prisma.menuCategory.upsert({
+    where: { slug: 'finger-food' },
+    update: { parentId: herzhaft.id },
+    create: { nameDe: 'Finger Food', nameFa: 'فینگرفود', slug: 'finger-food', sortOrder: 2, parentId: herzhaft.id }
+  });
+  const afghanSpecials = await prisma.menuCategory.upsert({
+    where: { slug: 'afghan-specials' },
+    update: { parentId: herzhaft.id },
+    create: { nameDe: 'Afghanische Spezialitäten', nameFa: 'غذاهای افغانی', slug: 'afghan-specials', sortOrder: 3, parentId: herzhaft.id }
   });
 
   // 4. Create Items
   // We'll just add one item per category for seeding, the rest can be added from the dashboard
   const items = [
-    { categoryId: coffeeCat.id, nameDe: 'Espresso', nameFa: 'اسپرسو', descriptionDe: 'Doppelter Espresso', price: 6.80, sortOrder: 1 },
-    { categoryId: teaCat.id, nameDe: 'Grüntee mit Kardamom', nameFa: 'چای سبز با هل', descriptionDe: 'Feiner Grüntee mit Kardamom', price: 5.00, sortOrder: 1 },
-    { categoryId: foodCat.id, nameDe: 'Bolani', nameFa: 'بولانی', descriptionDe: 'Fladenbrot mit Kartoffeln', price: 7.50, sortOrder: 1 },
-    { categoryId: sweetsCat.id, nameDe: 'Baklava', nameFa: 'بقلوا', descriptionDe: 'Hausgemacht', price: 7.50, sortOrder: 1 },
+    { categoryId: hotDrinks.id, nameDe: 'Espresso', nameFa: 'اسپرسو', descriptionDe: 'Doppelter Espresso', price: 6.80, sortOrder: 1, isSpecial: false },
+    { categoryId: hotDrinks.id, nameDe: 'Grüntee mit Kardamom', nameFa: 'چای سبز با هل', descriptionDe: 'Feiner Grüntee mit Kardamom', price: 5.00, sortOrder: 2, isSpecial: true },
+    { categoryId: afghanSpecials.id, nameDe: 'Bolani', nameFa: 'بولانی', descriptionDe: 'Fladenbrot mit Kartoffeln', price: 7.50, sortOrder: 1, isSpecial: true },
+    { categoryId: biscuits.id, nameDe: 'Baklava', nameFa: 'بقلوا', descriptionDe: 'Hausgemacht', price: 7.50, sortOrder: 1, isSpecial: false },
   ];
 
   for (const item of items) {

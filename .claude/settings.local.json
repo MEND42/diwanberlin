@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(file /Users/alirezahussaini/Documents/diwanberlin/icons/*.png)"
+    ]
+  }
+}
