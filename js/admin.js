@@ -170,7 +170,7 @@ function firstAllowedNavItem(mode = currentMode) {
 }
 
 function iconPath(fileName) {
-  return `icons/${encodeURIComponent(fileName).replace(/%2F/g, '/')}`;
+  return `/icons/${encodeURIComponent(fileName).replace(/%2F/g, '/')}`;
 }
 
 function renderModeSwitcher() {

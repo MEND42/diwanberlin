@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Küche - Cafe Diwan</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/admin/css/tokens.css">
+<link rel="stylesheet" href="/admin/css/shells.css">
+<script src="/socket.io/socket.io.js"></script>
+</head>
+<body class="kitchen-shell theme-coffee auth-pending">
+  <header class="app-header">
+    <div class="shell-title">
+      <p>Kitchen Display</p>
+      <h1>Live Tickets</h1>
+    </div>
+    <span id="live-status" class="live-badge offline">Offline</span>
+  </header>
+
+  <main class="ticket-wall">
+    <section class="ticket-column">
+      <h2>Neu</h2>
+      <div id="tickets-new"></div>
+    </section>
+    <section class="ticket-column">
+      <h2>In Zubereitung</h2>
+      <div id="tickets-preparing"></div>
+    </section>
+    <section class="ticket-column">
+      <h2>Bereit</h2>
+      <div id="tickets-ready"></div>
+    </section>
+  </main>
+
+  <script type="module" src="/admin/js/kitchen-app.js"></script>
+</body>
+</html>

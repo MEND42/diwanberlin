@@ -1,0 +1,80 @@
+:root {
+  --font-ui: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --gold: #c8922a;
+  --gold-strong: #e0ae55;
+  --ink: #17130c;
+  --muted: #786f63;
+  --line: rgba(23, 19, 12, 0.12);
+  --danger: #d4473d;
+  --success: #23884b;
+  --warning: #c47a16;
+  --info: #2b75b8;
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 22px;
+  --shadow-soft: 0 18px 55px rgba(31, 22, 10, 0.16);
+  --spring-snap: 180ms cubic-bezier(.2, .8, .2, 1);
+  --spring-gentle: 280ms cubic-bezier(.2, .8, .2, 1);
+  --spring-bounce: 420ms cubic-bezier(.2, 1.4, .3, 1);
+  --spring-swoosh: 520ms cubic-bezier(.16, 1, .3, 1);
+}
+
+.theme-paper {
+  --bg: #f7f0e4;
+  --surface: #fffaf0;
+  --surface-strong: #ffffff;
+  --text: #17130c;
+  --subtle: #756b5d;
+}
+
+.theme-cream {
+  --bg: #f2e4c8;
+  --surface: #fff6e4;
+  --surface-strong: #fffaf1;
+  --text: #1d1308;
+  --subtle: #806f58;
+}
+
+.theme-coffee {
+  --bg: #0e0905;
+  --surface: #18100a;
+  --surface-strong: #24170d;
+  --text: #f6ead2;
+  --subtle: #b8a27d;
+  --line: rgba(246, 234, 210, 0.14);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-family: var(--font-ui);
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Service - Cafe Diwan</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/admin/css/tokens.css">
+<link rel="stylesheet" href="/admin/css/shells.css">
+<script src="/socket.io/socket.io.js"></script>
+</head>
+<body class="service-shell theme-cream auth-pending">
+  <header class="app-header">
+    <div class="shell-title">
+      <p>Service Mode</p>
+      <h1>Tische</h1>
+    </div>
+    <span id="live-status" class="live-badge offline">Offline</span>
+  </header>
+
+  <main class="content-pad">
+    <section id="service-view-title" class="eyebrow">Tische</section>
+    <section id="table-grid" class="table-grid" aria-label="Tische"></section>
+    <section id="service-list" class="service-list" hidden></section>
+  </main>
+
+  <div class="radial-fab">
+    <button id="quick-action" aria-label="Quick actions">+</button>
+  </div>
+
+  <nav class="bottom-tabs" aria-label="Service navigation">
+    <button class="active" data-view="tables">Tische</button>
+    <button data-view="orders">Orders</button>
+    <button data-view="reservations">Reserv.</button>
+    <button data-view="more">Mehr</button>
+  </nav>
+
+  <div id="sheet" class="sheet-backdrop">
+    <section class="bottom-sheet" role="dialog" aria-modal="true">
+      <div class="sheet-handle"></div>
+      <div id="sheet-content"></div>
+    </section>
+  </div>
+
+  <script type="module" src="/admin/js/service-app.js"></script>
+</body>
+</html>

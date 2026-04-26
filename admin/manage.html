@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diwan Berlin - Admin Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/admin.css">
+<link rel="stylesheet" href="/admin/css/shells.css">
+<!-- Socket.io client -->
+<script src="/socket.io/socket.io.js"></script>
+<style>
+  :root {
+    --bg-dark: #0d0f13;
+    --bg-panel: #151922;
+    --bg-panel-2: #1b202b;
+    --bg-hover: #242b38;
+    --border: #2b3240;
+    --border-strong: #394252;
+    --text-main: #f5efe4;
+    --text-muted: #9aa4b3;
+    --text-soft: #c9c0b2;
+    --gold: #c8922a;
+    --gold-hover: #d8a643;
+    --danger: #ef4444;
+    --success: #22c55e;
+    --warning: #f59e0b;
+    --info: #38bdf8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg-dark); color: var(--text-main); font-family: 'Inter', sans-serif; overflow: hidden; height: 100vh; font-size: 14px; }
+  
+  /* Utilities */
+  .hidden { display: none !important; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 36px; padding: 8px 14px; background: var(--gold); color: #120d04; border: 1px solid transparent; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.2s, border-color 0.2s, transform 0.2s; white-space: nowrap; }
+  .btn:hover { background: var(--gold-hover); transform: translateY(-1px); }
+  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-main); }
+  .btn-outline:hover { background: var(--bg-hover); border-color: var(--border-strong); }
+  .btn-danger { background: var(--danger); color: #fff; }
+  .btn-small { min-height: 30px; padding: 5px 9px; font-size: 12px; }
+  .stack { display: flex; flex-direction: column; gap: 4px; }
+  .mono { font-variant-numeric: tabular-nums; }
+  
+  /* Login Screen */
+  #login-screen { position: fixed; inset: 0; background: var(--bg-dark); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+  .login-box { background: var(--bg-panel); padding: 36px; border-radius: 8px; border: 1px solid var(--border); width: 100%; max-width: 400px; text-align: left; box-shadow: 0 24px 80px rgba(0,0,0,0.32); }
+  .login-box h2 { margin-bottom: 8px; color: var(--text-main); font-size: 24px; }
+  .login-box::before { content: "Operations Console"; display: block; color: var(--gold); text-transform: uppercase; letter-spacing: .14em; font-size: 11px; margin-bottom: 10px; }
+  .login-box input { width: 100%; padding: 12px; margin-bottom: 16px; background: var(--bg-dark); border: 1px solid var(--border); color: #fff; border-radius: 6px; }
+  .login-box button { width: 100%; padding: 12px; }
+  
+  /* Layout */
+  #app-container { display: flex; height: 100vh; }
+  
+  /* Sidebar */
+  aside { width: 276px; background: #11151d; border-right: 1px solid var(--border); display: flex; flex-direction: column; }
+  .brand { padding: 24px; border-bottom: 1px solid var(--border); }
+  .brand-title { font-size: 18px; font-weight: 700; color: var(--text-main); letter-spacing: .01em; }
+  .brand-subtitle { margin-top: 5px; color: var(--text-muted); font-size: 12px; }
+  .nav-menu { padding: 18px 12px; flex: 1; overflow-y: auto; }
+  .nav-section-label { margin: 18px 10px 8px; color: #6f7a8c; font-size: 11px; text-transform: uppercase; letter-spacing: .13em; }
+  .nav-item { min-height: 44px; padding: 8px 10px; border-radius: 6px; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; gap: 10px; transition: all 0.2s; border: 1px solid transparent; }
+  .nav-item:hover { color: var(--text-main); background: var(--bg-hover); }
+  .nav-item.active { color: var(--text-main); border-color: rgba(200, 146, 42, 0.45); background: rgba(200, 146, 42, 0.11); }
+  .nav-icon { width: 34px; height: 28px; border: 1px solid var(--border); border-radius: 5px; display: inline-flex; align-items: center; justify-content: center; color: var(--gold); font-size: 10px; font-weight: 700; letter-spacing: .08em; flex: 0 0 auto; }
+  .nav-copy { min-width: 0; }
+  .nav-title { display: block; color: inherit; font-weight: 600; line-height: 1.2; }
+  .nav-meta { display: block; margin-top: 2px; color: #778193; font-size: 11px; line-height: 1.2; }
+  .nav-item .badge { background: var(--danger); color: white; font-size: 11px; padding: 2px 6px; border-radius: 10px; margin-left: auto; display: none; }
+  .user-box { padding: 16px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  
+  /* Main Content */
+  main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  header { min-height: 78px; padding: 0 28px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 20px; background: rgba(13,15,19,0.9); }
+  header h1 { font-size: 24px; font-weight: 650; }
+  .header-kicker { color: var(--text-muted); font-size: 12px; margin-top: 5px; }
+  .content { flex: 1; overflow-y: auto; padding: 24px 28px 32px; }
+  .view-section { display: none; }
+  .view-section.active { display: block; }
+  .ops-summary { display: grid; grid-template-columns: repeat(4, minmax(150px, 1fr)); gap: 12px; margin-bottom: 18px; }
+  .metric-card { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; padding: 14px; }
+  .metric-label { color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: .09em; }
+  .metric-value { margin-top: 8px; font-size: 26px; font-weight: 700; color: var(--text-main); }
+  .metric-foot { margin-top: 4px; color: var(--text-muted); font-size: 12px; }
+
+  /* Tables Grid */
+  .tables-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(156px, 1fr)); gap: 14px; }
+  .table-card { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; padding: 16px; cursor: pointer; transition: transform 0.2s, border-color 0.2s, background 0.2s; min-height: 134px; display: flex; flex-direction: column; justify-content: space-between; }
+  .table-card:hover { transform: translateY(-2px); border-color: var(--border-strong); background: var(--bg-panel-2); }
+  .table-card.available { border-color: var(--success); }
+  .table-card.occupied { border-color: var(--warning); background: rgba(245, 158, 11, 0.05); }
+  .table-card.reserved { border-color: var(--info); background: rgba(56, 189, 248, 0.05); }
+  .table-card h3 { font-size: 28px; margin-bottom: 6px; }
+  .table-card .status { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .12em; }
+  .table-card.available .status { color: var(--success); }
+  .table-card.occupied .status { color: var(--warning); }
+  .table-card.reserved .status { color: var(--info); }
+  .table-meta { color: var(--text-muted); font-size: 12px; line-height: 1.5; }
+
+  /* Kanban Board */
+  .kanban-board { display: grid; grid-template-columns: repeat(3, minmax(260px, 1fr)); gap: 16px; height: 100%; min-height: 520px; }
+  .kanban-col { background: var(--bg-panel); border-radius: 8px; border: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
+  .kanban-header { padding: 14px 16px; border-bottom: 1px solid var(--border); font-weight: 700; text-transform: uppercase; letter-spacing: .08em; font-size: 12px; display: flex; justify-content: space-between; }
+  .kanban-items { flex: 1; padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+  
+  .order-card { background: #10141b; border: 1px solid var(--border); border-radius: 8px; padding: 14px; }
+  .order-header { display: flex; justify-content: space-between; margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+  .order-table { font-weight: 600; color: var(--gold); }
+  .order-time { font-size: 12px; color: var(--text-muted); }
+  .order-item { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 4px; }
+  .order-actions { margin-top: 12px; display: flex; gap: 8px; }
+  .order-actions button { flex: 1; font-size: 12px; padding: 6px; }
+
+  /* Lists (Menu, Reservations, Events) */
+  .data-table { width: 100%; border-collapse: separate; border-spacing: 0; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .data-table th, .data-table td { padding: 13px 14px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  .data-table th { color: var(--text-muted); font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; background: #11151d; }
+  .data-table tr:last-child td { border-bottom: 0; }
+  .data-table tr:hover td { background: rgba(255,255,255,0.025); }
+  .toolbar { display: flex; gap: 12px; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; }
+  .toolbar-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+  .section-note { color: var(--text-muted); font-size: 13px; line-height: 1.5; max-width: 620px; }
+  .chip { display: inline-flex; align-items: center; border: 1px solid var(--border); border-radius: 999px; padding: 4px 9px; font-size: 12px; color: var(--text-muted); }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .muted { color: var(--text-muted); font-size: 13px; }
+
+  /* Modals */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 2000; }
+  .modal-content { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; width: 100%; max-width: 720px; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 24px 90px rgba(0,0,0,.48); }
+  .modal-header { padding: 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+  .modal-body { padding: 20px; overflow-y: auto; }
+  .modal-footer { padding: 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 12px; }
+  .close-modal { background: none; border: none; color: var(--text-muted); font-size: 24px; cursor: pointer; }
+  .close-modal:hover { color: #fff; }
+
+  /* Forms in Modals */
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; margin-bottom: 6px; font-size: 13px; color: var(--text-muted); }
+  .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; background: var(--bg-dark); border: 1px solid var(--border); color: #fff; border-radius: 6px; font-family: 'Inter', sans-serif; }
+
+  /* Order Creation List */
+  .menu-list-select { max-height: 300px; overflow-y: auto; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-dark); }
+  .menu-list-item { padding: 10px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+  .menu-list-item:last-child { border-bottom: none; }
+  .add-to-order-btn { padding: 4px 8px; font-size: 12px; }
+  
+  .current-order-list { margin-top: 20px; }
+  .order-line { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed var(--border); }
+  @media (max-width: 960px) {
+    body { overflow: auto; }
+    #app-container { min-height: 100vh; height: auto; }
+    aside { width: 232px; }
+    .ops-summary { grid-template-columns: repeat(2, minmax(140px, 1fr)); }
+    .kanban-board { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body class="auth-pending">
+
+  <!-- Login Screen -->
+  <div id="login-screen">
+    <div class="login-box">
+      <h2>Diwan Admin</h2>
+      <form id="login-form">
+        <input type="text" id="username" placeholder="Benutzername" required>
+        <input type="password" id="password" placeholder="Passwort" required>
+        <button type="submit" class="btn">Anmelden</button>
+        <p id="login-error" style="color: var(--danger); margin-top: 16px; font-size: 14px; display: none;">Falsche Zugangsdaten</p>
+      </form>
+    </div>
+  </div>
+
+  <!-- Main App -->
+  <div id="app-container" class="hidden">
+    <aside>
+      <div class="brand">
+        <div class="brand-title">Diwan Berlin</div>
+        <div class="brand-subtitle">Restaurant Operations</div>
+      </div>
+      <div class="nav-menu">
+        <div class="nav-section-label">Service</div>
+        <div class="nav-item active" data-view="tables" data-title="Tische & POS">
+          <span class="nav-icon">POS</span><span class="nav-copy"><span class="nav-title">Tische & POS</span><span class="nav-meta">Bestellen und kassieren</span></span>
+        </div>
+        <div class="nav-item" data-view="orders" data-title="Küchen-Kanban">
+          <span class="nav-icon">KDS</span><span class="nav-copy"><span class="nav-title">Küchen-Kanban</span><span class="nav-meta">Live Bestellungen</span></span>
+        </div>
+        <div class="nav-item" data-view="menu" data-title="Speisekarte">
+          <span class="nav-icon">MEN</span><span class="nav-copy"><span class="nav-title">Speisekarte</span><span class="nav-meta">Kategorien und Artikel</span></span>
+        </div>
+        <div class="nav-section-label">Planung</div>
+        <div class="nav-item" data-view="reservations" data-title="Reservierungen">
+          <span class="nav-icon">RES</span><span class="nav-copy"><span class="nav-title">Reservierungen</span><span class="nav-meta">Tische zuweisen</span></span><span class="badge" id="badge-res">0</span>
+        </div>
+        <div class="nav-item" data-view="events" data-title="Event-Anfragen">
+          <span class="nav-icon">INQ</span><span class="nav-copy"><span class="nav-title">Event-Anfragen</span><span class="nav-meta">Anfragen bearbeiten</span></span><span class="badge" id="badge-ev">0</span>
+        </div>
+        <div class="nav-item" data-view="event-listings" data-title="Eventkalender">
+          <span class="nav-icon">CAL</span><span class="nav-copy"><span class="nav-title">Eventkalender</span><span class="nav-meta">Website Events</span></span>
+        </div>
+        <div class="nav-section-label">Verwaltung</div>
+        <div class="nav-item" data-view="customers" data-title="Kunden & Rabatte">
+          <span class="nav-icon">CRM</span><span class="nav-copy"><span class="nav-title">Kunden & Rabatte</span><span class="nav-meta">Treue und Codes</span></span>
+        </div>
+        <div class="nav-item owner-only" data-view="users" data-title="Teamkonten">
+          <span class="nav-icon">USR</span><span class="nav-copy"><span class="nav-title">Teamkonten</span><span class="nav-meta">Rollen und Zugriff</span></span>
+        </div>
+      </div>
+      <div class="user-box">
+        <span style="font-size: 14px; color: var(--text-muted);">Angemeldet als Admin</span>
+        <button id="logout-btn" class="btn btn-outline" style="padding: 4px 10px; font-size: 12px;">Logout</button>
+      </div>
+    </aside>
+
+    <main>
+      <header>
+        <div>
+          <h1 id="view-title">Tische & POS</h1>
+          <div class="header-kicker" id="view-subtitle">Live service, billing and kitchen flow</div>
+        </div>
+        <div class="header-actions" id="header-actions"></div>
+      </header>
+
+      <div class="content">
+        <div class="ops-summary" id="ops-summary">
+          <div class="metric-card"><div class="metric-label">Aktive Bestellungen</div><div class="metric-value mono" id="metric-orders">0</div><div class="metric-foot">Nicht bezahlt</div></div>
+          <div class="metric-card"><div class="metric-label">Belegte Tische</div><div class="metric-value mono" id="metric-tables">0</div><div class="metric-foot">Von 30 Tischen</div></div>
+          <div class="metric-card"><div class="metric-label">Reservierungen</div><div class="metric-value mono" id="metric-reservations">0</div><div class="metric-foot">Ausstehend</div></div>
+          <div class="metric-card"><div class="metric-label">Event-Anfragen</div><div class="metric-value mono" id="metric-events">0</div><div class="metric-foot">Ausstehend</div></div>
+        </div>
+
+        <!-- TABLES VIEW -->
+        <div id="view-tables" class="view-section active">
+          <div class="toolbar">
+            <div class="section-note">Tisch anklicken, um Bestellungen aufzunehmen, Rechnung zu sehen oder den Status zu ändern.</div>
+            <div class="toolbar-actions"><button class="btn btn-outline" onclick="loadTables()">Aktualisieren</button></div>
+          </div>
+          <div class="tables-grid" id="tables-grid">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
+        <!-- ORDERS VIEW -->
+        <div id="view-orders" class="view-section">
+          <div class="toolbar">
+            <div class="section-note">Bestellungen laufen von links nach rechts. Status mit einem Klick weiterführen.</div>
+            <div class="toolbar-actions"><button class="btn btn-outline" onclick="loadOrders()">Aktualisieren</button></div>
+          </div>
+          <div class="kanban-board">
+            <div class="kanban-col">
+              <div class="kanban-header" style="border-bottom: 2px solid var(--danger);">NEU</div>
+              <div class="kanban-items" id="kb-new"></div>
+            </div>
+            <div class="kanban-col">
+              <div class="kanban-header" style="border-bottom: 2px solid var(--warning);">IN ZUBEREITUNG</div>
+              <div class="kanban-items" id="kb-preparing"></div>
+            </div>
+            <div class="kanban-col">
+              <div class="kanban-header" style="border-bottom: 2px solid var(--info);">BEREIT</div>
+              <div class="kanban-items" id="kb-ready"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- MENU VIEW -->
+        <div id="view-menu" class="view-section">
+          <div class="toolbar">
+            <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+              <select id="menu-cat-select" class="form-group" style="padding: 8px; width: 220px; background: var(--bg-panel); color: white; border: 1px solid var(--border);">
+                <!-- Categories -->
+              </select>
+              <button class="btn btn-outline btn-small" onclick="openCategoryForm()">Kategorie bearbeiten</button>
+              <button class="btn btn-danger btn-small" onclick="deleteCurrentCategory()">Kategorie löschen</button>
+            </div>
+            <div class="toolbar-actions">
+              <button class="btn btn-outline" onclick="openCategoryForm(null, true)">Neue Kategorie</button>
+              <button class="btn" onclick="openMenuItemForm()">Neuer Artikel</button>
+            </div>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Name (DE)</th>
+                <th>Name (FA)</th>
+                <th>Preis</th>
+                <th>Verfügbar</th>
+                <th>Aktionen</th>
+              </tr>
+            </thead>
+            <tbody id="menu-tbody">
+              <!-- Items -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- RESERVATIONS VIEW -->
+        <div id="view-reservations" class="view-section">
+          <div class="toolbar">
+            <div class="section-note">Reservierungen bestätigen, stornieren oder einem Tisch zuweisen.</div>
+            <div class="toolbar-actions"><button class="btn btn-outline" onclick="loadReservations()">Aktualisieren</button></div>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Datum & Zeit</th>
+                <th>Name</th>
+                <th>Gäste</th>
+                <th>Kontakt</th>
+                <th>Status</th>
+                <th>Aktionen</th>
+              </tr>
+            </thead>
+            <tbody id="res-tbody"></tbody>
+          </table>
+        </div>
+
+        <!-- EVENTS VIEW -->
+        <div id="view-events" class="view-section">
+          <div class="toolbar">
+            <div class="section-note">Eingehende Event-Anfragen prüfen, Status setzen und Details öffnen.</div>
+            <div class="toolbar-actions"><button class="btn btn-outline" onclick="loadEvents()">Aktualisieren</button></div>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Erstellt am</th>
+                <th>Datum</th>
+                <th>Name</th>
+                <th>Typ</th>
+                <th>Gäste</th>
+                <th>Status</th>
+                <th>Aktionen</th>
+              </tr>
+            </thead>
+            <tbody id="ev-tbody"></tbody>
+          </table>
+        </div>
+
+        <!-- EVENT LISTINGS VIEW -->
+        <div id="view-event-listings" class="view-section">
+          <div class="toolbar">
+            <div class="section-note">Diese Events erscheinen auf der öffentlichen Website im Bereich Veranstaltungen.</div>
+            <div class="toolbar-actions"><button class="btn" onclick="openEventListingForm()">Neues Event</button></div>
+          </div>
+          <table class="data-table">
+            <thead><tr><th>Datum</th><th>Titel</th><th>Zeit</th><th>Sichtbar</th><th>Aktionen</th></tr></thead>
+            <tbody id="event-listings-tbody"></tbody>
+          </table>
+        </div>
+
+        <!-- CUSTOMERS / DISCOUNTS VIEW -->
+        <div id="view-customers" class="view-section">
+          <div class="toolbar">
+            <div class="section-note">Treuepunkte und Rabattcodes für Stammkunden verwalten.</div>
+            <div class="toolbar-actions">
+              <button class="btn" onclick="openCustomerForm()">Kunde hinzufügen</button>
+              <button class="btn btn-outline" onclick="openDiscountForm()">Rabatt erstellen</button>
+            </div>
+          </div>
+          <h3 style="margin-bottom:12px;">Treuekunden</h3>
+          <table class="data-table" style="margin-bottom:32px;">
+            <thead><tr><th>Name</th><th>Kontakt</th><th>Punkte</th><th>Umsatz</th><th>Aktionen</th></tr></thead>
+            <tbody id="customers-tbody"></tbody>
+          </table>
+          <h3 style="margin-bottom:12px;">Rabatte</h3>
+          <table class="data-table">
+            <thead><tr><th>Code</th><th>Typ</th><th>Wert</th><th>Punkte</th><th>Status</th><th>Aktionen</th></tr></thead>
+            <tbody id="discounts-tbody"></tbody>
+          </table>
+        </div>
+
+        <!-- STAFF / HR VIEW -->
+        <div id="view-staff" class="view-section">
+          <div class="toolbar">
+            <div class="section-note">Wochenplanung 07:00-21:00. Mitarbeiter schlagen Zeiten vor; Management genehmigt und baut daraus den Dienstplan.</div>
+            <div class="toolbar-actions">
+              <button class="btn btn-outline" onclick="changeHrWeek(-1)">Vorwoche</button>
+              <button class="btn btn-outline" onclick="changeHrWeek(1)">Nächste Woche</button>
+              <button class="btn" onclick="openAvailabilityForm()">Zeit vorschlagen</button>
+              <button class="btn btn-outline manager-only" onclick="openStaffProfileForm()">Profil pflegen</button>
+              <button class="btn btn-outline manager-only" onclick="openShiftForm()">Schicht eintragen</button>
+            </div>
+          </div>
+          <div id="hr-week-label" class="week-label"></div>
+          <div id="coverage-warnings" class="warning-list"></div>
+          <div class="hr-grid" id="hr-grid"></div>
+          <div class="grid-2 admin-split">
+            <section>
+              <h3>Vorschläge</h3>
+              <table class="data-table"><thead><tr><th>Tag</th><th>Name</th><th>Zeit</th><th>Status</th><th>Aktionen</th></tr></thead><tbody id="availability-tbody"></tbody></table>
+            </section>
+            <section>
+              <h3>Zeiterfassung</h3>
+              <div class="toolbar-actions time-actions">
+                <button class="btn" onclick="clockIn()">Einstempeln</button>
+                <button class="btn btn-outline" onclick="openClockOutForm()">Ausstempeln</button>
+              </div>
+              <table class="data-table"><thead><tr><th>Name</th><th>Start</th><th>Ende</th><th>Pause</th><th>Status</th></tr></thead><tbody id="time-tbody"></tbody></table>
+            </section>
+          </div>
+        </div>
+
+        <!-- WEBSITE CONTENT VIEW -->
+        <div id="view-site" class="view-section">
+          <div class="toolbar">
+            <div class="section-note">Kontrollierte Website-Änderungen ohne Code: kurze Texte, Hinweise, Events und Speisekarte. Layout bleibt geschützt.</div>
+            <div class="toolbar-actions">
+              <button class="btn" onclick="openSiteContentForm()">Textblock hinzufügen</button>
+              <button class="btn btn-outline" onclick="loadSiteContent()">Aktualisieren</button>
+            </div>
+          </div>
+          <div class="cms-layout">
+            <div>
+              <h3>Website Texte</h3>
+              <table class="data-table"><thead><tr><th>Bereich</th><th>Deutsch</th><th>Persisch</th><th>Status</th><th>Aktion</th></tr></thead><tbody id="site-content-tbody"></tbody></table>
+            </div>
+            <aside class="cms-preview">
+              <span class="chip">Live Preview</span>
+              <h2>Cafe Diwan Berlin</h2>
+              <p id="cms-preview-text">Wählen Sie einen Textblock aus, um die Vorschau zu sehen.</p>
+              <div class="cms-preview-actions">
+                <button class="btn btn-outline" onclick="activateView('event-listings')">Events bearbeiten</button>
+                <button class="btn btn-outline" onclick="activateView('menu')">Speisekarte bearbeiten</button>
+              </div>
+            </aside>
+          </div>
+        </div>
+
+        <!-- USERS VIEW -->
+        <div id="view-users" class="view-section">
+          <div class="toolbar">
+            <div class="section-note">Owner haben Vollzugriff. Manager verwalten Menü, Events und Rabatte. Waiter arbeiten mit Tischen, Bestellungen und Rechnungen.</div>
+            <div class="toolbar-actions"><button class="btn" onclick="openUserForm()">Teamkonto erstellen</button></div>
+          </div>
+          <table class="data-table">
+            <thead><tr><th>Benutzername</th><th>Rolle</th><th>Aktiv</th><th>Erstellt</th><th>Aktionen</th></tr></thead>
+            <tbody id="users-tbody"></tbody>
+          </table>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- MODALS -->
+
+  <!-- Order / Bill Modal -->
+  <div id="table-modal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="tm-title">Tisch 1</h2>
+        <button class="close-modal" onclick="closeModal('table-modal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="display: flex; gap: 20px;">
+          <!-- Left: New Order -->
+          <div style="flex: 1; border-right: 1px solid var(--border); padding-right: 20px;">
+            <h3 style="margin-bottom: 16px;">Neue Bestellung</h3>
+            <select id="tm-cat" style="width: 100%; padding: 8px; margin-bottom: 12px; background: var(--bg-dark); color: white; border: 1px solid var(--border);">
+            </select>
+            <div class="menu-list-select" id="tm-menu-list">
+              <!-- Menu items to add -->
+            </div>
+            
+            <div class="current-order-list" id="tm-current-order">
+              <!-- Added items -->
+            </div>
+          </div>
+          
+          <!-- Right: Current Bill -->
+          <div style="flex: 1;">
+            <h3 style="margin-bottom: 16px;">Aktuelle Rechnung</h3>
+            <div id="tm-bill-items" style="max-height: 300px; overflow-y: auto; margin-bottom: 20px;">
+              <!-- Unpaid items -->
+            </div>
+            <div style="font-size: 20px; font-weight: 600; text-align: right; border-top: 1px solid var(--border); padding-top: 10px;">
+              Total: <span id="tm-bill-total" style="color: var(--gold);">€ 0.00</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" id="tm-btn-pay" onclick="payBill()">Rechnung begleichen</button>
+        <button class="btn" id="tm-btn-order" onclick="submitOrder()">Bestellung abschicken</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Generic Form Modal -->
+  <div id="form-modal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="form-title">Eintrag</h2>
+        <button class="close-modal" onclick="closeModal('form-modal')">&times;</button>
+      </div>
+      <form id="generic-form">
+        <div class="modal-body" id="form-body"></div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeModal('form-modal')">Abbrechen</button>
+          <button type="submit" class="btn">Speichern</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/js/admin.js"></script>
+  <script type="module" src="/admin/js/manage-app.js"></script>
+</body>
+</html>
