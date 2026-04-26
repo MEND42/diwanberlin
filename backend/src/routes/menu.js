@@ -3,8 +3,10 @@ const router = express.Router();
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const PDFDocument = require('pdfkit');
+const { ensureDefaultMenu } = require('../utils/defaultMenu');
 
 async function getActiveMenu() {
+  await ensureDefaultMenu(prisma);
   return prisma.menuCategory.findMany({
       where: { isActive: true, parentId: null },
       orderBy: { sortOrder: 'asc' },

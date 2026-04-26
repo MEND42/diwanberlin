@@ -9,7 +9,7 @@ const multer = require('multer');
 const sharp = require('sharp');
 const path = require('path');
 const fs = require('fs');
-const { seedDefaultMenu } = require('../../utils/defaultMenu');
+const { ensureDefaultMenu, seedDefaultMenu } = require('../../utils/defaultMenu');
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -34,9 +34,35 @@ function touchSitemap() {
   }
 }
 
+function slugify(value) {
+  return String(value || 'category')
+    .trim()
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/ä/g, 'ae')
+    .replace(/ö/g, 'oe')
+    .replace(/ü/g, 'ue')
+    .replace(/ß/g, 'ss')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '') || 'category';
+}
+
+async function uniqueCategorySlug(base) {
+  const clean = slugify(base);
+  let candidate = clean;
+  let suffix = 2;
+  while (await prisma.menuCategory.findUnique({ where: { slug: candidate } })) {
+    candidate = `${clean}-${suffix}`;
+    suffix += 1;
+  }
+  return candidate;
+}
+
 // GET all categories and items (including inactive)
 router.get('/', async (req, res) => {
   try {
+    await ensureDefaultMenu(prisma);
     const categories = await prisma.menuCategory.findMany({
       orderBy: { sortOrder: 'asc' },
       include: {
@@ -53,6 +79,7 @@ router.get('/', async (req, res) => {
 
 router.get('/categories', async (req, res) => {
   try {
+    await ensureDefaultMenu(prisma);
     const categories = await prisma.menuCategory.findMany({
       orderBy: { sortOrder: 'asc' },
       include: {
@@ -83,8 +110,21 @@ router.post('/seed-defaults', managers, async (req, res) => {
 router.post('/categories', managers, async (req, res) => {
   try {
     const { nameDe, nameFa, nameEn, slug, sortOrder, isActive, parentId } = req.body;
+    const safeNameDe = String(nameDe || '').trim();
+    if (!safeNameDe) {
+      return res.status(400).json({ error: 'Category name is required' });
+    }
+    const safeSlug = await uniqueCategorySlug(slug || safeNameDe);
     const category = await prisma.menuCategory.create({
-      data: { nameDe, nameFa, nameEn: nameEn || null, slug, sortOrder, isActive, parentId: parentId || null }
+      data: {
+        nameDe: safeNameDe,
+        nameFa: nameFa || safeNameDe,
+        nameEn: nameEn || safeNameDe,
+        slug: safeSlug,
+        sortOrder: Number(sortOrder) || 0,
+        isActive: isActive !== false,
+        parentId: parentId || null
+      }
     });
     touchSitemap();
     emitMenuUpdated(category);

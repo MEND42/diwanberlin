@@ -3,6 +3,7 @@ const rateLimit = require('express-rate-limit');
 const { PrismaClient } = require('@prisma/client');
 const socketService = require('../services/socket');
 const pushService = require('../services/push');
+const { ensureDefaultMenu } = require('../utils/defaultMenu');
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -25,6 +26,7 @@ async function findTableByToken(token) {
 }
 
 async function loadPublicMenu() {
+  await ensureDefaultMenu(prisma);
   return prisma.menuCategory.findMany({
     where: { isActive: true, parentId: null },
     orderBy: { sortOrder: 'asc' },

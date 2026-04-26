@@ -199,8 +199,23 @@ async function seedDefaultMenu(prisma) {
   };
 }
 
+async function ensureDefaultMenu(prisma) {
+  const [categoryCount, itemCount] = await Promise.all([
+    prisma.menuCategory.count(),
+    prisma.menuItem.count(),
+  ]);
+
+  if (categoryCount > 0 && itemCount > 0) {
+    return { seeded: false, categoriesCount: categoryCount, createdItems: 0, updatedItems: 0 };
+  }
+
+  const result = await seedDefaultMenu(prisma);
+  return { seeded: true, ...result };
+}
+
 module.exports = {
   DEFAULT_CATEGORIES,
   DEFAULT_ITEMS,
   seedDefaultMenu,
+  ensureDefaultMenu,
 };

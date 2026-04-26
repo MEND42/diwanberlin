@@ -1167,7 +1167,7 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
             <div class="fg"><label>E-Mail</label><input type="email" id="resEmail" data-i18n="resEmail" required></div>
           </div>
           <div class="frow">
-            <div class="fg"><label data-i18n="resDate">Datum</label><input type="date" id="resDate" required></div>
+            <div class="fg"><label data-i18n="resDate">Datum</label><input type="date" id="resDate"></div>
             <div class="fg"><label data-i18n="resTime">Uhrzeit</label>
               <select id="resTime">
                 <option value="09:00">09:00</option>
@@ -1196,7 +1196,7 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
           </div>
           <div class="fg"><label data-i18n="resNotes">Besondere Wünsche (optional)</label><textarea id="resNotes" data-i18n="resNotes"></textarea></div>
           <button type="submit" class="btn-g" data-i18n="resSubmit">Reservierung anfragen <span class="ac">↗</span></button>
-          <div id="form-ok" style="display:none; color: green; margin-top: 10px;">✓ Anfrage gesendet · درخواست شما ثبت شد</div>
+          <div id="form-ok" role="status" aria-live="polite" style="display:none; color: green; margin-top: 10px;">✓ Anfrage gesendet · درخواست شما ثبت شد</div>
         </form>
       </div>
       
@@ -1245,14 +1245,14 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
             <div class="fg"><label>E-Mail</label><input type="email" id="evEmail" data-i18n="resEmail" required></div>
           </div>
           <div class="frow">
-            <div class="fg"><label>Telefon</label><input type="tel" id="evPhone" data-i18n="resPhone" required></div>
+            <div class="fg"><label>Telefon</label><input type="tel" id="evPhone" data-i18n="resPhone"></div>
           </div>
           <div class="frow">
-            <div class="fg"><label data-i18n="resDate">Datum</label><input type="date" id="evDate" required></div>
-            <div class="fg"><label data-i18n="resTime">Uhrzeit / Dauer</label><input type="text" id="evTiming" placeholder="18:00 - 22:00" required></div>
+            <div class="fg"><label data-i18n="resDate">Datum</label><input type="date" id="evDate"></div>
+            <div class="fg"><label data-i18n="resTime">Uhrzeit / Dauer</label><input type="text" id="evTiming" placeholder="18:00 - 22:00"></div>
           </div>
           <div class="frow">
-            <div class="fg"><label data-i18n="resGuests">Anzahl Personen</label><input type="number" id="evGuests" placeholder="z.B. 30" required></div>
+            <div class="fg"><label data-i18n="resGuests">Anzahl Personen</label><input type="number" id="evGuests" placeholder="z.B. 30"></div>
             <div class="fg"><label data-i18n="eventType">Art der Veranstaltung</label>
               <select id="evType">
                 <option value="Verlobung" data-i18n="eventTypeEng">Verlobung</option>
@@ -1275,7 +1275,7 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
           <div class="fg"><label data-i18n="eventDecor">Dekoration</label><input type="text" id="evDecor" data-i18n="eventDecor"></div>
           <div class="fg"><label data-i18n="resNotes">Sonstige Anmerkungen</label><textarea id="evNotes" data-i18n="resNotes"></textarea></div>
           <button type="submit" class="btn-g" data-i18n="eventSubmit">Anfrage senden <span class="ac">↗</span></button>
-          <div id="event-form-ok" style="display:none; color: green; margin-top: 10px;">✓ Anfrage gesendet · درخواست شما ثبت شد</div>
+          <div id="event-form-ok" role="status" aria-live="polite" style="display:none; color: green; margin-top: 10px;">✓ Anfrage gesendet · درخواست شما ثبت شد</div>
         </form>
       </div>
     </div>

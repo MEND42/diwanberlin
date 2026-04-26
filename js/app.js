@@ -26,6 +26,132 @@ function localized(record, field, fallbackField) {
   return record?.[`${field}${suffix}`] || record?.[fallbackField] || record?.[`${field}De`] || '';
 }
 
+const PUBLIC_MENU_FALLBACK = [
+  {
+    slug: 'drinks',
+    nameDe: 'Getränke',
+    nameFa: 'نوشیدنی‌ها',
+    nameEn: 'Drinks',
+    subcategories: [
+      {
+        slug: 'hot-drinks',
+        nameDe: 'Heiße Getränke',
+        nameFa: 'نوشیدنی‌های گرم',
+        nameEn: 'Hot Drinks',
+        items: [
+          { nameDe: 'Heiße Schokolade', nameFa: 'شکلات داغ', nameEn: 'Hot Chocolate', descriptionDe: 'Dunkle Schokolade mit warmer Milch.', descriptionFa: 'شکلات تلخ با شیر گرم.', descriptionEn: 'Dark chocolate with warm milk.', price: 4.4, isAvailable: true },
+          { nameDe: 'Chai Latte', nameFa: 'چای لاته', nameEn: 'Chai Latte', descriptionDe: 'Gewürztee mit Milch und feinem Schaum.', descriptionFa: 'چای ادویه‌دار با شیر و کف نرم.', descriptionEn: 'Spiced tea with milk and foam.', price: 4.6, isAvailable: true },
+          { nameDe: 'Salep', nameFa: 'ثعلب', nameEn: 'Salep', descriptionDe: 'Warmer Milchdrink mit Zimt.', descriptionFa: 'نوشیدنی گرم شیری با دارچین.', descriptionEn: 'Warm milk drink with cinnamon.', price: 4.8, isAvailable: true },
+        ],
+      },
+      {
+        slug: 'coffees',
+        nameDe: 'Kaffee',
+        nameFa: 'قهوه',
+        nameEn: 'Coffee',
+        items: [
+          { nameDe: 'Espresso', nameFa: 'اسپرسو', nameEn: 'Espresso', descriptionDe: 'Kräftiger Espresso mit dichter Crema.', descriptionFa: 'اسپرسوی قوی با کرمای لطیف.', descriptionEn: 'Strong espresso with rich crema.', price: 2.9, isAvailable: true },
+          { nameDe: 'Cappuccino', nameFa: 'کاپوچینو', nameEn: 'Cappuccino', descriptionDe: 'Espresso mit samtigem Milchschaum.', descriptionFa: 'اسپرسو با کف شیر نرم.', descriptionEn: 'Espresso with silky milk foam.', price: 4.2, isAvailable: true },
+          { nameDe: 'Kardamom Kaffee', nameFa: 'قهوه هل‌دار', nameEn: 'Cardamom Coffee', descriptionDe: 'Hauskaffee mit Kardamom.', descriptionFa: 'قهوه خانگی با هل.', descriptionEn: 'House coffee with cardamom.', price: 4.8, isAvailable: true, isSpecial: true },
+        ],
+      },
+      {
+        slug: 'teas',
+        nameDe: 'Tee',
+        nameFa: 'چای',
+        nameEn: 'Tea',
+        items: [
+          { nameDe: 'Afghanischer Grüntee', nameFa: 'چای سبز افغانی', nameEn: 'Afghan Green Tea', descriptionDe: 'Grüntee mit Kardamom.', descriptionFa: 'چای سبز با هل.', descriptionEn: 'Green tea with cardamom.', price: 3.9, isAvailable: true },
+          { nameDe: 'Kashmiri Chai', nameFa: 'چای کشمیری', nameEn: 'Kashmiri Chai', descriptionDe: 'Cremiger rosa Tee mit Milch.', descriptionFa: 'چای صورتی خامه‌ای با شیر.', descriptionEn: 'Creamy pink tea with milk.', price: 4.9, isAvailable: true },
+          { nameDe: 'Frischer Minztee', nameFa: 'چای نعناع تازه', nameEn: 'Fresh Mint Tea', descriptionDe: 'Frische Minze, heiß aufgegossen.', descriptionFa: 'نعناع تازه دم‌شده.', descriptionEn: 'Fresh mint infusion.', price: 3.7, isAvailable: true },
+        ],
+      },
+      {
+        slug: 'cold-drinks',
+        nameDe: 'Kalte Getränke',
+        nameFa: 'نوشیدنی‌های سرد',
+        nameEn: 'Cold Drinks',
+        items: [
+          { nameDe: 'Iced Latte', nameFa: 'آیس لاته', nameEn: 'Iced Latte', descriptionDe: 'Espresso auf Eis mit kalter Milch.', descriptionFa: 'اسپرسو با یخ و شیر سرد.', descriptionEn: 'Espresso over ice with cold milk.', price: 4.8, isAvailable: true },
+          { nameDe: 'Hausgemachte Limonade', nameFa: 'لیموناد خانگی', nameEn: 'Homemade Lemonade', descriptionDe: 'Zitrone, Minze und leichte Süße.', descriptionFa: 'لیمو، نعناع و شیرینی ملایم.', descriptionEn: 'Lemon, mint and light sweetness.', price: 4.9, isAvailable: true },
+        ],
+      },
+      {
+        slug: 'soft-drinks',
+        nameDe: 'Softdrinks',
+        nameFa: 'نوشابه‌ها',
+        nameEn: 'Soft Drinks',
+        items: [
+          { nameDe: 'Mineralwasser', nameFa: 'آب معدنی', nameEn: 'Mineral Water', descriptionDe: 'Still oder sprudelnd.', descriptionFa: 'ساده یا گازدار.', descriptionEn: 'Still or sparkling.', price: 2.8, isAvailable: true },
+          { nameDe: 'Cola / Fanta / Sprite', nameFa: 'کولا / فانتا / اسپرایت', nameEn: 'Cola / Fanta / Sprite', descriptionDe: 'Klassisch gekühlt serviert.', descriptionFa: 'سرد سرو می‌شود.', descriptionEn: 'Served chilled.', price: 3.2, isAvailable: true },
+          { nameDe: 'Ayran', nameFa: 'آیران', nameEn: 'Ayran', descriptionDe: 'Joghurtgetränk, leicht salzig.', descriptionFa: 'نوشیدنی ماستی کمی شور.', descriptionEn: 'Lightly salted yoghurt drink.', price: 3.4, isAvailable: true },
+        ],
+      },
+      {
+        slug: 'seasonal-juices',
+        nameDe: 'Saisonale Säfte',
+        nameFa: 'آبمیوه‌های فصلی',
+        nameEn: 'Seasonal Juices',
+        items: [
+          { nameDe: 'Frischer Orangensaft', nameFa: 'آب پرتقال تازه', nameEn: 'Fresh Orange Juice', descriptionDe: 'Frisch gepresst.', descriptionFa: 'تازه فشرده‌شده.', descriptionEn: 'Freshly squeezed.', price: 5.2, isAvailable: true },
+          { nameDe: 'Granatapfelsaft', nameFa: 'آب انار', nameEn: 'Pomegranate Juice', descriptionDe: 'Fruchtig und leicht herb.', descriptionFa: 'میوه‌ای و کمی ترش.', descriptionEn: 'Fruity and slightly tart.', price: 5.8, isAvailable: true },
+          { nameDe: 'Mango Lassi', nameFa: 'منگو لسی', nameEn: 'Mango Lassi', descriptionDe: 'Mango, Joghurt und Kardamom.', descriptionFa: 'انبه، ماست و هل.', descriptionEn: 'Mango, yoghurt and cardamom.', price: 5.5, isAvailable: true },
+        ],
+      },
+      {
+        slug: 'alcoholic-drinks',
+        nameDe: 'Alkoholische Getränke',
+        nameFa: 'نوشیدنی‌های الکلی',
+        nameEn: 'Alcoholic Drinks',
+        items: [
+          { nameDe: 'Hauswein Weiß', nameFa: 'شراب سفید خانه', nameEn: 'House White Wine', descriptionDe: 'Glas Hauswein, gekühlt serviert.', descriptionFa: 'یک گیلاس شراب سفید خانه.', descriptionEn: 'Glass of house white wine.', price: 5.8, isAvailable: true },
+          { nameDe: 'Hauswein Rot', nameFa: 'شراب سرخ خانه', nameEn: 'House Red Wine', descriptionDe: 'Glas Hauswein, weich und rund.', descriptionFa: 'یک گیلاس شراب سرخ خانه.', descriptionEn: 'Glass of house red wine.', price: 5.8, isAvailable: true },
+          { nameDe: 'Bier', nameFa: 'آبجو', nameEn: 'Beer', descriptionDe: 'Flaschenbier, gekühlt.', descriptionFa: 'آبجوی بطری سرد.', descriptionEn: 'Bottled beer, chilled.', price: 4.2, isAvailable: true },
+        ],
+      },
+    ],
+  },
+  {
+    slug: 'snacks',
+    nameDe: 'Snacks',
+    nameFa: 'میان‌وعده‌ها',
+    nameEn: 'Snacks',
+    subcategories: [
+      {
+        slug: 'light-snacks',
+        nameDe: 'Leichte Snacks',
+        nameFa: 'میان‌وعده‌های سبک',
+        nameEn: 'Light Snacks',
+        items: [
+          { nameDe: 'Croissant', nameFa: 'کروسان', nameEn: 'Croissant', descriptionDe: 'Buttercroissant, frisch aufgebacken.', descriptionFa: 'کروسان کره‌ای تازه.', descriptionEn: 'Fresh butter croissant.', price: 2.9, isAvailable: true },
+          { nameDe: 'Hummus Teller', nameFa: 'بشقاب حمص', nameEn: 'Hummus Plate', descriptionDe: 'Hummus, Öl, Gewürze und Brot.', descriptionFa: 'حمص با روغن، ادویه و نان.', descriptionEn: 'Hummus with oil, spices and bread.', price: 6.5, isAvailable: true },
+        ],
+      },
+      {
+        slug: 'afghan-snacks',
+        nameDe: 'Afghanische Snacks',
+        nameFa: 'میان‌وعده‌های افغانی',
+        nameEn: 'Afghan Snacks',
+        items: [
+          { nameDe: 'Bolani Kartoffel', nameFa: 'بولانی کچالو', nameEn: 'Potato Bolani', descriptionDe: 'Gefülltes Fladenbrot mit Kartoffel und Kräutern.', descriptionFa: 'نان پرشده با کچالو و سبزی.', descriptionEn: 'Flatbread filled with potato and herbs.', price: 6.9, isAvailable: true, isSpecial: true },
+          { nameDe: 'Sambosa', nameFa: 'سمبوسه', nameEn: 'Sambosa', descriptionDe: 'Knusprige Teigtaschen mit würziger Füllung.', descriptionFa: 'خمیر ترد با مواد مزه‌دار.', descriptionEn: 'Crispy pastries with spiced filling.', price: 5.9, isAvailable: true },
+          { nameDe: 'Mantu Snack', nameFa: 'منتو کوچک', nameEn: 'Mantu Snack', descriptionDe: 'Gedämpfte Teigtaschen mit Joghurt und Sauce.', descriptionFa: 'منتوی بخارپز با ماست و سس.', descriptionEn: 'Steamed dumplings with yoghurt and sauce.', price: 8.5, isAvailable: true },
+        ],
+      },
+      {
+        slug: 'sweet-snacks',
+        nameDe: 'Süße Snacks',
+        nameFa: 'میان‌وعده‌های شیرین',
+        nameEn: 'Sweet Snacks',
+        items: [
+          { nameDe: 'Baklava', nameFa: 'بقلوا', nameEn: 'Baklava', descriptionDe: 'Süßes Gebäck mit Nüssen.', descriptionFa: 'شیرینی با مغزها.', descriptionEn: 'Sweet pastry with nuts.', price: 4.8, isAvailable: true },
+          { nameDe: 'Hauskuchen', nameFa: 'کیک خانگی', nameEn: 'House Cake', descriptionDe: 'Tageskuchen aus der Vitrine.', descriptionFa: 'کیک روز از ویترین.', descriptionEn: 'Cake of the day from the counter.', price: 4.6, isAvailable: true },
+        ],
+      },
+    ],
+  },
+];
+
 function flattenItems(category) {
   const direct = Array.isArray(category.items) ? category.items : [];
   const nested = Array.isArray(category.subcategories)
@@ -61,29 +187,22 @@ async function renderMenu() {
       categories = JSON.parse(cache);
       stale = true;
     } else {
-      tabsContainer.innerHTML = '';
-      inner.querySelectorAll('.panel.dynamic-panel,.menu-extra-controls').forEach(el => el.remove());
-      const fallback = document.createElement('div');
-      fallback.className = 'panel dynamic-panel active';
-      fallback.innerHTML = '<div class="mi"><div class="mn">Speisekarte demnächst verfügbar</div><div class="md">Unsere aktuelle Karte kann gerade nicht geladen werden.</div></div>';
-      inner.appendChild(fallback);
-      return;
+      categories = PUBLIC_MENU_FALLBACK;
+      stale = true;
     }
   }
 
-  const visibleCategories = categories
+  let visibleCategories = categories
     .map(category => ({ ...category, _items: flattenItems(category) }))
     .filter(category => category._items.length > 0);
 
   inner.querySelectorAll('.panel.dynamic-panel,.menu-extra-controls').forEach(el => el.remove());
 
   if (!visibleCategories.length) {
-    tabsContainer.innerHTML = '';
-    const empty = document.createElement('div');
-    empty.className = 'panel dynamic-panel active';
-    empty.innerHTML = '<div class="mi"><div class="mn">Speisekarte demnächst verfügbar</div><div class="md">Neue Speisen und Getränke werden bald eingetragen.</div></div>';
-    inner.appendChild(empty);
-    return;
+    visibleCategories = PUBLIC_MENU_FALLBACK
+      .map(category => ({ ...category, _items: flattenItems(category) }))
+      .filter(category => category._items.length > 0);
+    stale = true;
   }
 
   tabsContainer.innerHTML = visibleCategories.map((category, index) => {
