@@ -146,6 +146,26 @@
   
   .current-order-list { margin-top: 20px; }
   .order-line { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed var(--border); }
+  
+  /* Delete Modal */
+  .delete-modal { max-width: 400px; }
+  .delete-modal .modal-body { text-align: center; padding: 32px 20px; }
+  .delete-modal h3 { margin-bottom: 12px; color: var(--text-main); }
+  .delete-modal p { color: var(--text-muted); margin-bottom: 8px; }
+  .delete-modal .item-name { color: var(--gold); font-weight: 600; margin-bottom: 20px; }
+  .delete-modal .modal-footer { justify-content: center; }
+  .delete-modal .btn-danger { background: var(--danger); }
+  .delete-modal .btn-danger:hover { background: #dc2626; }
+  
+  /* Dashboard charts */
+  .chart-container { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; padding: 20px; margin-bottom: 20px; }
+  .chart-title { font-size: 14px; font-weight: 600; margin-bottom: 16px; color: var(--text-main); }
+  .bar-chart { display: flex; align-items: flex-end; gap: 4px; height: 120px; }
+  .bar-chart .bar { flex: 1; background: var(--gold); border-radius: 4px 4px 0 0; min-height: 4px; transition: height 0.3s; position: relative; }
+  .bar-chart .bar:hover { background: var(--gold-hover); }
+  .bar-chart .bar::after { content: attr(data-hour); position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%); font-size: 10px; color: var(--text-muted); }
+  .bar-chart .bar[data-count="0"] { background: var(--border); }
+  
   @media (max-width: 960px) {
     body { overflow: auto; }
     #app-container { min-height: 100vh; height: auto; }
@@ -202,8 +222,14 @@
         <div class="nav-item" data-view="customers" data-title="Kunden & Rabatte">
           <span class="nav-icon">CRM</span><span class="nav-copy"><span class="nav-title">Kunden & Rabatte</span><span class="nav-meta">Treue und Codes</span></span>
         </div>
+        <div class="nav-item owner-only" data-view="staff" data-title="Personalverwaltung">
+          <span class="nav-icon">HR</span><span class="nav-copy"><span class="nav-title">Personal</span><span class="nav-meta">Mitarbeiter & Schichten</span></span>
+        </div>
         <div class="nav-item owner-only" data-view="users" data-title="Teamkonten">
           <span class="nav-icon">USR</span><span class="nav-copy"><span class="nav-title">Teamkonten</span><span class="nav-meta">Rollen und Zugriff</span></span>
+        </div>
+        <div class="nav-item owner-only" data-view="settings" data-title="Einstellungen">
+          <span class="nav-icon">CFG</span><span class="nav-copy"><span class="nav-title">Einstellungen</span><span class="nav-meta">Kapazitäten & mehr</span></span>
         </div>
       </div>
       <div class="user-box">
@@ -227,6 +253,14 @@
           <div class="metric-card"><div class="metric-label">Belegte Tische</div><div class="metric-value mono" id="metric-tables">0</div><div class="metric-foot">Von 30 Tischen</div></div>
           <div class="metric-card"><div class="metric-label">Reservierungen</div><div class="metric-value mono" id="metric-reservations">0</div><div class="metric-foot">Ausstehend</div></div>
           <div class="metric-card"><div class="metric-label">Event-Anfragen</div><div class="metric-value mono" id="metric-events">0</div><div class="metric-foot">Ausstehend</div></div>
+        </div>
+        
+        <!-- Busy Hours Chart -->
+        <div class="chart-container">
+          <div class="chart-title">Stoßzeiten (Reservierungen pro Stunde)</div>
+          <div class="bar-chart" id="busy-hours-chart">
+            <!-- Rendered by JS -->
+          </div>
         </div>
 
         <!-- TABLES VIEW -->
@@ -487,7 +521,7 @@
   </div>
 
   <!-- Generic Form Modal -->
-  <div id="form-modal" class="modal-overlay hidden">
+<div id="form-modal" class="modal-overlay hidden">
     <div class="modal-content">
       <div class="modal-header">
         <h2 id="form-title">Eintrag</h2>
@@ -502,6 +536,115 @@
       </form>
     </div>
   </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div id="delete-modal" class="modal-overlay hidden">
+    <div class="modal-content delete-modal">
+      <div class="modal-body">
+        <h3>Möchten Sie diesen Eintrag löschen?</h3>
+        <p>Diese Aktion kann nicht rückgängig gemacht werden.</p>
+        <div class="item-name" id="delete-item-name"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModal('delete-modal')">Abbrechen</button>
+        <button type="button" class="btn btn-danger" id="delete-confirm-btn">Löschen</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  // Settings view handler
+  window.initSettingsView = async function() {
+    try {
+      const res = await fetch('/api/admin/settings');
+      const settings = await res.json();
+      settings.forEach(s => {
+        const el = document.getElementById('setting-' + s.key);
+        if (el) el.value = s.value || '';
+      });
+    } catch(e) { console.warn('Could not load settings', e); }
+  };
+
+  window.saveSettings = async function() {
+    const fields = ['maxCapacity', 'eventsPerMonth', 'openingTime', 'closingTime'];
+    const token = localStorage.getItem('diwanAdminToken');
+    for (const key of fields) {
+      const el = document.getElementById('setting-' + key);
+      if (!el) continue;
+      try {
+        await fetch('/api/admin/settings/' + key, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+          body: JSON.stringify({ value: el.value })
+        });
+      } catch(e) { console.error('Failed to save', key, e); }
+    }
+    const status = document.getElementById('settings-save-status');
+    status.style.display = 'inline';
+    setTimeout(() => status.style.display = 'none', 2000);
+  };
+
+  // View switching
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const view = item.dataset.view;
+      if (!view) return;
+      document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+      item.classList.add('active');
+      document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
+      document.getElementById('view-' + view)?.classList.add('active');
+      document.getElementById('view-title').textContent = item.dataset.title || view;
+      if (view === 'settings' && typeof initSettingsView === 'function') initSettingsView();
+    });
+  });
+  
+  // Delete Modal Functions
+  window.showDeleteConfirm = function(itemName, onConfirm) {
+    document.getElementById('delete-item-name').textContent = itemName;
+    document.getElementById('delete-modal').classList.remove('hidden');
+    const btn = document.getElementById('delete-confirm-btn');
+    const newBtn = btn.cloneNode(true);
+    btn.parentNode.replaceChild(newBtn, btn);
+    newBtn.addEventListener('click', async () => {
+      try {
+        await onConfirm();
+        closeModal('delete-modal');
+      } catch(e) { alert(e.message || 'Fehler beim Löschen'); }
+    });
+  };
+  
+  window.closeModal = function(id) {
+    document.getElementById(id)?.classList.add('hidden');
+  };
+  
+  // Busy Hours Chart
+  async function renderBusyHoursChart() {
+    const chartEl = document.getElementById('busy-hours-chart');
+    if (!chartEl) return;
+    try {
+      const res = await fetch('/api/admin/reservations', { headers: { 'Authorization': 'Bearer ' + localStorage.getItem('diwanAdminToken') }});
+      const data = await res.json();
+      const hours = {};
+      (data || []).forEach(r => {
+        if (r.time) {
+          const h = r.time.split(':')[0];
+          hours[h] = (hours[h] || 0) + 1;
+        }
+      });
+      const max = Math.max(...Object.values(hours), 1);
+      let html = '';
+      for (let h = 9; h <= 21; h++) {
+        const count = hours[h] || 0;
+        const height = max > 0 ? (count / max * 100) : 0;
+        html += `<div class="bar" style="height:${height}%" data-hour="${h}:00" data-count="${count}" title="${count} Reservierungen um ${h}:00"></div>`;
+      }
+      chartEl.innerHTML = html;
+    } catch(e) { chartEl.innerHTML = '<div class="muted">Keine Daten verfügbar</div>'; }
+  }
+  
+  // Initialize on load
+  renderBusyHoursChart();
+  </script>
 
   <script src="/js/admin.js"></script>
   <script type="module" src="/admin/js/manage-app.js"></script>

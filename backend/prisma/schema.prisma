@@ -25,20 +25,22 @@ model MenuCategory {
 }
 
 model MenuItem {
-  id            String       @id @default(uuid()) @db.Uuid
-  categoryId    String       @db.Uuid
-  category      MenuCategory @relation(fields: [categoryId], references: [id])
-  nameDe        String
-  nameFa        String
-  descriptionDe String
-  descriptionFa String?
-  price         Decimal      @db.Decimal(10, 2)
-  imageUrl      String?
-  isSpecial     Boolean      @default(false)
-  allergens     String?
-  isAvailable   Boolean      @default(true)
-  sortOrder     Int          @default(0)
-  orderItems    OrderItem[]
+  id              String       @id @default(uuid()) @db.Uuid
+  categoryId      String       @db.Uuid
+  category        MenuCategory @relation(fields: [categoryId], references: [id])
+  nameDe          String
+  nameFa          String
+  nameEn          String?
+  descriptionDe   String
+  descriptionFa  String?
+  descriptionEn  String?
+  price           Decimal      @db.Decimal(10, 2)
+  imageUrl        String?
+  isSpecial       Boolean      @default(false)
+  allergens       String?
+  isAvailable     Boolean      @default(true)
+  sortOrder       Int          @default(0)
+  orderItems      OrderItem[]
 }
 
 model Table {
@@ -273,6 +275,19 @@ model SiteContentBlock {
   type        String   @default("TEXT") // TEXT, TEXTAREA, URL, BOOLEAN
   valueDe     String?
   valueFa     String?
+  valueEn     String?
   isPublished Boolean  @default(true)
   updatedAt   DateTime @updatedAt
+}
+
+model SiteSettings {
+  id              String   @id @default(uuid()) @db.Uuid
+  key             String   @unique
+  value           String
+  valueDe         String?
+  valueFa         String?
+  valueEn         String?
+  type            String   @default("STRING") // STRING, NUMBER, BOOLEAN
+  category        String   @default("general") // general, capacities, contact
+  updatedAt       DateTime @updatedAt
 }

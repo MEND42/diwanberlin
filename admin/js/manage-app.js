@@ -9,8 +9,8 @@ if (session) {
       const target = prompt('Befehl oder Ziel öffnen', 'Tische');
       if (!target) return;
       const normalized = target.toLowerCase();
-      if (normalized.includes('küche') || normalized.includes('kitchen')) location.href = '/admin/kitchen.html';
-      if (normalized.includes('service')) location.href = '/admin/service.html';
+      if (normalized.includes('küche') || normalized.includes('kitchen')) location.href = '/admin-v2/kitchen';
+      if (normalized.includes('service')) location.href = '/admin-v2/service';
     }
   });
 }

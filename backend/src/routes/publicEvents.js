@@ -70,7 +70,7 @@ router.post('/:id/register', registrationLimiter, async (req, res) => {
     pushService.notifyRoles(['OWNER', 'MANAGER'], {
       title: 'Neue Event-Anmeldung',
       body: `${registration.name} · ${event.titleDe} · ${registration.guests} Personen`,
-      url: '/admin/management/event-listings',
+      url: '/admin-v2/management/event-listings',
       type: 'event',
     });
 

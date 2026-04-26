@@ -87,7 +87,7 @@ router.post('/table/:token/call', callLimiter, async (req, res) => {
     pushService.notifyRoles(['WAITER', 'MANAGER', 'OWNER'], {
       title: `Tisch ${table.number} ruft`,
       body: table.label || 'Kellner rufen',
-      url: '/admin/service/floor',
+      url: '/admin-v2/service/floor',
       type: 'waiter',
     });
     res.json({ ok: true, ...payload });
@@ -267,7 +267,7 @@ async function placeOrder(req, res) {
     pushService.notifyRoles(['KITCHEN', 'MANAGER', 'OWNER'], {
       title: `Neue QR-Bestellung · Tisch ${order.table?.number ?? table.number}`,
       body: `#${order.orderNumber} · ${order.items?.length ?? 0} Artikel`,
-      url: '/admin/kitchen',
+      url: '/admin-v2/kitchen',
       type: 'order',
     });
     recentOrdersByToken.set(req.params.token, Date.now());

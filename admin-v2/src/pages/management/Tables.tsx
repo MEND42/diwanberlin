@@ -6,6 +6,7 @@ import { tablesApi, ordersApi } from '@/lib/api';
 import { cn, formatEur, formatRelativeTime, springs, haptic } from '@/lib/utils';
 import { BottomSheet } from '@/components/primitives/BottomSheet';
 import { HoldButton } from '@/components/primitives/HoldButton';
+import { useToast } from '@/components/Toast';
 import type { Table, Order } from '@/types';
 
 const STATUS_STYLES: Record<Table['status'], { border: string; bg: string; dot: string; label: string }> = {
@@ -67,6 +68,7 @@ function TableDetailSheet({
   table, onClose, onTableChange,
 }: { table: Table | null; onClose: () => void; onTableChange: (table: Table) => void }) {
   const qc = useQueryClient();
+  const { showToast } = useToast();
   const [labelDraft, setLabelDraft] = useState('');
   const [billMode, setBillMode] = useState<'total' | 'split'>('total');
 
@@ -87,9 +89,11 @@ function TableDetailSheet({
       tablesApi.updateStatus(id, status),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['tables'] });
+      showToast('success', 'Tischstatus aktualisiert');
       haptic('success');
       onClose();
     },
+    onError: () => showToast('error', 'Fehler beim Aktualisieren'),
   });
 
   const labelMut = useMutation({
@@ -98,8 +102,10 @@ function TableDetailSheet({
     onSuccess: (updated) => {
       qc.invalidateQueries({ queryKey: ['tables'] });
       onTableChange(updated);
+      showToast('success', 'Tischbeschriftung gespeichert');
       haptic('success');
     },
+    onError: () => showToast('error', 'Fehler beim Speichern'),
   });
 
   const tokenMut = useMutation({
@@ -107,8 +113,10 @@ function TableDetailSheet({
     onSuccess: (updated) => {
       qc.invalidateQueries({ queryKey: ['tables'] });
       onTableChange(updated);
+      showToast('success', 'QR-Code neu generiert');
       haptic('success');
     },
+    onError: () => showToast('error', 'Fehler beim Generieren'),
   });
 
   const activeOrders = orders.filter(o => o.status !== 'PAID');

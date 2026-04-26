@@ -372,7 +372,7 @@ async function openTableModal(tableId, label) {
 
   // Populate Categories Dropdown
   const catSelect = document.getElementById('tm-cat');
-  catSelect.innerHTML = categories.map(c => `<option value="${c.id}">${c.nameDe}</option>`).join('');
+  catSelect.innerHTML = categories.map(c => `<option value="${c.id}">${escapeHtml(c.nameDe)}</option>`).join('');
 
   renderMenuItemsForOrder(categories[0]?.id);
 
@@ -595,9 +595,11 @@ function openMenuItemForm(id) {
   openForm(id ? 'Menüartikel bearbeiten' : 'Neuer Menüartikel', [
     { name: 'categoryId', label: 'Kategorie', value: item.categoryId || cat?.id, type: 'select', options: categories.map(c => ({ value: c.id, label: c.nameDe })) },
     { name: 'nameDe', label: 'Name Deutsch', value: item.nameDe, required: true },
-    { name: 'nameFa', label: 'Name Persisch', value: item.nameFa },
+    { name: 'nameFa', label: 'Name Persisch (فارسی)', value: item.nameFa },
+    { name: 'nameEn', label: 'Name Englisch', value: item.nameEn },
     { name: 'descriptionDe', label: 'Beschreibung Deutsch', value: item.descriptionDe, type: 'textarea' },
     { name: 'descriptionFa', label: 'Beschreibung Persisch', value: item.descriptionFa, type: 'textarea' },
+    { name: 'descriptionEn', label: 'Beschreibung Englisch', value: item.descriptionEn, type: 'textarea' },
     { name: 'price', label: 'Preis', value: item.price || '', type: 'number', required: true },
     { name: 'sortOrder', label: 'Sortierung', value: item.sortOrder || 0, type: 'number' },
     { name: 'isAvailable', label: 'Verfügbar', value: item.isAvailable === false ? 'false' : 'true', type: 'select', options: [{value:'true',label:'Ja'}, {value:'false',label:'Nein'}] }
@@ -611,6 +613,36 @@ function openMenuItemForm(id) {
     });
     loadMenu();
   });
+  
+  if (id && item.imageUrl) {
+    setTimeout(() => {
+      const body = document.getElementById('form-body');
+      const imgContainer = document.createElement('div');
+      imgContainer.innerHTML = `<div style="margin-top:12px"><img src="${item.imageUrl}" style="max-width:120px;border-radius:8px;margin-bottom:8px"><br><button type="button" class="btn btn-outline btn-small" onclick="uploadMenuItemImage('${id}')">Neues Bild hochladen</button></div>`;
+      body.appendChild(imgContainer);
+    }, 100);
+  }
+}
+
+async function uploadMenuItemImage(id) {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.onchange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const formData = new FormData();
+    formData.append('image', file);
+    const token = localStorage.getItem('diwanAdminToken');
+    await fetch(`/api/admin/menu/items/${id}/image`, {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token },
+      body: formData
+    });
+    loadMenu();
+    alert('Bild hochgeladen!');
+  };
+  input.click();
 }
 
 async function toggleMenuItem(id, isAvailable) {
@@ -654,6 +686,7 @@ async function loadReservations() {
       <td>
         <button class="btn btn-outline btn-small" onclick="openReservationDetails('${r.id}')">Details</button>
         <button class="btn btn-outline btn-small" onclick="openAssignTable('${r.id}')">Tisch</button>
+        <button class="btn btn-outline btn-small" style="color:var(--danger);border-color:var(--danger)" onclick="deleteReservation('${r.id}', '${r.name}')">Löschen</button>
       </td>
     </tr>
   `).join('');
@@ -666,6 +699,13 @@ async function updateResStatus(id, status) {
     body: JSON.stringify({ status })
   });
   loadReservations();
+}
+
+async function deleteReservation(id, name) {
+  showDeleteConfirm(`Reservierung von ${name}`, async () => {
+    await apiFetch(`/reservations/${id}`, { method: 'DELETE' });
+    loadReservations();
+  });
 }
 
 function openReservationDetails(id) {
@@ -724,7 +764,8 @@ async function loadEvents() {
           <option value="CANCELLED" ${e.status==='CANCELLED'?'selected':''}>Abgesagt</option>
         </select>
       </td>
-      <td><button class="btn btn-outline btn-small" onclick="openEventInquiryDetails('${e.id}')">Details</button></td>
+      <td><button class="btn btn-outline btn-small" onclick="openEventInquiryDetails('${e.id}')">Details</button>
+      <button class="btn btn-outline btn-small" style="color:var(--danger);border-color:var(--danger)" onclick="deleteEvent('${e.id}', '${e.name}')">Löschen</button></td>
     </tr>
   `).join('');
   renderOpsSummary();
@@ -736,6 +777,13 @@ async function updateEvStatus(id, status) {
     body: JSON.stringify({ status })
   });
   loadEvents();
+}
+
+async function deleteEvent(id, name) {
+  showDeleteConfirm(`Event-Anfrage von ${name}`, async () => {
+    await apiFetch(`/events/${id}`, { method: 'DELETE' });
+    loadEvents();
+  });
 }
 
 function openEventInquiryDetails(id) {
@@ -842,7 +890,10 @@ async function loadUsers() {
       <td>${u.role}</td>
       <td>${u.isActive ? 'Ja' : 'Nein'}</td>
       <td>${new Date(u.createdAt).toLocaleDateString()}</td>
-      <td><button class="btn btn-outline" onclick="openUserForm('${u.id}')">Bearbeiten</button></td>
+      <td>
+        <button class="btn btn-outline btn-small" onclick="openUserForm('${u.id}')">Bearbeiten</button>
+        <button class="btn btn-outline btn-small" style="color:var(--danger);border-color:var(--danger)" onclick="deleteUser('${u.id}', '${u.username}')" ${u.role === 'OWNER' ? 'disabled title="Cannot delete owner"' : ''}>Löschen</button>
+      </td>
     </tr>
   `).join('');
 }
@@ -858,6 +909,14 @@ function openUserForm(id) {
     data.isActive = data.isActive === 'true';
     if (!data.password) delete data.password;
     await apiFetch(id ? `/users/${id}` : '/users', { method: id ? 'PATCH' : 'POST', body: JSON.stringify(data) });
+    loadUsers();
+  });
+}
+
+async function deleteUser(id, username) {
+  if (!confirm(`Möchten Sie das Teamkonto "${username}" wirklich löschen?`)) return;
+  showDeleteConfirm(`Teamkonto: ${username}`, async () => {
+    await apiFetch(`/users/${id}`, { method: 'DELETE' });
     loadUsers();
   });
 }

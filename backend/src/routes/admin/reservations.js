@@ -60,4 +60,14 @@ router.patch('/:id/status', async (req, res) => {
   }
 });
 
+// DELETE reservation
+router.delete('/:id', async (req, res) => {
+  try {
+    await prisma.tableReservation.delete({ where: { id: req.params.id } });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete reservation' });
+  }
+});
+
 module.exports = router;

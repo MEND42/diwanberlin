@@ -14,6 +14,20 @@ router.post('/', async (req, res) => {
       drinks, cakes, food, equipment, decor, otherNotes 
     } = req.body;
     
+    // Check for duplicate: same email + same event date within last hour
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    const existingEvent = await prisma.eventInquiry.findFirst({
+      where: {
+        email: email.toLowerCase(),
+        eventDate: new Date(eventDate),
+        createdAt: { gte: oneHourAgo }
+      }
+    });
+    
+    if (existingEvent) {
+      return res.status(409).json({ error: 'Eine Anfrage mit diesen Daten existiert bereits. Bitte warten Sie oder kontaktieren Sie uns direkt.' });
+    }
+    
     // Create event inquiry
     const event = await prisma.eventInquiry.create({
       data: {
@@ -39,7 +53,7 @@ router.post('/', async (req, res) => {
     pushService.notifyRoles(['OWNER', 'MANAGER'], {
       title: 'Neue Event-Anfrage',
       body: `${name} · ${eventType} · ${numberOfPeople} Gäste`,
-      url: '/admin/management/events',
+      url: '/admin-v2/management/events',
       type: 'event',
     });
 

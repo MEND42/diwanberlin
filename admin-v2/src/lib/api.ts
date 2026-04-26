@@ -148,6 +148,7 @@ export const teamApi = {
 // ── Dashboard ─────────────────────────────────────────────
 export const dashboardApi = {
   metrics: () => request<import('@/types').DashboardMetrics>('/dashboard'),
+  busyHours: () => request<{ hour: number; count: number; guests: number }[]>('/dashboard/busy-hours'),
 };
 
 // ── Push notifications ──────────────────────────────────
@@ -164,4 +165,63 @@ export const siteApi = {
   list:   ()               => request<unknown[]>('/site-content'),
   update: (id: string, data: unknown) => request<unknown>(`/site-content/${id}`, 'PUT', data),
   create: (data: unknown)  => request<unknown>('/site-content', 'POST', data),
+};
+
+// ── Settings ───────────────────────────────────────────────
+export interface SiteSetting {
+  id: string;
+  key: string;
+  value: string;
+  valueDe?: string;
+  valueFa?: string;
+  valueEn?: string;
+  type: string;
+  category: string;
+}
+
+export const settingsApi = {
+  list: () => request<SiteSetting[]>('/settings'),
+  get: (key: string) => request<SiteSetting>(`/settings/${key}`),
+  set: (data: { key: string; value: string; type?: string; category?: string }) =>
+    request<SiteSetting>('/settings', 'POST', data),
+  update: (key: string, data: { value?: string; valueDe?: string; valueFa?: string; valueEn?: string }) =>
+    request<SiteSetting>(`/settings/${key}`, 'PATCH', data),
+  delete: (key: string) => request<{ success: boolean }>(`/settings/${key}`, 'DELETE'),
+  getPublicCapacities: () => request<Record<string, string>>('/settings/public'),
+};
+
+// ── HR / Staff ─────────────────────────────────────────────
+export const hrApi = {
+  // Staff
+  listStaff: () => request<import('@/types').TeamMember[]>('/hr/staff'),
+  updateProfile: (adminUserId: string, data: unknown) =>
+    request<import('@/types').StaffProfile>(`/hr/staff/${adminUserId}/profile`, 'PUT', data),
+
+  // Availability
+  getAvailability: (weekStart: string) =>
+    request<import('@/types').StaffAvailability[]>(`/hr/availability?weekStart=${weekStart}`),
+  submitAvailability: (data: unknown) =>
+    request<import('@/types').StaffAvailability>('/hr/availability', 'POST', data),
+  updateAvailability: (id: string, data: unknown) =>
+    request<import('@/types').StaffAvailability>(`/hr/availability/${id}`, 'PATCH', data),
+
+  // Shifts
+  getShifts: (weekStart: string) =>
+    request<import('@/types').ShiftAssignment[]>(`/hr/shifts?weekStart=${weekStart}`),
+  createShift: (data: unknown) =>
+    request<import('@/types').ShiftAssignment>('/hr/shifts', 'POST', data),
+  updateShift: (id: string, data: unknown) =>
+    request<import('@/types').ShiftAssignment>(`/hr/shifts/${id}`, 'PATCH', data),
+  deleteShift: (id: string) =>
+    request<{ success: boolean }>(`/hr/shifts/${id}`, 'DELETE'),
+
+  // Time entries
+  getTimeEntries: (weekStart: string) =>
+    request<import('@/types').TimeEntry[]>(`/hr/time-entries?weekStart=${weekStart}`),
+  clockIn: (note?: string) =>
+    request<import('@/types').TimeEntry>('/hr/clock-in', 'POST', { note }),
+  clockOut: (id: string, breakMinutes?: number) =>
+    request<import('@/types').TimeEntry>(`/hr/clock-out/${id}`, 'POST', { breakMinutes }),
+  updateTimeEntry: (id: string, data: unknown) =>
+    request<import('@/types').TimeEntry>(`/hr/time-entries/${id}`, 'PATCH', data),
 };

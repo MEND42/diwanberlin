@@ -31,6 +31,7 @@ const eventListingsRoutes = require('./routes/eventListings');
 const siteContentRoutes = require('./routes/siteContent');
 const publicTableRoutes = require('./routes/publicTable');
 const publicEventsRoutes = require('./routes/publicEvents');
+const publicSettingsRoutes = require('./routes/publicSettings');
 
 const adminAuthRoutes = require('./routes/admin/auth');
 const adminMenuRoutes = require('./routes/admin/menu');
@@ -46,6 +47,7 @@ const adminHrRoutes = require('./routes/admin/hr');
 const adminSiteContentRoutes = require('./routes/admin/siteContent');
 const adminDashboardRoutes = require('./routes/admin/dashboard');
 const adminPushRoutes = require('./routes/admin/push');
+const adminSettingsRoutes = require('./routes/admin/settings');
 
 const app = express();
 const server = http.createServer(app);
@@ -73,6 +75,7 @@ app.use('/api/event-listings', eventListingsRoutes);
 app.use('/api/site-content', siteContentRoutes);
 app.use('/api/public', publicTableRoutes);
 app.use('/api/public/events', publicEventsRoutes);
+app.use('/api/public/settings', publicSettingsRoutes);
 
 
 // Admin Routes (Auth)
@@ -92,6 +95,7 @@ app.use('/api/admin/hr', authMiddleware, adminHrRoutes);
 app.use('/api/admin/site-content', authMiddleware, adminSiteContentRoutes);
 app.use('/api/admin/dashboard', authMiddleware, adminDashboardRoutes);
 app.use('/api/admin/push', authMiddleware, adminPushRoutes);
+app.use('/api/admin/settings', authMiddleware, adminSettingsRoutes);
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {

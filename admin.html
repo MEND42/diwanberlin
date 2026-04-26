@@ -9,7 +9,17 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="admin/css/tokens.css">
 <link rel="stylesheet" href="admin/css/shells.css">
+<script>
+  // Redirect all traffic to admin-v2
+  window.location.href = '/admin-v2' + window.location.pathname.replace('/admin.html', '').replace('/admin/', '/') || '/';
+</script>
 </head>
+<body>
+  <div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:Inter,sans-serif;">
+    <p>Wird weitergeleitet zu admin-v2...</p>
+  </div>
+</body>
+</html>
 <body class="auth-shell theme-paper">
   <main class="auth-card">
     <div class="auth-brand">

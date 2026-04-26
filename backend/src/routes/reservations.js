@@ -11,6 +11,21 @@ router.post('/', async (req, res) => {
   try {
     const { name, email, phone, date, time, guests, specialRequests } = req.body;
     
+    // Check for duplicate: same email + same date + same time within last hour
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    const existingReservation = await prisma.tableReservation.findFirst({
+      where: {
+        email: email.toLowerCase(),
+        date: new Date(date),
+        time,
+        createdAt: { gte: oneHourAgo }
+      }
+    });
+    
+    if (existingReservation) {
+      return res.status(409).json({ error: 'Eine Reservierung mit diesen Daten existiert bereits. Bitte warten Sie oder kontaktieren Sie uns direkt.' });
+    }
+    
     // Create reservation
     const reservation = await prisma.tableReservation.create({
       data: {
@@ -30,7 +45,7 @@ router.post('/', async (req, res) => {
     pushService.notifyRoles(['OWNER', 'MANAGER'], {
       title: 'Neue Reservierung',
       body: `${name} · ${date} ${time} · ${guests} Gäste`,
-      url: '/admin/management/reservations',
+      url: '/admin-v2/management/reservations',
       type: 'reservation',
     });
 

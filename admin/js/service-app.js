@@ -18,7 +18,7 @@ async function init() {
   });
   document.querySelector('.bottom-tabs').addEventListener('click', handleTab);
   document.getElementById('quick-action').addEventListener('click', () => {
-    openSheet(`<h2>Schnellaktionen</h2><p class="muted">Neue Bestellung, Reservierung und Kassenfunktionen werden hier als Radial-Menü ausgebaut.</p><button class="primary-action" onclick="location.href='/admin/manage.html'">Management öffnen</button>`);
+    openSheet(`<h2>Schnellaktionen</h2><p class="muted">Neue Bestellung, Reservierung und Kassenfunktionen werden hier als Radial-Menü ausgebaut.</p><button class="primary-action" onclick="location.href='/admin-v2/management'">Management öffnen</button>`);
   });
 
   createSocket(document.getElementById('live-status'), {
@@ -122,7 +122,7 @@ function openTable(id) {
       <span>Offene Rechnung</span>
       <strong style="display:block;font-size:34px;margin-top:6px;">€${total.toFixed(2)}</strong>
     </div>
-    <button class="primary-action" onclick="location.href='/admin/manage.html'">Bestellung bearbeiten</button>
+    <button class="primary-action" onclick="location.href='/admin-v2/management'">Bestellung bearbeiten</button>
   `);
 }
 

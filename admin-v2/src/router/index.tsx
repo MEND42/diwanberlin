@@ -20,6 +20,7 @@ import { Customers }       from '@/pages/management/Customers';
 import { TeamAccounts }    from '@/pages/management/TeamAccounts';
 import { HR }              from '@/pages/management/HR';
 import { Website }         from '@/pages/management/Website';
+import { Settings }        from '@/pages/management/Settings';
 import { AccountSettings } from '@/pages/management/AccountSettings';
 
 import { FloorPlan }       from '@/pages/service/FloorPlan';
@@ -73,7 +74,10 @@ export function AppRouter() {
         <Route path="team"        element={
           <ProtectedRoute allowedRoles={['OWNER']}><TeamAccounts /></ProtectedRoute>
         } />
-        <Route path="settings"    element={<AccountSettings />} />
+        <Route path="settings"    element={
+          <ProtectedRoute allowedRoles={['OWNER', 'MANAGER']}><Settings /></ProtectedRoute>
+        } />
+        <Route path="account"     element={<AccountSettings />} />
       </Route>
 
       {/* Service shell — Waiter + Manager + Owner */}

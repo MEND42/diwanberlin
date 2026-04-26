@@ -10,7 +10,11 @@ import { BottomSheet } from '@/components/primitives/BottomSheet';
 import { cn, springs, formatEur } from '@/lib/utils';
 import type { MenuCategory, MenuItem } from '@/types';
 
-const ITEM_EMPTY = { nameDe: '', nameFa: '', descriptionDe: '', descriptionFa: '', price: 0, isAvailable: true, sortOrder: 0, imageUrl: '', categoryId: '' };
+const ITEM_EMPTY = { 
+  nameDe: '', nameFa: '', nameEn: '', 
+  descriptionDe: '', descriptionFa: '', descriptionEn: '', 
+  price: 0, isAvailable: true, sortOrder: 0, imageUrl: '', categoryId: '' 
+};
 type ItemDraft = typeof ITEM_EMPTY;
 
 function ItemForm({ value, onChange }: { value: ItemDraft; onChange: (v: ItemDraft) => void }) {
@@ -19,20 +23,57 @@ function ItemForm({ value, onChange }: { value: ItemDraft; onChange: (v: ItemDra
   const labelCls = 'block text-[10px] tracking-[0.14em] uppercase text-ink2 font-medium mb-1.5';
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-3">
+      {/* Name fields */}
+      <div className="grid grid-cols-3 gap-3">
         <div>
           <label className={labelCls}>Name (DE)</label>
           <input value={value.nameDe} onChange={e => set('nameDe', e.target.value)} className={inputCls} placeholder="Name auf Deutsch" />
         </div>
         <div>
-          <label className={labelCls}>Name (FA)</label>
+          <label className={labelCls}>Name (FA) 🇮🇷</label>
           <input value={value.nameFa} onChange={e => set('nameFa', e.target.value)} className={inputCls} placeholder="نام" dir="rtl" />
         </div>
+        <div>
+          <label className={labelCls}>Name (EN) 🇬🇧</label>
+          <input value={value.nameEn} onChange={e => set('nameEn', e.target.value)} className={inputCls} placeholder="Name in English" />
+        </div>
       </div>
+      
+      {/* Description fields */}
       <div>
         <label className={labelCls}>Beschreibung (DE)</label>
         <textarea value={value.descriptionDe} onChange={e => set('descriptionDe', e.target.value)} rows={2} className={cn(inputCls, 'resize-none')} placeholder="Kurze Beschreibung…" />
       </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className={labelCls}>Beschreibung (FA) 🇮🇷</label>
+          <textarea value={value.descriptionFa} onChange={e => set('descriptionFa', e.target.value)} rows={2} className={cn(inputCls, 'resize-none')} placeholder="توضیحات" dir="rtl" />
+        </div>
+        <div>
+          <label className={labelCls}>Beschreibung (EN) 🇬🇧</label>
+          <textarea value={value.descriptionEn} onChange={e => set('descriptionEn', e.target.value)} rows={2} className={cn(inputCls, 'resize-none')} placeholder="Description in English" />
+        </div>
+      </div>
+      
+      {/* Image upload */}
+      <div>
+        <label className={labelCls}>Bild URL</label>
+        <div className="flex gap-2">
+          <input 
+            value={value.imageUrl || ''} 
+            onChange={e => set('imageUrl', e.target.value)} 
+            className={inputCls} 
+            placeholder="https://..." 
+          />
+          {value.imageUrl && (
+            <div className="w-12 h-12 rounded-lg overflow-hidden bg-paper2 flex-shrink-0">
+              <img src={value.imageUrl} alt="" className="w-full h-full object-cover" />
+            </div>
+          )}
+        </div>
+      </div>
+      
+      {/* Price and sort */}
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className={labelCls}>Preis (€)</label>
@@ -135,7 +176,14 @@ export function Menu() {
 
   function openEditItem(item: MenuItem) {
     setEditItem(item);
-    setItemForm({ ...item, imageUrl: item.imageUrl ?? '', descriptionFa: item.descriptionFa ?? '' });
+    setItemForm({ 
+      ...ITEM_EMPTY,
+      ...item, 
+      nameEn: item.nameEn ?? '',
+      descriptionFa: item.descriptionFa ?? '',
+      descriptionEn: item.descriptionEn ?? '',
+      imageUrl: item.imageUrl ?? '' 
+    });
     setItemSheet(true);
   }
 

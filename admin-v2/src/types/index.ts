@@ -41,8 +41,10 @@ export interface MenuItem {
   categoryId: string;
   nameDe: string;
   nameFa: string;
+  nameEn?: string;
   descriptionDe: string;
   descriptionFa?: string;
+  descriptionEn?: string;
   price: number;
   isAvailable: boolean;
   sortOrder: number;
@@ -54,6 +56,7 @@ export interface MenuCategory {
   parentId?: string | null;
   nameDe: string;
   nameFa: string;
+  nameEn?: string;
   slug: string;
   sortOrder: number;
   isActive: boolean;
@@ -205,6 +208,12 @@ export interface DashboardMetrics {
   staffClockedIn: number;
 }
 
+export interface BusyHour {
+  hour: number;
+  count: number;
+  guests: number;
+}
+
 // ── Socket events ─────────────────────────────────────────
 export interface SocketEvents {
   'order:new': Order;
@@ -216,5 +225,67 @@ export interface SocketEvents {
     tableNumber: number;
     label?: string;
     createdAt: string;
+  };
+}
+
+// ── HR / Staff ────────────────────────────────────────────
+export interface StaffProfile {
+  id: string;
+  adminUserId: string;
+  fullName: string;
+  phone?: string;
+  email?: string;
+  position?: string;
+  notes?: string;
+  isActive: boolean;
+}
+
+export interface StaffAvailability {
+  id: string;
+  adminUserId: string;
+  weekStart: string;
+  dayOfWeek: number;
+  startTime: string;
+  endTime: string;
+  note?: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  adminUser?: {
+    id: string;
+    username: string;
+    role: Role;
+    staffProfile?: StaffProfile;
+  };
+}
+
+export interface ShiftAssignment {
+  id: string;
+  adminUserId: string;
+  weekStart: string;
+  dayOfWeek: number;
+  startTime: string;
+  endTime: string;
+  note?: string;
+  status: 'APPROVED' | 'CANCELLED';
+  adminUser?: {
+    id: string;
+    username: string;
+    role: Role;
+    staffProfile?: StaffProfile;
+  };
+}
+
+export interface TimeEntry {
+  id: string;
+  adminUserId: string;
+  clockIn: string;
+  clockOut?: string;
+  breakMinutes: number;
+  note?: string;
+  status: 'OPEN' | 'SUBMITTED' | 'APPROVED';
+  adminUser?: {
+    id: string;
+    username: string;
+    role: Role;
+    staffProfile?: StaffProfile;
   };
 }

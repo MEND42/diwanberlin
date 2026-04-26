@@ -7,9 +7,9 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { dashboardApi } from '@/lib/api';
-import { formatEur, springs } from '@/lib/utils';
+import { formatEur, springs, cn } from '@/lib/utils';
 import { useAppStore }  from '@/store/appStore';
-import type { DashboardMetrics } from '@/types';
+import type { DashboardMetrics, BusyHour } from '@/types';
 
 function MetricCard({
   label, value, sub, icon: Icon, color, onClick, delay = 0,
@@ -76,6 +76,53 @@ function SkeletonCard() {
   );
 }
 
+function BusyHoursChart({ data }: { data: BusyHour[] }) {
+  const maxCount = Math.max(...data.map(d => d.count), 1);
+  
+  return (
+    <div className="bg-white rounded-2xl border border-diwan-gold/8 shadow-warm-sm p-5">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-ink2">Stoßzeiten</h3>
+        <span className="text-[10px] text-ink2/60">Letzte 30 Tage</span>
+      </div>
+      <div className="flex items-end justify-between gap-1 h-24">
+        {data.map((item, i) => {
+          const height = item.count > 0 ? Math.max((item.count / maxCount) * 100, 8) : 4;
+          const isPeak = item.count >= maxCount * 0.7;
+          return (
+            <div key={item.hour} className="flex-1 flex flex-col items-center gap-1">
+              <motion.div
+                initial={{ height: 0 }}
+                animate={{ height: `${height}%` }}
+                transition={{ ...springs.gentle, delay: i * 0.02 }}
+                className={cn(
+                  'w-full rounded-t-md',
+                  isPeak ? 'bg-diwan-gold' : 'bg-diwan-gold/40'
+                )}
+                title={`${item.count} Reservierungen`}
+              />
+              <span className="text-[8px] text-ink2/60">{item.hour}:00</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function SkeletonChart() {
+  return (
+    <div className="bg-white rounded-2xl border border-diwan-gold/8 shadow-warm-sm p-5">
+      <div className="h-4 bg-paper2 rounded w-24 mb-4 animate-pulse" />
+      <div className="flex items-end justify-between gap-1 h-24">
+        {Array.from({ length: 14 }).map((_, i) => (
+          <div key={i} className="flex-1 bg-paper2 rounded-t-md animate-pulse" style={{ height: `${Math.random() * 60 + 20}%` }} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function Dashboard() {
   const navigate     = useNavigate();
   const pendingRes   = useAppStore(s => s.pendingReservations);
@@ -86,6 +133,13 @@ export function Dashboard() {
     queryFn:  dashboardApi.metrics,
     refetchInterval: 30_000,
     retry: false,
+  });
+
+  const { data: busyHours, isLoading: loadingBusy } = useQuery<BusyHour[]>({
+    queryKey: ['dashboard-busy-hours'],
+    queryFn: dashboardApi.busyHours,
+    refetchInterval: 300_000,
+    staleTime: 300_000,
   });
 
   const today = new Date().toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' });
@@ -138,6 +192,15 @@ export function Dashboard() {
           </>
         )}
       </div>
+
+      {/* Busy Hours Chart */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ ...springs.gentle, delay: 0.18 }}
+      >
+        {loadingBusy ? <SkeletonChart /> : busyHours && <BusyHoursChart data={busyHours} />}
+      </motion.div>
 
       {/* Two column layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

@@ -379,10 +379,20 @@ function initHeroMotion() {
 }
 
 function initForms() {
+  const t = (key) => translations[currentLang]?.[key] || translations['de'][key] || key;
+  
   const resForm = document.getElementById('reservationForm');
   if (resForm) {
     resForm.addEventListener('submit', async e => {
       e.preventDefault();
+      const submitBtn = resForm.querySelector('button[type="submit"]');
+      const formOk = document.getElementById('form-ok');
+      
+      if (submitBtn.dataset.submitting === 'true') return;
+      submitBtn.dataset.submitting = 'true';
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = `<span class="ac">⏳</span> ${t('submitting')}`;
+      
       const payload = {
         name: document.getElementById('resName').value,
         email: document.getElementById('resEmail').value,
@@ -398,10 +408,16 @@ function initForms() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
         });
-        document.getElementById('form-ok').style.display = 'block';
+        formOk.innerHTML = `<span style="color: #22c55e;">${t('resSuccess')}</span>`;
+        formOk.style.display = 'block';
         resForm.reset();
       } catch (error) {
-        console.error(error);
+        formOk.innerHTML = `<span style="color: #ef4444;">${t('resError')}</span>`;
+        formOk.style.display = 'block';
+      } finally {
+        submitBtn.dataset.submitting = 'false';
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = t('resSubmit');
       }
     });
   }
@@ -410,6 +426,14 @@ function initForms() {
   if (evForm) {
     evForm.addEventListener('submit', async e => {
       e.preventDefault();
+      const submitBtn = evForm.querySelector('button[type="submit"]');
+      const formOk = document.getElementById('event-form-ok');
+      
+      if (submitBtn.dataset.submitting === 'true') return;
+      submitBtn.dataset.submitting = 'true';
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = `<span class="ac">⏳</span> ${t('submitting')}`;
+      
       const payload = {
         name: document.getElementById('evName').value,
         email: document.getElementById('evEmail').value,
@@ -431,10 +455,16 @@ function initForms() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
         });
-        document.getElementById('event-form-ok').style.display = 'block';
+        formOk.innerHTML = `<span style="color: #22c55e;">${t('eventSuccess')}</span>`;
+        formOk.style.display = 'block';
         evForm.reset();
       } catch (error) {
-        console.error(error);
+        formOk.innerHTML = `<span style="color: #ef4444;">${t('eventError')}</span>`;
+        formOk.style.display = 'block';
+      } finally {
+        submitBtn.dataset.submitting = 'false';
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = t('eventSubmit');
       }
     });
   }
@@ -444,7 +474,40 @@ document.addEventListener('DOMContentLoaded', () => {
   renderMenu();
   renderPublicEvents();
   renderSiteContent();
+  renderCapacities();
   initMobileNav();
   initHeroMotion();
   initForms();
 });
+
+async function renderCapacities() {
+  try {
+    const caps = await fetchJson(`${API_URL}/public/settings/capacities`);
+    const capEl = document.getElementById('dynamicCapacity');
+    const capCountEl = document.getElementById('capacityCount');
+    const evtCountEl = document.getElementById('eventsCount');
+    if (capEl && caps.maxCapacity) capEl.textContent = caps.maxCapacity;
+    if (capCountEl) {
+      capCountEl.textContent = caps.maxCapacity || '60';
+      capCountEl.dataset.count = caps.maxCapacity || '60';
+    }
+    if (evtCountEl) {
+      evtCountEl.textContent = caps.eventsPerMonth || '15';
+      evtCountEl.dataset.count = caps.eventsPerMonth || '15';
+    }
+    // Re-trigger counter animation if already intersected
+    if (typeof countUp === 'function' && capCountEl) {
+      const obs = new IntersectionObserver(entries => {
+        entries.forEach(e => {
+          if (e.isIntersecting) {
+            countUp(e.target, parseInt(e.target.dataset.count), 1600);
+            obs.unobserve(e.target);
+          }
+        });
+      }, { threshold: 0.5 });
+      [capCountEl, evtCountEl].forEach(el => { if (el) obs.observe(el); });
+    }
+  } catch (e) {
+    console.warn('Could not load capacities', e);
+  }
+}

@@ -46,4 +46,46 @@ router.get('/', async (_req, res) => {
   }
 });
 
+router.get('/busy-hours', async (_req, res) => {
+  try {
+    const now = new Date();
+    const daysAgo = 30;
+    const startDate = new Date(now);
+    startDate.setDate(startDate.getDate() - daysAgo);
+    startDate.setHours(0, 0, 0, 0);
+
+    const reservations = await prisma.tableReservation.findMany({
+      where: {
+        date: { gte: startDate },
+        status: { in: ['PENDING', 'CONFIRMED'] },
+      },
+      select: { date: true, time: true, guests: true },
+    });
+
+    const hourlyCounts = Array.from({ length: 14 }, (_, i) => ({
+      hour: i + 8,
+      count: 0,
+      guests: 0,
+    }));
+
+    reservations.forEach(r => {
+      const hourMatch = r.time?.match(/^(\d{1,2}):/);
+      if (hourMatch) {
+        const hour = parseInt(hourMatch[1], 10);
+        if (hour >= 8 && hour <= 21) {
+          const idx = hourlyCounts.findIndex(h => h.hour === hour);
+          if (idx !== -1) {
+            hourlyCounts[idx].count++;
+            hourlyCounts[idx].guests += r.guests || 0;
+          }
+        }
+      }
+    });
+
+    res.json(hourlyCounts);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to load busy hours' });
+  }
+});
+
 module.exports = router;

@@ -40,10 +40,10 @@ export async function login(credentials) {
 
 export function routeForSession(session) {
   const width = window.innerWidth || 1024;
-  if (session.role === 'KITCHEN') return '/admin/kitchen.html';
-  if (session.role === 'WAITER') return width <= 900 ? '/admin/service.html' : '/admin/manage.html';
-  if (width <= 700) return '/admin/service.html';
-  return '/admin/manage.html';
+  if (session.role === 'KITCHEN') return '/admin-v2/kitchen';
+  if (session.role === 'WAITER') return width <= 900 ? '/admin-v2/service' : '/admin-v2/management';
+  if (width <= 700) return '/admin-v2/service';
+  return '/admin-v2/management';
 }
 
 export function requireSession(allowedRoles = []) {

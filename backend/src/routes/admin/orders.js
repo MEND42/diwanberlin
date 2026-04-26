@@ -117,7 +117,7 @@ router.post('/', async (req, res) => {
     pushService.notifyRoles(['KITCHEN', 'MANAGER', 'OWNER'], {
       title: `Neue Bestellung · Tisch ${order.table?.number ?? '?'}`,
       body: `#${order.orderNumber} · ${order.items?.length ?? 0} Artikel`,
-      url: '/admin/kitchen',
+      url: '/admin-v2/kitchen',
       type: 'order',
     });
     

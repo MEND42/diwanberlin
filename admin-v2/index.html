@@ -12,8 +12,27 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
+  <style>
+    /* Skip link for accessibility */
+    .skip-link {
+      position: absolute;
+      top: -40px;
+      left: 0;
+      background: #c8922a;
+      color: #180e04;
+      padding: 8px 16px;
+      z-index: 9999;
+      font-weight: 600;
+      text-decoration: none;
+      border-radius: 0 0 8px 0;
+    }
+    .skip-link:focus {
+      top: 0;
+    }
+  </style>
 </head>
 <body>
+  <a href="#root" class="skip-link">Zum Inhalt springen</a>
   <div id="root"></div>
   <script type="module" src="/src/main.tsx"></script>
 </body>

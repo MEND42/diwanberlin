@@ -88,4 +88,17 @@ router.post('/:id/reset-password', ownerOnly, async (req, res) => {
   }
 });
 
+router.delete('/:id', ownerOnly, async (req, res) => {
+  try {
+    const user = await prisma.adminUser.findUnique({ where: { id: req.params.id } });
+    if (user?.role === 'OWNER') {
+      return res.status(400).json({ error: 'Cannot delete owner account' });
+    }
+    await prisma.adminUser.delete({ where: { id: req.params.id } });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete user' });
+  }
+});
+
 module.exports = router;

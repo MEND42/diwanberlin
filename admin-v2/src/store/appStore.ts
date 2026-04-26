@@ -17,6 +17,9 @@ interface AppState {
   token: string | null;
   rememberMe: boolean;
 
+  // Current user helper (for convenience)
+  currentUser: (AdminUser & { id: string }) | null;
+
   // Live badges
   pendingReservations: number;
   pendingEvents: number;
@@ -42,6 +45,7 @@ export const useAppStore = create<AppState>()(
       user: null,
       token: null,
       rememberMe: false,
+      currentUser: null,
       pendingReservations: 0,
       pendingEvents: 0,
       activeOrders: 0,
@@ -51,7 +55,7 @@ export const useAppStore = create<AppState>()(
         const storage = rememberMe ? localStorage : sessionStorage;
         storage.setItem('diwanAdminToken', token);
         storage.setItem('diwanAdminUser', JSON.stringify(user));
-        set({ user, token, rememberMe });
+        set({ user, token, rememberMe, currentUser: { ...user, id: user.id } });
       },
 
       clearAuth: () => {
@@ -63,7 +67,10 @@ export const useAppStore = create<AppState>()(
       },
 
       setUser: (partial) =>
-        set((s) => ({ user: s.user ? { ...s.user, ...partial } : null })),
+        set((s) => {
+          const updated = s.user ? { ...s.user, ...partial } : null;
+          return { user: updated, currentUser: updated ? { ...updated, id: updated.id } : null };
+        }),
 
       setBadge: (key, value) => set({ [key]: value }),
 
@@ -98,6 +105,7 @@ export const useAppStore = create<AppState>()(
         user: s.user,
         token: s.token,
         rememberMe: s.rememberMe,
+        currentUser: s.currentUser,
       }),
     },
   ),

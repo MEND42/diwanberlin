@@ -29,6 +29,7 @@ const NAV: NavItem[] = [
   { view: 'hr',             path: '/management/hr',             title: 'Team & Zeiten',   meta: 'Planung und Schichten',  icon: Clock,           roles: ['OWNER','MANAGER','WAITER'], section: 'management' },
   { view: 'website',        path: '/management/website',        title: 'Website',         meta: 'Texte ohne Code',        icon: Globe,           roles: ['OWNER','MANAGER'],          section: 'management' },
   { view: 'team',           path: '/management/team',           title: 'Teamkonten',      meta: 'Rollen und Zugriff',     icon: UserCog,         roles: ['OWNER'],                    section: 'management' },
+  { view: 'settings',       path: '/management/settings',       title: 'Einstellungen',   meta: 'Kapazitäten & mehr',    icon: Settings,        roles: ['OWNER','MANAGER'],          section: 'management' },
 ];
 
 const SECTIONS = [
@@ -258,7 +259,7 @@ export function ManagementShell() {
             </span>
           </a>
           <button
-            onClick={() => navigate('/management/settings')}
+            onClick={() => navigate('/management/account')}
             data-tour="account-settings"
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left hover:bg-white/5 transition-colors group"
           >

@@ -413,7 +413,7 @@ h2 em{font-style:italic;color:var(--gold2)}
 /* ── LOCATION ── */
 #location{background:var(--bg2)}
 .loc-g{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:start;margin-top:56px}
-.map-frame{width:100%;aspect-ratio:4/3;border:none;filter:grayscale(.4) sepia(.3);display:block}
+.map-frame{width:100%;height:350px;min-height:280px;border:none;filter:grayscale(.4) sepia(.3);display:block;border-radius:12px}
 .map-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:16px}
 .map-actions a{display:inline-flex;align-items:center;justify-content:center;border-radius:999px;border:1px solid rgba(200,146,42,.35);padding:10px 18px;color:var(--cream);text-decoration:none;font-size:12px;letter-spacing:.08em;text-transform:uppercase;transition:background .2s,border-color .2s}
 .map-actions a:hover{background:rgba(200,146,42,.12);border-color:var(--gold)}
@@ -506,26 +506,186 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
 .tr select,.tr input[type=range]{width:100%;accent-color:var(--gold)}
 
 /* ── MOBILE ── */
+/* Mobile-first base styles */
+@media(max-width:600px){
+  /* Navigation */
+  nav{padding:14px 16px;flex-wrap:wrap;gap:10px}
+  nav.on{padding:10px 16px}
+  .nlogo img{width:44px;height:44px;padding:3px}
+  .nname{display:none}
+  .nlinks{display:none}
+  .ncta{padding:8px 14px;font-size:11px}
+  .ncta .arr{width:20px;height:20px;font-size:10px}
+  
+  /* Language dropdown mobile */
+  .lang-btn{padding:6px 10px;font-size:11px}
+  .lang-menu{right:0;min-width:100px}
+  .lang-menu button{padding:6px 10px;font-size:12px}
+  
+  /* Hamburger */
+  .hamburger{display:flex;width:36px;height:36px;padding:6px}
+  
+  /* Hero */
+  #hero{min-height:auto;padding:70px 0 40px}
+  .hl{padding:20px 16px 40px}
+  .hl-h .ln{font-size:42px !important;line-height:1.1}
+  .hl-slogan{font-size:18px}
+  .hl-sub{font-size:14px;margin-bottom:24px}
+  .hl-acts{flex-direction:column;gap:12px;align-items:flex-start}
+  .hl-acts .btn-g,.hl-acts .btn-o{width:100%;justify-content:center}
+  .hr{height:40vh;min-height:280px}
+  .hr img.hero-photo{object-position:center 30%}
+  .hscroll{display:none}
+  
+  /* Slogan banner */
+  .slogan-banner{padding:12px 16px}
+  .slogan-track{gap:40px}
+  .slogan-item .s-fa{font-size:16px}
+  .slogan-item .s-de{font-size:10px}
+  
+  /* Sections */
+  .inner{padding:48px 16px}
+  .lbl{font-size:10px;margin-bottom:12px}
+  .lbl::before{width:20px}
+  h2{font-size:28px}
+  .fa-h{font-size:.6em}
+  
+  /* About */
+  .about-g{gap:24px}
+  .about-t p{font-size:14px;line-height:1.7;margin-top:16px}
+  .about-slogan{padding:16px 20px;margin-top:20px}
+  .about-slogan .fa{font-size:20px}
+  .about-slogan .de{font-size:12px}
+  .about-img{aspect-ratio:3/4}
+  .about-cap{font-size:10px}
+  
+  /* Features */
+  .feat-g{grid-template-columns:1fr;gap:1px}
+  .feat{padding:28px 20px}
+  .fn{font-size:48px}
+  .ft{font-size:18px}
+  .ffa{font-size:14px}
+  .fb{font-size:13px}
+  
+  /* Menu */
+  .tabs{margin:24px 0;overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch}
+  .tab{padding:10px 16px;font-size:11px;white-space:nowrap}
+  .panel.active .sub-panel{grid-template-columns:1fr}
+  .mi{padding:20px 16px}
+  .mi-img img{height:120px}
+  .mn{font-size:16px}
+  .mfa{font-size:13px}
+  .md{font-size:13px}
+  .mp{font-size:13px;margin-top:12px}
+  .menu-tools{flex-direction:column;gap:12px}
+  .menu-search-wrap{width:100%;flex:none}
+  .menu-search-wrap input{padding:10px 14px}
+  .special-item{grid-column:span 1}
+  
+  /* Mid slogan */
+  .mid-slogan{padding:40px 16px}
+  .mid-slogan .fa-big{font-size:24px}
+  .mid-slogan .de-small{font-size:11px}
+  
+  /* Events */
+  .ev-top{gap:24px;margin-bottom:32px}
+  .ev-top p{font-size:14px;margin-top:12px}
+  .elist{gap:0}
+  .ei{padding:16px;gap:12px}
+  .eday{font-size:28px}
+  .emon{font-size:10px}
+  .ename{font-size:16px}
+  .edesc{font-size:12px}
+  .etime{display:none}
+  .event-actions{grid-column:2;margin-top:8px}
+  .event-register{padding:7px 12px;font-size:10px}
+  
+  /* Testimonials */
+  .ttwrap{margin-top:32px}
+  .tc{width:280px;padding:20px}
+  .ts{font-size:12px}
+  .tt{font-size:13px}
+  
+  /* Location */
+  .loc-g{gap:24px;margin-top:32px}
+  .map-frame{aspect-ratio:1/1.5}
+  .map-actions{gap:8px}
+  .map-actions a{padding:8px 12px;font-size:10px}
+  .loc-info h3{font-size:20px;margin-bottom:20px}
+  .ib{margin-bottom:20px}
+  .ilbl{font-size:10px}
+  .ival{font-size:14px}
+  .hrow{font-size:13px}
+  
+  /* Reservations */
+  .res-g{gap:24px}
+  .rform{gap:12px;margin-top:24px}
+  .frow{grid-template-columns:1fr;gap:12px}
+  .fg{margin-bottom:0}
+  label{font-size:10px}
+  input,select,textarea{padding:10px 12px;font-size:14px}
+  .btn-g{width:100%;justify-content:center;padding:12px 20px}
+  .res-info{padding-top:24px}
+  .res-info p{font-size:14px}
+  .res-fa{font-size:14px}
+  .clist{gap:12px}
+  .crow{gap:10px}
+  .ck{font-size:10px;width:60px}
+  .cv{font-size:13px}
+  
+  /* Event Request */
+  .clist{flex-direction:column;gap:12px}
+  .crow{flex-direction:column;gap:4px}
+  .crow .ck,.crow .cv{width:auto}
+  
+  /* Footer */
+  footer{padding:32px 16px}
+  .fi{grid-template-columns:1fr;gap:16px}
+  .fl img{width:60px;height:60px}
+  .fc{order:2}
+  .fl{order:1}
+  .flinks{order:3;flex-wrap:wrap;gap:16px;justify-content:center}
+  .ffa{font-size:14px}
+  .fcopy{font-size:11px}
+  
+  /* Modals */
+  .event-modal{padding:12px}
+  .event-modal__panel{max-height:95vh;padding:20px}
+  .event-modal__image{height:160px}
+  .event-modal h3{font-size:22px}
+  .event-modal__desc{font-size:14px}
+  .event-modal__meta{gap:6px}
+  .event-modal__meta span{font-size:11px;padding:5px 8px}
+  
+  /* Counters */
+  .feat .r.d4 div:first-child{font-size:48px}
+  .feat .r.d4 div:nth-child(3){font-size:48px;margin-top:20px}
+  .feat .r.d4 div:nth-child(2),.feat .r.d4 div:nth-child(4){font-size:12px}
+  
+  /* Hide unnecessary on mobile */
+  .wave-divider svg{height:60px}
+  #tp{display:none !important}
+}
+
 @media(max-width:900px){
-  nav{padding:18px 24px}nav.on{padding:12px 24px}.nlinks{display:none}
+  nav{padding:16px 24px}nav.on{padding:12px 24px}.nlinks{display:none}
   .nlogo img{width:52px;height:52px;padding:4px}
   #hero{grid-template-columns:1fr}
   .hero-grid,.hero-stage,.hero-orb{display:none}
-  .hl{padding:100px 24px 56px}
+  .hl{padding:80px 24px 48px}
   .hl-logo img{width:min(140px,42vw);padding:10px}
   .hr{height:50vh;min-height:320px}
   .cup-scene{width:220px;height:280px;transform:scale(.7)}
-  .inner{padding:72px 24px}
-  .about-g,.ev-top,.loc-g,.res-g{grid-template-columns:1fr;gap:44px}
-  .feat-g,.panel.active{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
-  .fi{grid-template-columns:1fr;text-align:center;gap:20px}.flinks{justify-content:center}
+  .inner{padding:60px 24px}
+  .about-g,.ev-top,.loc-g,.res-g{grid-template-columns:1fr;gap:32px}
+  .feat-g,.panel.active{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+  .fi{grid-template-columns:1fr 1fr;text-align:center;gap:20px}.flinks{justify-content:center}
   .fl img{margin:0 auto}
   .ei{grid-template-columns:60px 1fr;gap:16px}.etime{display:none}.event-actions{grid-column:2;justify-self:start;margin-top:8px}
   .frow{grid-template-columns:1fr}
   .rule{margin:0 24px}
   .slogan-banner{padding:14px 24px}
-  .mid-slogan{padding:60px 24px}
-  /* Hamburger visible on mobile */
+  .mid-slogan{padding:50px 24px}
   .hamburger{display:flex}
 }
 
@@ -574,8 +734,54 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
   opacity:0;
   pointer-events:none;
   transition:opacity .35s ease;
+  overflow-y:auto;
+  padding:20px;
 }
 #mobile-overlay.open{opacity:1;pointer-events:all}
+
+/* Language Dropdown */
+.lang-dropdown{position:relative}
+.lang-btn{
+  background:none;
+  border:1px solid var(--gold);
+  color:var(--gold);
+  padding:6px 14px;
+  border-radius:12px;
+  cursor:pointer;
+  font-family:'DM Sans',sans-serif;
+  font-size:12px;
+  font-weight:500;
+  letter-spacing:0.1em;
+}
+.lang-btn:hover{background:rgba(200,146,42,.1)}
+.lang-menu{
+  position:absolute;
+  top:100%;
+  right:0;
+  margin-top:6px;
+  background:var(--bg2);
+  border:1px solid rgba(200,146,42,.3);
+  border-radius:12px;
+  padding:6px;
+  display:none;
+  min-width:120px;
+  z-index:999;
+}
+.lang-menu.open{display:block}
+.lang-menu button{
+  display:block;
+  width:100%;
+  padding:8px 12px;
+  background:none;
+  border:none;
+  color:var(--cream);
+  text-align:right;
+  cursor:pointer;
+  font-family:'DM Sans',sans-serif;
+  font-size:13px;
+  border-radius:8px;
+}
+.lang-menu button:hover{background:rgba(200,146,42,.2)}
 #mobile-overlay ul{
   list-style:none;
   display:flex;
@@ -634,7 +840,14 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
     <li><a href="#location" data-i18n="navLocation">Lage</a></li>
   </ul>
   <div style="display: flex; gap: 12px; align-items: center;">
-    <button id="langToggle" style="background: none; border: 1px solid var(--gold); color: var(--gold); padding: 5px 10px; border-radius: 12px; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 500; letter-spacing: 0.1em;">Persian</button>
+    <div class="lang-dropdown">
+      <button id="langToggle" class="lang-btn">Deutsch</button>
+      <div class="lang-menu" id="langMenu">
+        <button data-lang="de">Deutsch</button>
+        <button data-lang="fa">فارسی</button>
+        <button data-lang="en">English</button>
+      </div>
+    </div>
     <a href="#reservations" class="ncta" data-i18n="navReserve">Reservieren <span class="arr">↗</span></a>
     <!-- Hamburger: mobile only -->
     <button class="hamburger" id="hamburger" aria-label="Menü öffnen" aria-expanded="false">
@@ -747,13 +960,13 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
   <div class="inner">
     <div class="about-g">
       <div class="about-t r">
-        <div class="lbl">داستان ما · Unsere Geschichte</div>
-        <h2 class="r" data-word-reveal>Ein Ort des <em>Herzens</em><span class="fa-h">جایی از قلب</span></h2>
-        <p data-content-key="aboutIntro">Cafe Diwan ist ein warmer, ruhiger Ort im Herzen Berlins. Wir servieren heiße und kalte Getränke, Frühstück und kleine Speisen in einer Atmosphäre, die zum Gespräch und Verweilen einlädt.</p>
-        <p>Diwan ist mehr als ein Café — es ist ein Kulturzentrum. Bei uns finden regelmäßige Musikabende, Geburtstagsfeiern, Poesieabende, Theateraufführungen und interkulturelle Begegnungen statt. Unser Ziel: Solidarität stärken, Dialog fördern, Kunst und Kultur feiern. <strong style="color:var(--gold)">Kapazität: 60 Personen.</strong></p>
+        <div class="lbl" data-i18n="aboutEyebrow">داستان ما · Unsere Geschichte</div>
+        <h2 class="r" data-word-reveal data-i18n="aboutTitle">Ein Ort des <em>Herzens</em><span class="fa-h">جایی از قلب</span></h2>
+        <p data-content-key="aboutIntro" data-i18n="aboutDesc1">Cafe Diwan ist ein warmer, ruhiger Ort im Herzen Berlins. Wir servieren heiße und kalte Getränke, Frühstück und kleine Speisen in einer Atmosphäre, die zum Gespräch und Verweilen einlädt.</p>
+        <p data-i18n="aboutDesc2">Diwan ist mehr als ein Café — es ist ein Kulturzentrum. Bei uns finden regelmäßige Musikabende, Geburtstagsfeiern, Poesieabende, Theateraufführungen und interkulturelle Begegnungen statt. Unser Ziel: Solidarität stärken, Dialog fördern, Kunst und Kultur feiern. <strong style="color:var(--gold)" data-i18n="capacityLabel">Kapazität:</strong> <strong style="color:var(--gold)" id="dynamicCapacity">60</strong> <strong style="color:var(--gold)" data-i18n="capacityUnit">Personen.</strong></p>
         <div class="about-slogan">
           <span class="fa">طعم خانه، دور از خانه</span>
-          <span class="de">Der Geschmack von Zuhause, fern von Zuhause</span>
+          <span class="de" data-i18n="aboutSloganDe">Der Geschmack von Zuhause, fern von Zuhause</span>
         </div>
       </div>
       <div class="about-img r d2">
@@ -777,25 +990,25 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
     <div class="feat-g">
       <div class="feat r">
         <div class="fn">01</div>
-        <h3 class="ft">Specialty Coffee</h3>
+        <h3 class="ft" data-i18n="feat1Title">Specialty Coffee</h3>
         <span class="ffa">قهوه ویژه</span>
-        <p class="fb">Single-Origin-Bohnen, täglich frisch gemahlen — von Espresso bis zum warm gewürzten Kardamom-Kaffee.</p>
+        <p class="fb" data-i18n="feat1Desc">Single-Origin-Bohnen, täglich frisch gemahlen — von Espresso bis zum warm gewürzten Kardamom-Kaffee.</p>
       </div>
       <div class="feat r d3">
         <div class="fn">02</div>
-        <h3 class="ft">Kultur &amp; Begegnung</h3>
+        <h3 class="ft" data-i18n="feat2Title">Kultur &amp; Begegnung</h3>
         <span class="ffa">فرهنگ و دیدار</span>
-        <p class="fb">Wöchentliche Lesungen, Musikabende und interkulturelle Gespräche — Diwan ist ein lebendiger Treffpunkt.</p>
+        <p class="fb" data-i18n="feat2Desc">Wöchentliche Lesungen, Musikabende und interkulturelle Gespräche — Diwan ist ein lebendiger Treffpunkt.</p>
       </div>
       <div class="feat r d4" style="display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;background:rgba(200,146,42,.03);">
         <div style="font-family:'Bebas Neue',sans-serif;font-size:72px;color:var(--gold);line-height:1;margin-bottom:8px;">
-          <span data-count="60">0</span>+
+          <span data-count="60" id="capacityCount">0</span>+
         </div>
-        <div style="font-size:14px;color:var(--dim);letter-spacing:.1em;text-transform:uppercase;">Gäste Kapazität</div>
+        <div style="font-size:14px;color:var(--dim);letter-spacing:.1em;text-transform:uppercase;" data-i18n="featCapacity">Gäste Kapazität</div>
         <div style="font-family:'Bebas Neue',sans-serif;font-size:72px;color:var(--gold);line-height:1;margin-top:32px;margin-bottom:8px;">
-          <span data-count="15">0</span>+
+          <span data-count="15" id="eventsCount">0</span>+
         </div>
-        <div style="font-size:14px;color:var(--dim);letter-spacing:.1em;text-transform:uppercase;">Veranstaltungen / Monat</div>
+        <div style="font-size:14px;color:var(--dim);letter-spacing:.1em;text-transform:uppercase;" data-i18n="featEvents">Veranstaltungen / Monat</div>
       </div>
     </div>
   </div>
@@ -896,8 +1109,8 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
 <!-- LOCATION -->
 <section id="location" class="section">
   <div class="inner">
-    <div class="lbl r">کجا هستیم · Wo wir sind</div>
-    <h2 class="r" data-word-reveal>Besuchen Sie <em>uns</em><span class="fa-h">از ما دیدن کنید</span></h2>
+    <div class="lbl r" data-i18n="locTitle">کجا هستیم · Wo wir sind</div>
+    <h2 class="r" data-word-reveal data-i18n="locVisit">Besuchen Sie <em>uns</em><span class="fa-h">از ما دیدن کنید</span></h2>
     <div class="loc-g">
       <div class="r">
         <iframe class="map-frame"
@@ -906,26 +1119,26 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
           title="Cafe Diwan Berlin">
         </iframe>
         <div class="map-actions">
-          <a href="https://www.google.com/maps/search/?api=1&query=Cafe%20Diwan%20Berlin%2C%20Rhinstra%C3%9Fe%2079A%2C%2010315%20Berlin" target="_blank" rel="noopener">In Google Maps öffnen</a>
-          <a href="https://www.google.com/maps/dir/?api=1&destination=Cafe%20Diwan%20Berlin%2C%20Rhinstra%C3%9Fe%2079A%2C%2010315%20Berlin" target="_blank" rel="noopener">Route starten</a>
+          <a href="https://www.google.com/maps/search/?api=1&query=Cafe%20Diwan%20Berlin%2C%20Rhinstra%C3%9Fe%2079A%2C%2010315%20Berlin" target="_blank" rel="noopener" data-i18n="locOpenMaps">In Google Maps öffnen</a>
+          <a href="https://www.google.com/maps/dir/?api=1&destination=Cafe%20Diwan%20Berlin%2C%20Rhinstra%C3%9Fe%2079A%2C%2010315%20Berlin" target="_blank" rel="noopener" data-i18n="locDirections">Route starten</a>
         </div>
       </div>
       <div class="r d2">
         <div class="loc-info">
-          <h3>Cafe Diwan Berlin</h3>
+          <h3 data-i18n="locCafeName">Cafe Diwan Berlin</h3>
           <div class="ib">
-            <div class="ilbl">Adresse · آدرس</div>
-            <div class="ival">Rhinstraße 79A<br>10315 Berlin</div>
+            <div class="ilbl" data-i18n="locAddressLabel">Adresse · آدرس</div>
+            <div class="ival" data-i18n="locAddress">Rhinstraße 79A<br>10315 Berlin</div>
           </div>
           <div class="ib">
-            <div class="ilbl">Öffnungszeiten · ساعات کار</div>
+            <div class="ilbl" data-i18n="locHoursLabel">Öffnungszeiten · ساعات کار</div>
             <div>
-              <div class="hrow"><span class="hd">Täglich · هر روز</span><span class="ht">07:00 – 21:00</span></div>
+              <div class="hrow"><span class="hd" data-i18n="locHoursDaily">Täglich · هر روز</span><span class="ht" data-i18n="locHoursTime">07:00 – 21:00</span></div>
             </div>
           </div>
           <div class="ib">
-            <div class="ilbl">Verkehr · حمل و نقل</div>
-            <div class="ival">S-Bahn: Lichtenberg (S5, S7)<br>Bus: 108, 296</div>
+            <div class="ilbl" data-i18n="locTransportLabel">Verkehr · حمل و نقل</div>
+            <div class="ival" data-i18n="locTransport">S-Bahn: Lichtenberg (S5, S7)<br>Bus: 108, 296</div>
           </div>
         </div>
       </div>
@@ -1074,12 +1287,12 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
   <div class="fi">
     <div class="fl"><img src="uploads/diwan-logo-new.png" alt="Diwan"></div>
     <div class="fc">
-      <span class="ffa">چای، قصه، لبخند · دیوان برلین</span>
-      <div class="fcopy">© 2026 Cafe Diwan Berlin · diwanberlin.com</div>
+      <span class="ffa" data-i18n="footerSlogan">چای، قصه، لبخند · دیوان برلین</span>
+      <div class="fcopy" data-i18n="footerRights">© 2026 Cafe Diwan Berlin · diwanberlin.com</div>
     </div>
     <div class="flinks">
-      <a href="/impressum.html">Impressum</a>
-      <a href="/datenschutz.html">Datenschutz</a>
+      <a href="/impressum.html" data-i18n="footerImpressum">Impressum</a>
+      <a href="/datenschutz.html" data-i18n="footerPrivacy">Datenschutz</a>
       <a href="https://www.instagram.com/berlin.diwan.cafe?igsh=M25vc2dkNWRzOHQ5" target="_blank" rel="noopener">Instagram</a>
       <a href="https://www.facebook.com/profile.php?id=61567392711638" target="_blank" rel="noopener">Facebook</a>
     </div>

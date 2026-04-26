@@ -71,4 +71,14 @@ router.patch('/:id/status', managers, async (req, res) => {
   }
 });
 
+// DELETE event inquiry
+router.delete('/:id', managers, async (req, res) => {
+  try {
+    await prisma.eventInquiry.delete({ where: { id: req.params.id } });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete event inquiry' });
+  }
+});
+
 module.exports = router;

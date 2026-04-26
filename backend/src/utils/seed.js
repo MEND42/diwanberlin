@@ -140,6 +140,22 @@ async function main() {
     if (!exists) await prisma.eventListing.create({ data: event });
   }
 
+  // 5. Create Site Settings for capacities
+  const settings = [
+    { key: 'maxCapacity', value: '60', type: 'NUMBER', category: 'capacities' },
+    { key: 'eventsPerMonth', value: '15', type: 'NUMBER', category: 'capacities' },
+    { key: 'openingTime', value: '07:00', type: 'STRING', category: 'general' },
+    { key: 'closingTime', value: '21:00', type: 'STRING', category: 'general' },
+  ];
+
+  for (const s of settings) {
+    await prisma.siteSettings.upsert({
+      where: { key: s.key },
+      update: {},
+      create: s
+    });
+  }
+
   console.log('Database seeded successfully!');
 }
 
