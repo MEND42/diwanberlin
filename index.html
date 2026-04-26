@@ -196,7 +196,7 @@ nav.on{background:rgba(24,14,4,.97);backdrop-filter:blur(14px);padding:14px 60px
 /* ── HERO ── */
 #hero{min-height:100vh;display:flex;align-items:center;overflow:hidden;background:var(--bg);position:relative;perspective:1400px;isolation:isolate}
 #hero::before{content:'';position:absolute;inset:0;background:linear-gradient(to right,rgba(24,14,4,.88) 0%,rgba(24,14,4,.55) 45%,rgba(24,14,4,.1) 100%);pointer-events:none;z-index:2}
-.hero-grid,.hero-orb,.hero-stage,.beans{display:none}
+.hero-grid,.hero-orb,.hero-stage{display:none}
 
 /* left */
 .hl{display:flex;flex-direction:column;justify-content:center;padding:140px 56px 80px;position:relative;z-index:4;width:100%;max-width:750px;transform-style:preserve-3d}
@@ -657,6 +657,18 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
   </div>
   <!-- Mouse spotlight -->
   <div class="spotlight" aria-hidden="true"></div>
+  <!-- Floating beans -->
+  <div class="beans" aria-hidden="true">
+    <div class="bean" style="left:15%;top:20%;--d:12s;--del:0s;--sz:24px;--rot:15deg">
+      <svg viewBox="0 0 24 24"><path fill="rgba(200,146,42,0.4)" d="M12,2C6.48,2 2,6.48 2,12C2,17.52 6.48,22 12,22C17.52,22 22,17.52 22,12C22,6.48 17.52,2 12,2M11,19.93C7.06,19.43 4,16.05 4,12C4,7.95 7.06,4.57 11,4.07V19.93M13,4.07C16.94,4.57 20,7.95 20,12C20,16.05 16.94,19.43 13,19.93V4.07Z"/></svg>
+    </div>
+    <div class="bean" style="left:85%;top:15%;--d:15s;--del:2s;--sz:32px;--rot:-25deg">
+      <svg viewBox="0 0 24 24"><path fill="rgba(200,146,42,0.3)" d="M12,2C6.48,2 2,6.48 2,12C2,17.52 6.48,22 12,22C17.52,22 22,17.52 22,12C22,6.48 17.52,2 12,2M11,19.93C7.06,19.43 4,16.05 4,12C4,7.95 7.06,4.57 11,4.07V19.93M13,4.07C16.94,4.57 20,7.95 20,12C20,16.05 16.94,19.43 13,19.93V4.07Z"/></svg>
+    </div>
+    <div class="bean" style="left:75%;top:80%;--d:10s;--del:1s;--sz:18px;--rot:45deg">
+      <svg viewBox="0 0 24 24"><path fill="rgba(200,146,42,0.5)" d="M12,2C6.48,2 2,6.48 2,12C2,17.52 6.48,22 12,22C17.52,22 22,17.52 22,12C22,6.48 17.52,2 12,2M11,19.93C7.06,19.43 4,16.05 4,12C4,7.95 7.06,4.57 11,4.07V19.93M13,4.07C16.94,4.57 20,7.95 20,12C20,16.05 16.94,19.43 13,19.93V4.07Z"/></svg>
+    </div>
+  </div>
   <!-- LEFT: Text -->
   <div class="hl">
     <!-- Logo removed from hero section -->
