@@ -19,6 +19,7 @@
     .sheet{position:fixed;inset:auto 0 0;z-index:20;max-height:82svh;background:linear-gradient(180deg,var(--panel2),var(--bg));border-radius:28px 28px 0 0;border:1px solid var(--line);box-shadow:0 -24px 80px rgba(0,0,0,.45);transform:translateY(105%);transition:transform .32s cubic-bezier(.2,.8,.2,1);padding:22px 16px max(22px,env(safe-area-inset-bottom));overflow:auto}.sheet.open{transform:translateY(0)}.sheet-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}.sheet h2{margin:0;font-size:24px}.close{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--cream);font-size:22px}
     .cart-line{display:grid;grid-template-columns:1fr auto;gap:10px;border-bottom:1px solid rgba(200,146,42,.12);padding:12px 0}.cart-line strong{font-size:15px}.cart-line span{color:var(--muted);font-size:13px}.notes{width:100%;min-height:72px;border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.04);color:var(--cream);padding:12px;margin:14px 0;outline:none}.total{display:flex;justify-content:space-between;align-items:center;margin:18px 0;font-size:22px;font-weight:900}.hold{position:relative;overflow:hidden;width:100%;min-height:66px;border:0;border-radius:20px;background:var(--gold);color:#160d04;font-weight:900}.hold::before{content:"";position:absolute;inset:0 auto 0 0;width:var(--progress,0%);background:rgba(255,255,255,.32);transition:width .08s linear}.hold span{position:relative}
     .success{display:none;text-align:center;padding:64px 16px}.success.open{display:block}.success .check{width:74px;height:74px;margin:0 auto 18px;border-radius:50%;display:grid;place-items:center;background:rgba(200,146,42,.14);color:var(--gold);font-size:42px}.success h1{margin:0;font-size:42px}.success p{color:var(--muted);line-height:1.6}.progress{display:flex;justify-content:center;gap:8px;margin-top:20px}.step{width:10px;height:10px;border-radius:50%;background:rgba(200,146,42,.25)}.step.active{background:var(--gold)}
+    .confirm-modal{position:fixed;inset:0;z-index:40;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(8,5,2,.72);backdrop-filter:blur(10px)}.confirm-modal.open{display:flex}.confirm-panel{width:min(100%,420px);border:1px solid var(--line);border-radius:28px;background:linear-gradient(180deg,var(--panel2),var(--panel));padding:24px;text-align:center;box-shadow:0 28px 90px rgba(0,0,0,.55)}.confirm-check{width:72px;height:72px;margin:0 auto 16px;border-radius:50%;display:grid;place-items:center;background:rgba(200,146,42,.16);color:var(--gold);font-size:42px}.confirm-panel h2{margin:0;font-size:28px}.confirm-panel p{margin:12px 0 0;color:var(--muted);line-height:1.55}.confirm-actions{display:grid;gap:10px;margin-top:22px}.confirm-actions button{min-height:52px;border-radius:18px;font-weight:900}.confirm-close{border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--cream)}.confirm-more{border:0;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#160d04}
     .error{color:#ffb4a8;background:rgba(255,90,70,.08);border:1px solid rgba(255,90,70,.18);padding:14px;border-radius:16px}.hidden{display:none!important}
     @media(min-width:660px){.grid{grid-template-columns:1fr 1fr}.item{min-height:150px}}
     @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
@@ -51,6 +52,18 @@
     </div>
   </section>
 
+  <div class="confirm-modal" id="orderConfirm" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+    <div class="confirm-panel">
+      <div class="confirm-check">✓</div>
+      <h2 id="confirmTitle">Bestellung registriert</h2>
+      <p id="confirmText">Danke für Ihre Bestellung. Wir bereiten alles vor und bringen es bald an Ihren Tisch.</p>
+      <div class="confirm-actions">
+        <button class="confirm-more" id="orderMore" type="button">Noch etwas bestellen</button>
+        <button class="confirm-close" id="confirmClose" type="button">Schließen</button>
+      </div>
+    </div>
+  </div>
+
   <div class="cart-bar">
     <button class="cart-btn" id="cartButton" type="button" disabled><span>Warenkorb</span><strong id="cartCount">0 · € 0,00</strong></button>
   </div>
@@ -66,7 +79,12 @@
 
   <script src="/socket.io/socket.io.min.js"></script>
   <script>
-    const API = location.hostname === 'localhost' ? 'http://localhost:3000/api' : '/api';
+    const API = (() => {
+      if (window.DIWAN_API_URL) return window.DIWAN_API_URL;
+      if (location.protocol === 'file:') return 'https://diwanberlin.com/api';
+      if (['localhost', '127.0.0.1'].includes(location.hostname)) return 'http://localhost:3000/api';
+      return '/api';
+    })();
     const token = new URLSearchParams(location.search).get('t') || location.pathname.split('/').filter(Boolean).pop();
     const state = { table: null, categories: [], active: null, cart: JSON.parse(localStorage.getItem(`diwanCart_${token}`) || '{}'), lastOrderId: null };
     const fmt = n => `€ ${Number(n || 0).toFixed(2).replace('.', ',')}`;
@@ -151,6 +169,7 @@
     }
 
     function openSheet(open) { document.getElementById('cartSheet').classList.toggle('open', open); }
+    function openConfirm(open) { document.getElementById('orderConfirm').classList.toggle('open', open); }
 
     function initHoldButton() {
       const button = document.getElementById('submitOrder');
@@ -190,10 +209,8 @@
         state.cart = {};
         saveCart();
         openSheet(false);
-        document.getElementById('app').classList.add('hidden');
-        document.querySelector('.cart-bar').classList.add('hidden');
-        document.getElementById('success').classList.add('open');
-        document.getElementById('successText').textContent = `Bestellnummer #${order.orderNumber}. Wir bereiten alles vor.`;
+        document.getElementById('confirmText').textContent = `Danke für Ihre Bestellung. Bestellnummer #${order.orderNumber} ist registriert. Wir bereiten alles vor und bringen es bald an Ihren Tisch.`;
+        openConfirm(true);
         localStorage.removeItem(`diwanCart_${token}`);
         if (navigator.vibrate) navigator.vibrate([20, 60, 20]);
         pollStatus(order.orderId);
@@ -237,6 +254,12 @@
 
     document.getElementById('cartButton').addEventListener('click', () => openSheet(true));
     document.getElementById('closeSheet').addEventListener('click', () => openSheet(false));
+    document.getElementById('confirmClose').addEventListener('click', () => openConfirm(false));
+    document.getElementById('orderMore').addEventListener('click', () => {
+      document.getElementById('orderNotes').value = '';
+      openConfirm(false);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
     initHoldButton();
     init();
 

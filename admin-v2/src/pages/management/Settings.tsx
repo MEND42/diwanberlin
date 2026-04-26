@@ -1,16 +1,16 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Settings as SettingsIcon, Save, Plus, Trash2, GripVertical, Users, Grid3X3, Calendar, Clock, Globe } from 'lucide-react';
+import { Settings as SettingsIcon, Save, Users, Calendar, Clock, Globe, CheckCircle2 } from 'lucide-react';
 import { settingsApi, type SiteSetting } from '@/lib/api';
-import { cn, springs } from '@/lib/utils';
 
 const CATEGORIES = [
   { key: 'capacities', label: 'Kapazitäten', icon: Users, fields: [
-    { key: 'totalSeats', label: 'Gesamtsitze', type: 'number' },
+    { key: 'maxCapacity', label: 'Gesamtsitze', type: 'number' },
     { key: 'indoorSeats', label: 'Innenplätze', type: 'number' },
     { key: 'outdoorSeats', label: 'Außenplätze', type: 'number' },
     { key: 'maxPartySize', label: 'Max. Gruppengröße', type: 'number' },
+    { key: 'eventsPerMonth', label: 'Events pro Monat', type: 'number' },
   ]},
   { key: 'hours', label: 'Öffnungszeiten', icon: Clock, fields: [
     { key: 'openingTime', label: 'Öffnung', type: 'time' },
@@ -33,37 +33,62 @@ function SettingField({
   field,
   value,
   onChange,
+  onSave,
+  saving,
+  saved,
 }: {
   field: { key: string; label: string; type: string };
   value?: string;
   onChange: (value: string) => void;
+  onSave: () => void;
+  saving: boolean;
+  saved: boolean;
 }) {
   return (
-    <div className="flex items-center justify-between py-3 border-b border-paper2 last:border-0">
-      <label className="text-sm text-ink">{field.label}</label>
+    <div className="grid gap-2 py-4 border-b border-paper2 last:border-0 sm:grid-cols-[1fr_190px_92px] sm:items-center">
+      <label htmlFor={`setting-${field.key}`} className="text-base font-semibold text-ink">{field.label}</label>
       <input
+        id={`setting-${field.key}`}
         type={field.type === 'number' ? 'number' : field.type === 'time' ? 'time' : 'text'}
+        inputMode={field.type === 'number' ? 'numeric' : undefined}
+        min={field.type === 'number' ? 0 : undefined}
+        step={field.type === 'number' ? 1 : undefined}
         value={value ?? ''}
         onChange={e => onChange(e.target.value)}
-        className="w-32 px-3 py-1.5 text-sm rounded-lg border border-diwan-gold/20 text-ink bg-paper2 focus:ring-2 focus:ring-diwan-gold/25 focus:border-diwan-gold/40 outline-none"
+        onKeyDown={e => {
+          if (e.key === 'Enter') onSave();
+        }}
+        className="min-h-12 w-full rounded-2xl border border-diwan-gold/25 bg-white px-4 text-base font-bold text-ink outline-none focus:border-diwan-gold/60 focus:ring-4 focus:ring-diwan-gold/15"
       />
+      <button
+        type="button"
+        onClick={onSave}
+        disabled={saving}
+        className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-diwan-gold px-4 text-sm font-bold text-diwan-bg shadow-sm hover:bg-diwan-gold2 disabled:opacity-50"
+      >
+        {saved ? <CheckCircle2 size={16} /> : <Save size={16} />}
+        {saving ? 'Speichert' : saved ? 'Gespeichert' : 'Speichern'}
+      </button>
     </div>
   );
 }
 
 function CategorySection({
   category,
-  settings,
-  onUpdate,
-  onDelete,
+  values,
+  onChange,
+  onSave,
+  savingKey,
+  savedKey,
 }: {
   category: { key: string; label: string; icon: any; fields: { key: string; label: string; type: string }[] };
-  settings: SiteSetting[];
-  onUpdate: (key: string, value: string) => void;
-  onDelete: (key: string) => void;
+  values: Record<string, string>;
+  onChange: (key: string, value: string) => void;
+  onSave: (field: { key: string; type: string }, categoryKey: string) => void;
+  savingKey: string | null;
+  savedKey: string | null;
 }) {
   const Icon = category.icon;
-  const values = Object.fromEntries(settings.filter(s => s.category === category.key).map(s => [s.key, s.value]));
 
   return (
     <motion.div
@@ -83,7 +108,10 @@ function CategorySection({
             key={field.key}
             field={field}
             value={values[field.key]}
-            onChange={(value) => onUpdate(field.key, value)}
+            onChange={(value) => onChange(field.key, value)}
+            onSave={() => onSave(field, category.key)}
+            saving={savingKey === field.key}
+            saved={savedKey === field.key}
           />
         ))}
       </div>
@@ -94,24 +122,44 @@ function CategorySection({
 export function Settings() {
   const queryClient = useQueryClient();
   const [saving, setSaving] = useState<string | null>(null);
+  const [saved, setSaved] = useState<string | null>(null);
+  const [drafts, setDrafts] = useState<Record<string, string>>({});
 
   const { data: settings = [], isLoading } = useQuery<SiteSetting[]>({
     queryKey: ['settings'],
     queryFn: settingsApi.list,
   });
 
+  const values = useMemo(() => {
+    const fromServer = Object.fromEntries(settings.map(setting => [setting.key, setting.value ?? '']));
+    return { ...fromServer, ...drafts };
+  }, [drafts, settings]);
+
   const updateMutation = useMutation({
-    mutationFn: ({ key, value }: { key: string; value: string }) =>
-      settingsApi.update(key, { value }),
+    mutationFn: ({ key, value, type, category }: { key: string; value: string; type: string; category: string }) =>
+      settingsApi.set({ key, value, type: type === 'number' ? 'NUMBER' : 'STRING', category }),
     onMutate: ({ key }) => setSaving(key),
-    onSettled: () => {
+    onSuccess: (_data, variables) => {
+      setSaved(variables.key);
+      setTimeout(() => setSaved(current => current === variables.key ? null : current), 1800);
+    },
+    onSettled: async () => {
       setSaving(null);
-      queryClient.invalidateQueries({ queryKey: ['settings'] });
+      await queryClient.invalidateQueries({ queryKey: ['settings'] });
     },
   });
 
-  const handleUpdate = (key: string, value: string) => {
-    updateMutation.mutate({ key, value });
+  const handleChange = (key: string, value: string) => {
+    setDrafts(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleSave = (field: { key: string; type: string }, category: string) => {
+    updateMutation.mutate({
+      key: field.key,
+      value: values[field.key] ?? '',
+      type: field.type,
+      category,
+    });
   };
 
   if (isLoading) {
@@ -149,9 +197,11 @@ export function Settings() {
           <CategorySection
             key={cat.key}
             category={cat}
-            settings={settings}
-            onUpdate={handleUpdate}
-            onDelete={() => {}}
+            values={values}
+            onChange={handleChange}
+            onSave={handleSave}
+            savingKey={saving}
+            savedKey={saved}
           />
         ))}
       </div>
