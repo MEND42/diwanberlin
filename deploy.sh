@@ -33,7 +33,6 @@ rsync -av --delete \
   --include call.html \
   --include order.html \
   --include admin.css \
-  --include 'admin/***' \
   --include robots.txt \
   --include sitemap.xml \
   --include 'icons/***' \
