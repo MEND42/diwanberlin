@@ -19,10 +19,28 @@ export function useAuth() {
   const isAuthenticated = Boolean(user && token);
 
   const logout = useCallback((reason?: string) => {
+    const tokenForCleanup = token;
+    if ('serviceWorker' in navigator && 'PushManager' in window) {
+      navigator.serviceWorker.ready
+        .then(registration => registration.pushManager.getSubscription())
+        .then(subscription => {
+          if (!subscription) return;
+          const endpoint = subscription.endpoint;
+          return subscription.unsubscribe().then(() => fetch('/api/admin/push/subscribe', {
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${tokenForCleanup ?? ''}`,
+            },
+            body: JSON.stringify({ endpoint }),
+          }));
+        })
+        .catch(() => {});
+    }
     clearAuth();
     haptic('tap');
     navigate('/login', reason ? { state: { message: reason } } : undefined);
-  }, [clearAuth, navigate]);
+  }, [clearAuth, navigate, token]);
 
   // Watch for 401 events from the API client
   useEffect(() => {
@@ -72,6 +90,7 @@ export function useAuth() {
       const adminUser: AdminUser = {
         id:                 data.id,
         username:           data.username,
+        email:              data.email,
         displayName:        data.displayName,
         role:               data.role as AdminUser['role'],
         mustChangePassword: data.mustChangePassword,
@@ -80,6 +99,7 @@ export function useAuth() {
       haptic('success');
 
       if (data.mustChangePassword) {
+        localStorage.setItem('diwan_tour_pending', '1');
         navigate('/change-password');
       } else {
         const shell = getDefaultShell(adminUser.role);

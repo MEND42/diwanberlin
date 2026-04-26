@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { ProtectedRoute } from './ProtectedRoute';
 
 import { Login }           from '@/pages/Login';
+import { ResetPassword }   from '@/pages/ResetPassword';
 import { ChangePassword }  from '@/pages/ChangePassword';
 import { Unauthorized }    from '@/pages/Unauthorized';
 
@@ -22,6 +23,7 @@ import { Website }         from '@/pages/management/Website';
 import { AccountSettings } from '@/pages/management/AccountSettings';
 
 import { FloorPlan }       from '@/pages/service/FloorPlan';
+import { ServiceReservations } from '@/pages/service/ServiceReservations';
 import { KDS }             from '@/pages/kitchen/KDS';
 
 import { useAppStore, getDefaultShell } from '@/store/appStore';
@@ -37,6 +39,7 @@ export function AppRouter() {
     <Routes>
       {/* Public */}
       <Route path="/login"         element={<Login />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/change-password" element={
         <ProtectedRoute><ChangePassword /></ProtectedRoute>
       } />
@@ -81,7 +84,7 @@ export function AppRouter() {
       }>
         <Route index element={<Navigate to="floor" replace />} />
         <Route path="floor"        element={<FloorPlan />} />
-        <Route path="reservations" element={<Reservations />} />
+        <Route path="reservations" element={<ServiceReservations />} />
         <Route path="settings"     element={<AccountSettings />} />
       </Route>
 

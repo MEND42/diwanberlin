@@ -36,6 +36,15 @@ router.patch('/:id', async (req, res) => {
   }
 });
 
+router.put('/:id', async (req, res) => {
+  try {
+    const customer = await prisma.customer.update({ where: { id: req.params.id }, data: normalizeCustomer(req.body) });
+    res.json(customer);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update customer' });
+  }
+});
+
 router.post('/:id/points', async (req, res) => {
   try {
     const delta = Number(req.body.points || 0);

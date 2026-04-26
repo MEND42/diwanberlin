@@ -4,10 +4,8 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const PDFDocument = require('pdfkit');
 
-// GET all active categories and their active items (nested)
-router.get('/', async (req, res) => {
-  try {
-    const categories = await prisma.menuCategory.findMany({
+async function getActiveMenu() {
+  return prisma.menuCategory.findMany({
       where: { isActive: true, parentId: null },
       orderBy: { sortOrder: 'asc' },
       include: {
@@ -27,6 +25,23 @@ router.get('/', async (req, res) => {
         }
       }
     });
+}
+
+// GET all active categories and their active items (nested)
+router.get('/', async (req, res) => {
+  try {
+    const categories = await getActiveMenu();
+    res.json(categories);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to fetch menu' });
+  }
+});
+
+// Compatibility alias used by the public site integration plan.
+router.get('/categories', async (req, res) => {
+  try {
+    const categories = await getActiveMenu();
     res.json(categories);
   } catch (error) {
     console.error(error);
@@ -37,20 +52,7 @@ router.get('/', async (req, res) => {
 // GET /pdf to download generated menu PDF
 router.get('/pdf', async (req, res) => {
   try {
-    const categories = await prisma.menuCategory.findMany({
-      where: { isActive: true, parentId: null },
-      orderBy: { sortOrder: 'asc' },
-      include: {
-        subcategories: {
-          where: { isActive: true },
-          orderBy: { sortOrder: 'asc' },
-          include: {
-            items: { where: { isAvailable: true }, orderBy: { sortOrder: 'asc' } }
-          }
-        },
-        items: { where: { isAvailable: true }, orderBy: { sortOrder: 'asc' } }
-      }
-    });
+    const categories = await getActiveMenu();
 
     const doc = new PDFDocument({ margin: 50 });
     let filename = 'Cafe_Diwan_Speisekarte.pdf';

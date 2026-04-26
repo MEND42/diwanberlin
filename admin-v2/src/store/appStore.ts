@@ -4,7 +4,7 @@ import type { AdminUser, Role } from '@/types';
 
 interface Notification {
   id: string;
-  type: 'order' | 'reservation' | 'event' | 'system';
+  type: 'order' | 'reservation' | 'event' | 'system' | 'waiter';
   title: string;
   body: string;
   read: boolean;
@@ -31,6 +31,7 @@ interface AppState {
   setUser: (user: Partial<AdminUser>) => void;
   setBadge: (key: 'pendingReservations' | 'pendingEvents' | 'activeOrders', value: number) => void;
   addNotification: (n: Omit<Notification, 'id' | 'read' | 'createdAt'>) => void;
+  dismissNotification: (id: string) => void;
   markAllRead: () => void;
   clearNotifications: () => void;
 }
@@ -77,6 +78,11 @@ export const useAppStore = create<AppState>()(
             },
             ...s.notifications.slice(0, 49),
           ],
+        })),
+
+      dismissNotification: (id) =>
+        set((s) => ({
+          notifications: s.notifications.filter((n) => n.id !== id),
         })),
 
       markAllRead: () =>

@@ -56,9 +56,8 @@ export function SwipeRow({
       {/* Left action reveal */}
       {leftAction && (
         <motion.div
-          style={{ opacity: leftOpacity, scale: leftScale }}
           className="absolute left-0 top-0 bottom-0 flex items-center px-5"
-          style={{ background: leftAction.bg, opacity: leftOpacity }}
+          style={{ background: leftAction.bg, opacity: leftOpacity, scale: leftScale }}
         >
           <div className="flex flex-col items-center gap-1">
             <span style={{ color: leftAction.color }}>{leftAction.icon}</span>

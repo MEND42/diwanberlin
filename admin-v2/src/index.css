@@ -1,0 +1,63 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-paper text-ink;
+    font-family: 'Inter', system-ui, sans-serif;
+    overscroll-behavior: none;
+  }
+
+  /* Hide scrollbars on touch where layout handles overflow */
+  .scrollbar-none {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .scrollbar-none::-webkit-scrollbar { display: none; }
+
+  /* Thin warm scrollbar on desktop panels */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(200,146,42,0.25); border-radius: 9999px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(200,146,42,0.45); }
+
+  /* Inputs reset */
+  input, select, textarea, button {
+    font-family: inherit;
+  }
+  input[type='date']::-webkit-calendar-picker-indicator {
+    opacity: 0.4;
+    filter: invert(1);
+  }
+}
+
+@layer utilities {
+  /* Safe area padding utilities */
+  .pt-safe-top    { padding-top:    env(safe-area-inset-top); }
+  .pb-safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+
+  /* Glass card */
+  .glass {
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+
+  /* Tabular numbers */
+  .tabular { font-variant-numeric: tabular-nums; }
+
+  /* Font family shortcuts */
+  .font-display { font-family: 'Playfair Display', Georgia, serif; }
+}
+
+/* Framer Motion: disable pointer events on exit animations */
+[data-framer-portal-host] { pointer-events: none; }
+[data-framer-portal-host] > * { pointer-events: auto; }

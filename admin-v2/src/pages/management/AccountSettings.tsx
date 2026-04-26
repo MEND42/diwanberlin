@@ -1,14 +1,15 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { User, Lock, Bell, Smartphone } from 'lucide-react';
+import { User, Lock, Bell, Smartphone, ExternalLink, type LucideIcon } from 'lucide-react';
 import { useAuth }     from '@/hooks/useAuth';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { useAppStore } from '@/store/appStore';
 import { cn, springs, getInitials, ROLE_LABELS } from '@/lib/utils';
 import { authApi }     from '@/lib/api';
 
 function Section({ title, icon: Icon, children }: {
   title: string;
-  icon: React.ComponentType<{ size?: number; className?: string }>;
+  icon: LucideIcon;
   children: React.ReactNode;
 }) {
   return (
@@ -26,6 +27,7 @@ function Section({ title, icon: Icon, children }: {
 
 export function AccountSettings() {
   const { user, changePassword } = useAuth();
+  const push = usePushNotifications();
   const setUser = useAppStore(s => s.setUser);
 
   const [displayName, setDisplayName] = useState(user?.displayName ?? user?.username ?? '');
@@ -59,6 +61,12 @@ export function AccountSettings() {
     } finally {
       setPwLoading(false);
     }
+  }
+
+  function restartTour() {
+    localStorage.removeItem('diwan_tour_done');
+    localStorage.setItem('diwan_tour_pending', '1');
+    window.dispatchEvent(new CustomEvent('diwan:restart-tour'));
   }
 
   const inputClass = cn(
@@ -147,19 +155,39 @@ export function AccountSettings() {
       {/* Notifications */}
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ ...springs.gentle, delay: 0.15 }}>
         <Section title="Benachrichtigungen" icon={Bell}>
-          <div className="space-y-3">
-            {[
-              { label: 'Neue Reservierungen',   key: 'notif_reservations' },
-              { label: 'Neue Event-Anfragen',   key: 'notif_events' },
-              { label: 'Bestellungen bereit',   key: 'notif_orders' },
-            ].map(({ label, key }) => (
-              <label key={key} className="flex items-center justify-between cursor-pointer group">
-                <span className="text-sm text-ink group-hover:text-diwan-gold transition-colors">{label}</span>
-                <div className="w-10 h-5.5 rounded-full bg-diwan-gold relative cursor-pointer">
-                  <div className="absolute right-0.5 top-0.5 w-4 h-4 bg-white rounded-full shadow-sm" />
-                </div>
-              </label>
-            ))}
+          <div className="space-y-4">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-sm font-semibold text-ink">Push-Benachrichtigungen</p>
+                <p className="mt-1 text-xs leading-5 text-ink2">
+                  Erhalten Sie wichtige Hinweise auch dann, wenn die Admin-App im Hintergrund ist.
+                </p>
+              </div>
+              <button
+                type="button"
+                disabled={push.loading || push.state === 'unsupported' || push.state === 'blocked'}
+                onClick={push.active ? push.disable : push.enable}
+                className={cn(
+                  'relative h-6 w-11 flex-shrink-0 rounded-full transition-colors disabled:opacity-50',
+                  push.active ? 'bg-diwan-gold' : 'bg-paper2',
+                )}
+                aria-pressed={push.active}
+              >
+                <span className={cn(
+                  'absolute top-1 h-4 w-4 rounded-full bg-white shadow-sm transition-transform',
+                  push.active ? 'translate-x-6' : 'translate-x-1',
+                )} />
+              </button>
+            </div>
+
+            <div className="rounded-xl border border-diwan-gold/10 bg-paper px-4 py-3 text-xs text-ink2">
+              {push.state === 'active' && 'Aktiviert: Neue Bestellungen, Reservierungen, Event-Anmeldungen und Kellner-Rufe werden als Push gesendet.'}
+              {push.state === 'inactive' && 'Nicht aktiviert. Aktivieren Sie Push, damit dieses Gerät Benachrichtigungen empfangen kann.'}
+              {push.state === 'loading' && 'Wird aktualisiert...'}
+              {push.state === 'blocked' && 'Benachrichtigungen sind im Browser blockiert. Bitte in den Browser-Einstellungen erlauben.'}
+              {push.state === 'unsupported' && 'Dieser Browser unterstützt Web Push nicht vollständig.'}
+              {push.error && <p className="mt-2 text-red-600">{push.error}</p>}
+            </div>
           </div>
         </Section>
       </motion.div>
@@ -173,7 +201,52 @@ export function AccountSettings() {
           <p className="text-xs text-ink2/60">
             Safari / Chrome: „Zum Home-Bildschirm hinzufügen" im Browser-Menü.
           </p>
+          <button
+            type="button"
+            onClick={restartTour}
+            className="mt-4 rounded-xl border border-diwan-gold/20 px-4 py-2 text-sm font-semibold text-diwan-gold hover:border-diwan-gold/45 hover:bg-diwan-gold/5 transition-colors"
+          >
+            Tour neu starten
+          </button>
         </Section>
+      </motion.div>
+
+      {/* Gandom AI credit */}
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ ...springs.gentle, delay: 0.25 }}>
+        <div className="overflow-hidden rounded-2xl border border-diwan-gold/15 bg-[#050505] shadow-warm-sm">
+          <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center">
+            <img
+              src="/uploads/partners/gandom-ai-logo.png"
+              alt="Gandom AI"
+              className="h-16 w-16 rounded-2xl object-cover ring-1 ring-diwan-gold/20"
+            />
+            <div className="flex-1">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-diwan-gold">Entwicklung & Support</p>
+              <h3 className="mt-1 font-display text-xl text-diwan-cream">Developed by Gandom AI</h3>
+              <p className="mt-1 text-sm leading-6 text-diwan-dim">
+                Dieses Admin-Portal und das operative Backend-System wurden von Gandom AI entwickelt.
+              </p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <a
+                  href="https://www.gandomai.com"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 rounded-xl bg-diwan-gold px-3 py-2 text-xs font-bold text-diwan-bg"
+                >
+                  Website <ExternalLink size={12} />
+                </a>
+                <a
+                  href="https://www.youtube.com/@GandomAI"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 rounded-xl border border-diwan-gold/25 px-3 py-2 text-xs font-bold text-diwan-cream hover:bg-white/5"
+                >
+                  YouTube <ExternalLink size={12} />
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
       </motion.div>
     </div>
   );

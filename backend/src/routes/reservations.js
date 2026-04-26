@@ -4,6 +4,7 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const socketService = require('../services/socket');
 const { sendEmail } = require('../services/email');
+const pushService = require('../services/push');
 
 // POST a new table reservation
 router.post('/', async (req, res) => {
@@ -26,6 +27,12 @@ router.post('/', async (req, res) => {
     // Notify dashboard
     const io = socketService.getIO();
     io.emit('reservation:new', reservation);
+    pushService.notifyRoles(['OWNER', 'MANAGER'], {
+      title: 'Neue Reservierung',
+      body: `${name} · ${date} ${time} · ${guests} Gäste`,
+      url: '/admin/management/reservations',
+      type: 'reservation',
+    });
 
     // Send email to owner
     await sendEmail({

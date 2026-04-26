@@ -32,4 +32,32 @@ router.patch('/:id', async (req, res) => {
   }
 });
 
+router.put('/:id', async (req, res) => {
+  try {
+    const reservation = await prisma.tableReservation.update({
+      where: { id: req.params.id },
+      data: req.body,
+      include: { table: true }
+    });
+    try { socketService.getIO().emit('reservation:updated', reservation); } catch (_) {}
+    res.json(reservation);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update reservation' });
+  }
+});
+
+router.patch('/:id/status', async (req, res) => {
+  try {
+    const reservation = await prisma.tableReservation.update({
+      where: { id: req.params.id },
+      data: { status: req.body.status },
+      include: { table: true }
+    });
+    try { socketService.getIO().emit('reservation:updated', reservation); } catch (_) {}
+    res.json(reservation);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update reservation status' });
+  }
+});
+
 module.exports = router;

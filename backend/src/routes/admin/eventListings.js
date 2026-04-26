@@ -15,9 +15,19 @@ function emit(payload) {
 
 router.get('/', async (req, res) => {
   const events = await prisma.eventListing.findMany({
-    orderBy: [{ eventDate: 'asc' }, { sortOrder: 'asc' }]
+    orderBy: [{ eventDate: 'asc' }, { sortOrder: 'asc' }],
+    include: {
+      registrations: {
+        where: { status: { not: 'CANCELLED' } },
+        select: { guests: true },
+      },
+    },
   });
-  res.json(events);
+  res.json(events.map(event => {
+    const registrationsCount = event.registrations.reduce((sum, registration) => sum + registration.guests, 0);
+    const { registrations, ...rest } = event;
+    return { ...rest, registrationsCount };
+  }));
 });
 
 router.post('/', managers, async (req, res) => {
@@ -33,6 +43,18 @@ router.post('/', managers, async (req, res) => {
 });
 
 router.patch('/:id', managers, async (req, res) => {
+  try {
+    const data = { ...req.body };
+    if (data.eventDate) data.eventDate = new Date(data.eventDate);
+    const event = await prisma.eventListing.update({ where: { id: req.params.id }, data });
+    emit(event);
+    res.json(event);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update event' });
+  }
+});
+
+router.put('/:id', managers, async (req, res) => {
   try {
     const data = { ...req.body };
     if (data.eventDate) data.eventDate = new Date(data.eventDate);

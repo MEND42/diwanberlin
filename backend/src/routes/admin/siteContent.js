@@ -50,4 +50,17 @@ router.patch('/:id', managers, async (req, res) => {
   }
 });
 
+router.put('/:id', managers, async (req, res) => {
+  try {
+    const block = await prisma.siteContentBlock.update({
+      where: { id: req.params.id },
+      data: req.body
+    });
+    emit(block);
+    res.json(block);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update content block' });
+  }
+});
+
 module.exports = router;

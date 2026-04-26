@@ -35,12 +35,28 @@ router.get('/', async (req, res) => {
   }
 });
 
+router.get('/categories', async (req, res) => {
+  try {
+    const categories = await prisma.menuCategory.findMany({
+      orderBy: { sortOrder: 'asc' },
+      include: {
+        items: {
+          orderBy: { sortOrder: 'asc' }
+        }
+      }
+    });
+    res.json(categories);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch menu categories' });
+  }
+});
+
 // POST new category
 router.post('/categories', managers, async (req, res) => {
   try {
-    const { nameDe, nameFa, slug, sortOrder, isActive } = req.body;
+    const { nameDe, nameFa, slug, sortOrder, isActive, parentId } = req.body;
     const category = await prisma.menuCategory.create({
-      data: { nameDe, nameFa, slug, sortOrder, isActive }
+      data: { nameDe, nameFa, slug, sortOrder, isActive, parentId: parentId || null }
     });
     emitMenuUpdated(category);
     res.status(201).json(category);
@@ -51,6 +67,20 @@ router.post('/categories', managers, async (req, res) => {
 
 // PATCH category
 router.patch('/categories/:id', managers, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const category = await prisma.menuCategory.update({
+      where: { id },
+      data: req.body
+    });
+    emitMenuUpdated(category);
+    res.json(category);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update category' });
+  }
+});
+
+router.put('/categories/:id', managers, async (req, res) => {
   try {
     const { id } = req.params;
     const category = await prisma.menuCategory.update({
@@ -101,6 +131,33 @@ router.patch('/items/:id', managers, async (req, res) => {
     res.json(item);
   } catch (error) {
     res.status(500).json({ error: 'Failed to update item' });
+  }
+});
+
+router.put('/items/:id', managers, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const item = await prisma.menuItem.update({
+      where: { id },
+      data: req.body
+    });
+    emitMenuUpdated(item);
+    res.json(item);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update item' });
+  }
+});
+
+router.patch('/items/:id/availability', managers, async (req, res) => {
+  try {
+    const item = await prisma.menuItem.update({
+      where: { id: req.params.id },
+      data: { isAvailable: Boolean(req.body.isAvailable) }
+    });
+    emitMenuUpdated(item);
+    res.json(item);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update item availability' });
   }
 });
 

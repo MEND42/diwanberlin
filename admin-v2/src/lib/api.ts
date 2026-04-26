@@ -50,11 +50,17 @@ async function request<T>(
 // ── Auth ──────────────────────────────────────────────────
 export const authApi = {
   login: (username: string, password: string) =>
-    request<{ token: string; id: string; username: string; role: string; displayName?: string; mustChangePassword?: boolean }>(
+    request<{ token: string; id: string; username: string; email?: string; role: string; displayName?: string; mustChangePassword?: boolean }>(
       '/login', 'POST', { username, password },
     ),
+  me: () =>
+    request<import('@/types').AdminUser & { isActive: boolean }>('/me'),
   changePassword: (currentPassword: string, newPassword: string) =>
     request<void>('/change-password', 'POST', { currentPassword, newPassword }),
+  forgotPassword: (identifier: string) =>
+    request<{ success: boolean }>('/forgot-password', 'POST', { identifier }),
+  resetPassword: (token: string, newPassword: string) =>
+    request<{ success: boolean }>('/reset-password', 'POST', { token, newPassword }),
 };
 
 // ── Tables ────────────────────────────────────────────────
@@ -62,6 +68,12 @@ export const tablesApi = {
   list:      ()         => request<import('@/types').Table[]>('/tables'),
   updateStatus: (id: string, status: string) =>
     request<import('@/types').Table>(`/tables/${id}/status`, 'PATCH', { status }),
+  updateLabel: (id: string, label: string) =>
+    request<import('@/types').Table>(`/tables/${id}/label`, 'PATCH', { label }),
+  regenerateToken: (id: string) =>
+    request<import('@/types').Table>(`/tables/${id}/regenerate-token`, 'POST'),
+  qrUrl: (id: string) => `${BASE}/tables/${id}/qr`,
+  qrOrderUrl: (id: string) => `${BASE}/tables/${id}/qr-order`,
 };
 
 // ── Orders ────────────────────────────────────────────────
@@ -106,6 +118,10 @@ export const eventsApi = {
   updateListing: (id: string, data: unknown) =>
     request<import('@/types').EventListing>(`/event-listings/${id}`, 'PUT', data),
   deleteListing: (id: string)    => request<void>(`/event-listings/${id}`, 'DELETE'),
+  registrations: (id: string) =>
+    request<import('@/types').EventRegistration[]>(`/events/${id}/registrations`),
+  updateRegistration: (id: string, status: string) =>
+    request<import('@/types').EventRegistration>(`/events/registrations/${id}`, 'PATCH', { status }),
 };
 
 // ── Customers ─────────────────────────────────────────────
@@ -132,6 +148,15 @@ export const teamApi = {
 // ── Dashboard ─────────────────────────────────────────────
 export const dashboardApi = {
   metrics: () => request<import('@/types').DashboardMetrics>('/dashboard'),
+};
+
+// ── Push notifications ──────────────────────────────────
+export const pushApi = {
+  publicKey: () => request<{ publicKey: string }>('/push/public-key'),
+  subscribe: (subscription: PushSubscriptionJSON) =>
+    request<{ id: string }>('/push/subscribe', 'POST', subscription),
+  unsubscribe: (endpoint?: string) =>
+    request<{ success: boolean }>('/push/subscribe', 'DELETE', { endpoint }),
 };
 
 // ── Site content ──────────────────────────────────────────

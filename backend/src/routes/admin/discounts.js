@@ -41,4 +41,13 @@ router.patch('/:id', managers, async (req, res) => {
   }
 });
 
+router.put('/:id', managers, async (req, res) => {
+  try {
+    const discount = await prisma.discount.update({ where: { id: req.params.id }, data: normalizeDiscount(req.body) });
+    res.json(discount);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update discount' });
+  }
+});
+
 module.exports = router;

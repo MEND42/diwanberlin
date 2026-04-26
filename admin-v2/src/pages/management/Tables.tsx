@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { RefreshCw, Users, Clock } from 'lucide-react';
+import { Download, QrCode, RefreshCw, Tag, Users, Clock } from 'lucide-react';
 import { tablesApi, ordersApi } from '@/lib/api';
-import { cn, formatRelativeTime, springs, haptic } from '@/lib/utils';
+import { cn, formatEur, formatRelativeTime, springs, haptic } from '@/lib/utils';
 import { BottomSheet } from '@/components/primitives/BottomSheet';
 import { HoldButton } from '@/components/primitives/HoldButton';
 import type { Table, Order } from '@/types';
@@ -64,9 +64,16 @@ function TableCard({ table, onClick }: { table: Table; onClick: () => void }) {
 }
 
 function TableDetailSheet({
-  table, onClose,
-}: { table: Table | null; onClose: () => void }) {
+  table, onClose, onTableChange,
+}: { table: Table | null; onClose: () => void; onTableChange: (table: Table) => void }) {
   const qc = useQueryClient();
+  const [labelDraft, setLabelDraft] = useState('');
+  const [billMode, setBillMode] = useState<'total' | 'split'>('total');
+
+  useEffect(() => {
+    setLabelDraft(table?.label ?? '');
+    setBillMode('total');
+  }, [table?.id, table?.label]);
 
   const { data: orders = [] } = useQuery<Order[]>({
     queryKey: ['orders', 'table', table?.id],
@@ -85,10 +92,74 @@ function TableDetailSheet({
     },
   });
 
+  const labelMut = useMutation({
+    mutationFn: ({ id, label }: { id: string; label: string }) =>
+      tablesApi.updateLabel(id, label),
+    onSuccess: (updated) => {
+      qc.invalidateQueries({ queryKey: ['tables'] });
+      onTableChange(updated);
+      haptic('success');
+    },
+  });
+
+  const tokenMut = useMutation({
+    mutationFn: (id: string) => tablesApi.regenerateToken(id),
+    onSuccess: (updated) => {
+      qc.invalidateQueries({ queryKey: ['tables'] });
+      onTableChange(updated);
+      haptic('success');
+    },
+  });
+
   const activeOrders = orders.filter(o => o.status !== 'PAID');
   const total = activeOrders.reduce((s, o) => s + Number(o.totalAmount), 0);
 
   if (!table) return null;
+  const currentTable = table;
+
+  async function saveLabel() {
+    if (!table || (labelDraft.trim() || '') === (table.label ?? '')) return;
+    labelMut.mutate({ id: table.id, label: labelDraft });
+  }
+
+  async function payOrder(orderId: string) {
+    await ordersApi.pay(orderId);
+    haptic('success');
+    qc.invalidateQueries({ queryKey: ['orders'] });
+    qc.invalidateQueries({ queryKey: ['tables'] });
+  }
+
+  async function payAllOrders() {
+    await Promise.all(activeOrders.map(o => ordersApi.pay(o.id)));
+    haptic('success');
+    qc.invalidateQueries({ queryKey: ['orders'] });
+    qc.invalidateQueries({ queryKey: ['tables'] });
+    onClose();
+  }
+
+  async function downloadQr(type: 'call' | 'order' = 'call') {
+    const authToken = localStorage.getItem('diwanAdminToken') ?? sessionStorage.getItem('diwanAdminToken');
+    const apiUrl = type === 'order' ? tablesApi.qrOrderUrl(currentTable.id) : tablesApi.qrUrl(currentTable.id);
+    const res = await fetch(apiUrl, {
+      headers: { Authorization: `Bearer ${authToken ?? ''}` },
+    });
+    if (!res.ok) throw new Error('QR download failed');
+    const blob = await res.blob();
+    const objUrl = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = objUrl;
+    a.download = `tisch-${currentTable.number}-qr-${type}.png`;
+    a.click();
+    URL.revokeObjectURL(objUrl);
+  }
+
+  const callUrl = table.qrToken
+    ? `${window.location.origin}/call?t=${encodeURIComponent(table.qrToken)}`
+    : '';
+
+  const orderUrl = table.qrToken
+    ? `${window.location.origin}/order?t=${encodeURIComponent(table.qrToken)}`
+    : '';
 
   return (
     <BottomSheet isOpen={Boolean(table)} onClose={onClose} title={`Tisch ${table.number}`}>
@@ -111,10 +182,111 @@ function TableDetailSheet({
           ))}
         </div>
 
+        {/* Map annotation */}
+        <label className="block">
+          <span className="mb-1 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-ink2">
+            <Tag size={11} />
+            Tischname
+          </span>
+          <input
+            value={labelDraft}
+            onChange={(event) => setLabelDraft(event.target.value)}
+            onBlur={saveLabel}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') {
+                event.currentTarget.blur();
+              }
+            }}
+            placeholder="Tischname..."
+            className="w-full rounded-xl border border-diwan-gold/10 bg-paper px-3 py-2 text-sm text-ink outline-none transition focus:border-diwan-gold/40 focus:bg-white"
+          />
+        </label>
+
+        {/* QR code tools */}
+        <div className="rounded-xl border border-diwan-gold/10 bg-paper p-3.5 space-y-3">
+          {/* Call QR */}
+          <div>
+            <div className="mb-2 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <QrCode size={15} className="text-diwan-gold" />
+                <div>
+                  <p className="text-sm font-semibold text-ink">Kellner-rufen QR</p>
+                  <p className="text-[11px] text-ink2">Für Tischschild oder Aufsteller</p>
+                </div>
+              </div>
+              <div className="flex gap-1.5">
+                <button
+                  onClick={() => downloadQr('call')}
+                  className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-diwan-gold px-2.5 text-[11px] font-bold text-diwan-bg"
+                >
+                  <Download size={12} />
+                  PNG
+                </button>
+                <button
+                  onClick={() => tokenMut.mutate(table.id)}
+                  className="inline-flex h-8 items-center justify-center rounded-lg border border-diwan-gold/15 px-2.5 text-ink2 hover:border-diwan-gold/40"
+                  title="QR token erneuern"
+                >
+                  <RefreshCw size={12} />
+                </button>
+              </div>
+            </div>
+            {callUrl && (
+              <p className="truncate rounded-lg bg-white px-2.5 py-1.5 text-[11px] text-ink2">
+                {callUrl}
+              </p>
+            )}
+          </div>
+
+          <div className="border-t border-diwan-gold/10" />
+
+          {/* Order QR */}
+          <div>
+            <div className="mb-2 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <QrCode size={15} className="text-green-600" />
+                <div>
+                  <p className="text-sm font-semibold text-ink">Bestell-QR</p>
+                  <p className="text-[11px] text-ink2">Gäste können direkt bestellen</p>
+                </div>
+              </div>
+              <button
+                onClick={() => downloadQr('order')}
+                className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-green-600 px-2.5 text-[11px] font-bold text-white"
+              >
+                <Download size={12} />
+                PNG
+              </button>
+            </div>
+            {orderUrl && (
+              <p className="truncate rounded-lg bg-white px-2.5 py-1.5 text-[11px] text-ink2">
+                {orderUrl}
+              </p>
+            )}
+          </div>
+        </div>
+
         {/* Active orders */}
         {activeOrders.length > 0 && (
           <div>
             <h3 className="text-xs font-semibold uppercase tracking-[0.12em] text-ink2 mb-3">Offene Bestellungen</h3>
+            <div className="mb-3 inline-flex rounded-xl bg-paper2 p-1">
+              {([
+                ['total', 'Gesamtrechnung'],
+                ['split', 'Aufteilen'],
+              ] as const).map(([mode, label]) => (
+                <button
+                  key={mode}
+                  onClick={() => setBillMode(mode)}
+                  className={cn(
+                    'rounded-lg px-3 py-1.5 text-xs font-semibold transition-all',
+                    billMode === mode ? 'bg-white text-ink shadow-warm-sm' : 'text-ink2',
+                  )}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
             <div className="space-y-2">
               {activeOrders.map(order => (
                 <div key={order.id} className="bg-paper rounded-xl p-3.5 border border-diwan-gold/10">
@@ -133,31 +305,39 @@ function TableDetailSheet({
                   ))}
                   <div className="flex justify-between text-sm font-semibold text-ink mt-2 pt-2 border-t border-paper2">
                     <span>Zwischensumme</span>
-                    <span className="text-diwan-gold">€ {Number(order.totalAmount).toFixed(2)}</span>
+                    <span className="text-diwan-gold">{formatEur(order.totalAmount)}</span>
                   </div>
+                  {billMode === 'split' && (
+                    <div className="mt-3 flex justify-end">
+                      <HoldButton
+                        variant="success"
+                        size="md"
+                        onCommit={() => payOrder(order.id)}
+                      >
+                        Diese Bestellung zahlen
+                      </HoldButton>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
 
             {/* Total + pay */}
-            <div className="mt-4 flex items-center justify-between px-1">
-              <div>
-                <p className="text-xs text-ink2">Gesamtbetrag</p>
-                <p className="text-2xl font-bold text-ink">€ {total.toFixed(2)}</p>
+            {billMode === 'total' && (
+              <div className="mt-4 flex items-center justify-between px-1">
+                <div>
+                  <p className="text-xs text-ink2">Gesamtbetrag</p>
+                  <p className="text-2xl font-bold text-ink">{formatEur(total)}</p>
+                </div>
+                <HoldButton
+                  variant="success"
+                  size="lg"
+                  onCommit={payAllOrders}
+                >
+                  Alles bezahlt
+                </HoldButton>
               </div>
-              <HoldButton
-                variant="success"
-                size="lg"
-                onCommit={() => {
-                  activeOrders.forEach(o =>
-                    ordersApi.pay(o.id).then(() => qc.invalidateQueries({ queryKey: ['orders'] })),
-                  );
-                  statusMut.mutate({ id: table.id, status: 'AVAILABLE' });
-                }}
-              >
-                Bezahlt
-              </HoldButton>
-            </div>
+            )}
           </div>
         )}
 
@@ -247,6 +427,7 @@ export function Tables() {
 
       <TableDetailSheet
         table={selected}
+        onTableChange={setSelected}
         onClose={() => { setSelected(null); qc.invalidateQueries({ queryKey: ['tables'] }); }}
       />
     </div>

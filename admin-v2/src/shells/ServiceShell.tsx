@@ -1,17 +1,20 @@
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Grid3X3, CalendarDays, Settings, LayoutDashboard, Wifi, WifiOff } from 'lucide-react';
+import { Grid3X3, CalendarDays, Settings, LayoutDashboard, Wifi, WifiOff, type LucideIcon } from 'lucide-react';
 import { useAuth }     from '@/hooks/useAuth';
 import { useSocket }   from '@/hooks/useSocket';
 import { useAppStore } from '@/store/appStore';
 import { cn, springs, ROLE_LABELS } from '@/lib/utils';
+import { WaiterCallBanner } from '@/components/WaiterCallBanner';
+import type { Role } from '@/types';
 
-const TABS = [
-  { label: 'Tische',        path: '/service/floor',        icon: Grid3X3,       roles: ['OWNER','MANAGER','WAITER'] },
-  { label: 'Reservierungen',path: '/service/reservations', icon: CalendarDays,  roles: ['OWNER','MANAGER','WAITER'] },
-  { label: 'Verwaltung',    path: '/management/dashboard', icon: LayoutDashboard,roles: ['OWNER','MANAGER'] },
-  { label: 'Einstellungen', path: '/service/settings',     icon: Settings,      roles: ['OWNER','MANAGER','WAITER'] },
-] as const;
+interface Tab { label: string; path: string; icon: LucideIcon; roles: Role[] }
+const TABS: Tab[] = [
+  { label: 'Tische',        path: '/service/floor',        icon: Grid3X3,        roles: ['OWNER','MANAGER','WAITER'] },
+  { label: 'Reservierungen',path: '/service/reservations', icon: CalendarDays,   roles: ['OWNER','MANAGER','WAITER'] },
+  { label: 'Verwaltung',    path: '/management/dashboard', icon: LayoutDashboard, roles: ['OWNER','MANAGER'] },
+  { label: 'Einstellungen', path: '/service/settings',     icon: Settings,       roles: ['OWNER','MANAGER','WAITER'] },
+];
 
 export function ServiceShell() {
   const { user }         = useAuth();
@@ -66,6 +69,9 @@ export function ServiceShell() {
           </motion.div>
         </AnimatePresence>
       </main>
+
+      {/* Waiter call urgent banners */}
+      <WaiterCallBanner />
 
       {/* Bottom tab bar */}
       <nav className="flex-shrink-0 border-t border-diwan-gold/8 bg-diwan-bg px-2 py-2"

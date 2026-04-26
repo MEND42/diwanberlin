@@ -10,9 +10,12 @@ import {
 } from 'lucide-react';
 import { useAuth }      from '@/hooks/useAuth';
 import { useSocket }    from '@/hooks/useSocket';
+import { useTour }      from '@/hooks/useTour';
 import { useAppStore }  from '@/store/appStore';
 import { cn, getInitials, ROLE_LABELS, springs } from '@/lib/utils';
-import type { NavItem } from '@/types';
+import { WaiterCallBanner } from '@/components/WaiterCallBanner';
+import { TourOverlay } from '@/components/TourOverlay';
+import type { NavItem, Role } from '@/types';
 
 const NAV: NavItem[] = [
   { view: 'dashboard',      path: '/management/dashboard',      title: 'Dashboard',       meta: 'Überblick & Kennzahlen', icon: LayoutDashboard, roles: ['OWNER','MANAGER','WAITER'], section: 'service' },
@@ -47,6 +50,7 @@ function NavItemRow({ item, active, badge }: { item: NavItem; active: boolean; b
           ? 'bg-diwan-gold/12 text-diwan-cream'
           : 'text-diwan-dim hover:text-diwan-cream hover:bg-white/5',
       )}
+      data-tour={item.view === 'reservations' ? 'nav-reservations' : undefined}
     >
       {/* Active indicator */}
       {active && (
@@ -144,6 +148,8 @@ export function ManagementShell() {
   const pendingRes         = useAppStore(s => s.pendingReservations);
   const pendingEv          = useAppStore(s => s.pendingEvents);
   const markAllRead        = useAppStore(s => s.markAllRead);
+  const dismissNotif       = useAppStore(s => s.dismissNotification);
+  const tour               = useTour();
 
   const [cmdOpen,    setCmdOpen]    = useState(false);
   const [notifOpen,  setNotifOpen]  = useState(false);
@@ -192,7 +198,7 @@ export function ManagementShell() {
 
         {/* Shell switcher for non-kitchen roles */}
         {user && user.role !== 'KITCHEN' && (
-          <div className="px-3 py-3 border-b border-white/6">
+          <div className="px-3 py-3 border-b border-white/6" data-tour="shell-switcher">
             <div className="grid grid-cols-2 gap-1">
               {[
                 { label: 'Verwaltung', path: '/management/dashboard' },
@@ -240,8 +246,20 @@ export function ManagementShell() {
 
         {/* User box */}
         <div className="border-t border-white/6 p-3 space-y-1">
+          <a
+            href="https://www.gandomai.com"
+            target="_blank"
+            rel="noreferrer"
+            className="mb-2 flex items-center gap-2 rounded-xl border border-white/8 bg-white/[0.03] px-3 py-2 hover:bg-white/[0.06] transition-colors"
+          >
+            <img src="/uploads/partners/gandom-ai-logo.png" alt="Gandom AI" className="h-5 w-5 rounded object-cover" />
+            <span className="text-[10px] leading-tight text-diwan-dim">
+              Developed by <span className="text-diwan-cream">Gandom AI</span>
+            </span>
+          </a>
           <button
             onClick={() => navigate('/management/settings')}
+            data-tour="account-settings"
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left hover:bg-white/5 transition-colors group"
           >
             <div className="w-7 h-7 rounded-full bg-diwan-gold/20 flex items-center justify-center flex-shrink-0 text-diwan-gold text-xs font-bold">
@@ -302,6 +320,7 @@ export function ManagementShell() {
             <div className="relative">
               <button
                 onClick={() => { setNotifOpen(v => !v); if (unread > 0) markAllRead(); }}
+                data-tour="notifications"
                 className="relative w-8 h-8 flex items-center justify-center rounded-xl hover:bg-paper2 transition-colors text-ink2"
               >
                 <Bell size={15} />
@@ -329,9 +348,34 @@ export function ManagementShell() {
                       {notifications.length === 0
                         ? <p className="text-center text-ink2 text-sm py-8">Keine Benachrichtigungen</p>
                         : notifications.slice(0, 20).map(n => (
-                            <div key={n.id} className="px-4 py-3 border-b border-paper2 last:border-0 hover:bg-paper transition-colors">
-                              <p className="text-xs font-semibold text-ink">{n.title}</p>
-                              <p className="text-[11px] text-ink2 mt-0.5">{n.body}</p>
+                            <div
+                              key={n.id}
+                              className={cn(
+                                'flex items-start gap-3 px-4 py-3 border-b border-paper2 last:border-0 transition-colors',
+                                n.type === 'waiter'
+                                  ? 'bg-amber-50 hover:bg-amber-100/60'
+                                  : 'hover:bg-paper',
+                              )}
+                            >
+                              {n.type === 'waiter' && (
+                                <span className="text-base flex-shrink-0 mt-0.5">🔔</span>
+                              )}
+                              <div className="flex-1 min-w-0">
+                                <p className={cn(
+                                  'text-xs font-semibold',
+                                  n.type === 'waiter' ? 'text-amber-800' : 'text-ink',
+                                )}>
+                                  {n.title}
+                                </p>
+                                <p className="text-[11px] text-ink2 mt-0.5 truncate">{n.body}</p>
+                              </div>
+                              <button
+                                onClick={() => dismissNotif(n.id)}
+                                className="flex-shrink-0 text-ink2/40 hover:text-ink2 transition-colors mt-0.5"
+                                aria-label="Entfernen"
+                              >
+                                <X size={12} />
+                              </button>
                             </div>
                           ))
                       }
@@ -364,6 +408,17 @@ export function ManagementShell() {
       <AnimatePresence>
         {cmdOpen && <CommandPalette onClose={() => setCmdOpen(false)} />}
       </AnimatePresence>
+
+      {/* Waiter call urgent banners */}
+      <WaiterCallBanner />
+      <TourOverlay
+        active={tour.active}
+        step={tour.step}
+        index={tour.index}
+        total={tour.steps.length}
+        onNext={tour.next}
+        onSkip={tour.finish}
+      />
     </div>
   );
 }

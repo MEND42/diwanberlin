@@ -30,6 +30,8 @@ echo "[deploy] Syncing frontend to /var/www/diwanberlin..."
 rsync -av --delete \
   --include index.html \
   --include admin.html \
+  --include call.html \
+  --include order.html \
   --include admin.css \
   --include 'admin/***' \
   --include robots.txt \
@@ -39,6 +41,20 @@ rsync -av --delete \
   --include 'uploads/***' \
   --exclude '*' \
   "$PROJECT_DIR/" /var/www/diwanberlin/
+
+echo "[deploy] Building admin-v2..."
+npm ci --prefix "$PROJECT_DIR/admin-v2"
+if [ -f "$PROJECT_DIR/backend/.env" ]; then
+  VAPID_PUBLIC_KEY_FROM_ENV="$(grep -E '^VAPID_PUBLIC_KEY=' "$PROJECT_DIR/backend/.env" | tail -n1 | cut -d= -f2- || true)"
+  if [ -n "$VAPID_PUBLIC_KEY_FROM_ENV" ]; then
+    export VITE_VAPID_PUBLIC_KEY="$VAPID_PUBLIC_KEY_FROM_ENV"
+  fi
+fi
+npm run build --prefix "$PROJECT_DIR/admin-v2"
+
+echo "[deploy] Syncing admin-v2 to /var/www/diwanberlin/admin..."
+mkdir -p /var/www/diwanberlin/admin
+rsync -av --delete "$PROJECT_DIR/admin-v2/dist/" /var/www/diwanberlin/admin/
 
 if [ "$(id -u)" -eq 0 ]; then
   chown -R diwanberlin:www-data /var/www/diwanberlin

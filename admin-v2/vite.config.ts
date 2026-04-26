@@ -8,6 +8,9 @@ export default defineConfig(({ command }) => ({
   plugins: [
     react(),
     VitePWA({
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
       registerType: 'autoUpdate',
       manifest: {
         name: 'Diwan Berlin · Admin',
@@ -23,20 +26,24 @@ export default defineConfig(({ command }) => ({
           { src: '/uploads/diwan-logo-new.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
         ],
       },
-      workbox: {
+      injectManifest: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
-        runtimeCaching: [
-          {
-            urlPattern: /^\/api\/admin\//,
-            handler: 'NetworkFirst',
-            options: { cacheName: 'api-admin-cache', expiration: { maxAgeSeconds: 60 } },
-          },
-        ],
       },
     }),
   ],
   resolve: {
     alias: { '@': path.resolve(__dirname, './src') },
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor':  ['react', 'react-dom', 'react-router-dom'],
+          'motion-vendor': ['framer-motion'],
+          'query-vendor':  ['@tanstack/react-query'],
+        },
+      },
+    },
   },
   server: {
     proxy: {

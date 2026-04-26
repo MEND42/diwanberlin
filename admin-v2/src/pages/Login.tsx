@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Eye, EyeOff, LogIn } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { authApi } from '@/lib/api';
 import { springs, cn } from '@/lib/utils';
 
 const grain = `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E")`;
@@ -19,6 +20,10 @@ export function Login() {
   const [loading,    setLoading]    = useState(false);
   const [error,      setError]      = useState<string | null>(redirectMessage ?? null);
   const [shakeKey,   setShakeKey]   = useState(0);
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [forgotId,   setForgotId]   = useState('');
+  const [forgotSent, setForgotSent] = useState(false);
+  const [forgotBusy, setForgotBusy] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -32,6 +37,19 @@ export function Login() {
       setShakeKey(k => k + 1);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleForgot() {
+    setForgotBusy(true);
+    setError(null);
+    try {
+      await authApi.forgotPassword(forgotId.trim());
+      setForgotSent(true);
+    } catch {
+      setForgotSent(true);
+    } finally {
+      setForgotBusy(false);
     }
   }
 
@@ -168,28 +186,76 @@ export function Login() {
             </div>
 
             {/* Remember me */}
-            <label className="flex items-center gap-3 cursor-pointer group">
-              <div
-                onClick={() => setRememberMe(v => !v)}
-                className={cn(
-                  'w-4 h-4 rounded border flex items-center justify-center transition-all duration-200 flex-shrink-0',
-                  rememberMe
-                    ? 'bg-diwan-gold border-diwan-gold'
-                    : 'border-white/20 bg-transparent group-hover:border-diwan-gold/50',
-                )}
+            <div className="flex items-center justify-between gap-3">
+              <label className="flex items-center gap-3 cursor-pointer group">
+                <div
+                  onClick={() => setRememberMe(v => !v)}
+                  className={cn(
+                    'w-4 h-4 rounded border flex items-center justify-center transition-all duration-200 flex-shrink-0',
+                    rememberMe
+                      ? 'bg-diwan-gold border-diwan-gold'
+                      : 'border-white/20 bg-transparent group-hover:border-diwan-gold/50',
+                  )}
+                >
+                  {rememberMe && (
+                    <motion.svg initial={{ scale: 0 }} animate={{ scale: 1 }} transition={springs.snap}
+                      viewBox="0 0 10 8" className="w-2.5 h-2" fill="none"
+                    >
+                      <path d="M1 4L3.5 6.5L9 1" stroke="#180e04" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </motion.svg>
+                  )}
+                </div>
+                <span className="text-xs text-diwan-dim group-hover:text-diwan-cream transition-colors">
+                  Angemeldet bleiben
+                </span>
+              </label>
+              <button
+                type="button"
+                onClick={() => { setForgotOpen(v => !v); setForgotSent(false); setForgotId(username); }}
+                className="text-xs text-diwan-gold hover:text-diwan-cream transition-colors"
               >
-                {rememberMe && (
-                  <motion.svg initial={{ scale: 0 }} animate={{ scale: 1 }} transition={springs.snap}
-                    viewBox="0 0 10 8" className="w-2.5 h-2" fill="none"
-                  >
-                    <path d="M1 4L3.5 6.5L9 1" stroke="#180e04" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                  </motion.svg>
-                )}
-              </div>
-              <span className="text-xs text-diwan-dim group-hover:text-diwan-cream transition-colors">
-                Angemeldet bleiben
-              </span>
-            </label>
+                Passwort vergessen?
+              </button>
+            </div>
+
+            <AnimatePresence>
+              {forgotOpen && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="overflow-hidden"
+                >
+                  <div className="rounded-xl border border-diwan-gold/15 bg-black/18 p-3">
+                    {forgotSent ? (
+                      <p className="text-xs leading-5 text-diwan-cream/80">
+                        Wenn ein Konto mit E-Mail existiert, wurde ein Reset-Link versendet.
+                      </p>
+                    ) : (
+                      <div className="space-y-2">
+                        <p className="text-xs text-diwan-dim">Benutzername oder E-Mail eingeben.</p>
+                        <div className="flex gap-2">
+                          <input
+                            value={forgotId}
+                            onChange={e => setForgotId(e.target.value)}
+                            className="min-w-0 flex-1 rounded-xl px-3 py-2 text-xs text-diwan-cream bg-black/25 border border-white/10 focus:outline-none focus:border-diwan-gold/50"
+                            placeholder="admin@..."
+                          />
+                          <button
+                            type="button"
+                            onClick={handleForgot}
+                            disabled={forgotBusy || !forgotId.trim()}
+                            className="rounded-xl bg-diwan-gold px-3 py-2 text-xs font-bold text-diwan-bg disabled:opacity-50"
+                          >
+                            Senden
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Submit */}
             <motion.button
@@ -222,9 +288,13 @@ export function Login() {
 
           {/* Footer */}
           <div className="px-8 pb-6 text-center">
-            <p className="text-[11px] text-diwan-dim/50">
-              Cafe Diwan Berlin · Restaurant Operations
-            </p>
+            <div className="mb-3 flex items-center justify-center gap-2 rounded-xl border border-white/8 bg-black/15 px-3 py-2">
+              <img src="/uploads/partners/gandom-ai-logo.png" alt="Gandom AI" className="h-6 w-6 rounded object-cover" />
+              <p className="text-[10px] leading-tight text-diwan-dim/75">
+                Portal developed by <span className="text-diwan-cream">Gandom AI</span>
+              </p>
+            </div>
+            <p className="text-[11px] text-diwan-dim/50">Cafe Diwan Berlin · Restaurant Operations</p>
           </div>
         </div>
       </motion.div>

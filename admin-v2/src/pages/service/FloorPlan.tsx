@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Users, Plus, RefreshCw } from 'lucide-react';
@@ -14,7 +14,7 @@ const STATUS_CONFIG: Record<Table['status'], { ring: string; glow?: string; labe
   RESERVED:  { ring: 'ring-2 ring-blue-300/60',    label: 'Reserviert', textColor: 'text-blue-600' },
 };
 
-function TableTile({ table, onTap }: { table: Table; onTap: () => void }) {
+function TableTile({ table, called, onTap }: { table: Table; called?: boolean; onTap: () => void }) {
   const cfg = STATUS_CONFIG[table.status];
   return (
     <motion.button
@@ -25,6 +25,7 @@ function TableTile({ table, onTap }: { table: Table; onTap: () => void }) {
         'relative flex flex-col items-center justify-center aspect-square rounded-2xl bg-white',
         'border border-paper2 transition-shadow',
         cfg.ring, cfg.glow,
+        called && 'ring-4 ring-diwan-gold shadow-[0_0_0_8px_rgba(200,146,42,0.18)]',
       )}
     >
       {/* Occupied pulse ring */}
@@ -39,6 +40,16 @@ function TableTile({ table, onTap }: { table: Table; onTap: () => void }) {
       <span className={cn('text-[9px] font-bold uppercase tracking-wider mt-1', cfg.textColor)}>
         {cfg.label}
       </span>
+      {table.label && (
+        <span className="mt-0.5 max-w-[82%] truncate text-[9px] text-ink2/65">
+          {table.label}
+        </span>
+      )}
+      {called && (
+        <span className="absolute -top-1 -right-1 rounded-full bg-diwan-gold px-1.5 py-0.5 text-[9px] font-bold text-diwan-bg shadow-warm-md">
+          Ruft
+        </span>
+      )}
     </motion.button>
   );
 }
@@ -51,6 +62,7 @@ function TableSheet({ table, onClose }: { table: Table | null; onClose: () => vo
   const [draft, setDraft] = useState<OrderDraft[]>([]);
   const [catId, setCatId] = useState<string>('');
   const [submitting, setSubmitting] = useState(false);
+  const [billMode, setBillMode] = useState<'total' | 'split'>('total');
 
   const { data: orders = [] } = useQuery<Order[]>({
     queryKey: ['orders', 'table', table?.id],
@@ -89,7 +101,7 @@ function TableSheet({ table, onClose }: { table: Table | null; onClose: () => vo
   }
 
   async function submitOrder() {
-    if (!draft.length) return;
+    if (!draft.length || !table) return;
     setSubmitting(true);
     try {
       await ordersApi.create({
@@ -103,6 +115,21 @@ function TableSheet({ table, onClose }: { table: Table | null; onClose: () => vo
       qc.invalidateQueries({ queryKey: ['tables'] });
     } catch { haptic('error'); }
     finally { setSubmitting(false); }
+  }
+
+  async function payOrder(orderId: string) {
+    await ordersApi.pay(orderId);
+    haptic('success');
+    qc.invalidateQueries({ queryKey: ['orders'] });
+    qc.invalidateQueries({ queryKey: ['tables'] });
+  }
+
+  async function payAllOrders() {
+    await Promise.all(activeOrders.map(o => ordersApi.pay(o.id)));
+    haptic('success');
+    qc.invalidateQueries({ queryKey: ['orders'] });
+    qc.invalidateQueries({ queryKey: ['tables'] });
+    onClose();
   }
 
   return (
@@ -131,35 +158,63 @@ function TableSheet({ table, onClose }: { table: Table | null; onClose: () => vo
             <p className="text-center text-ink2 text-sm py-10">Keine offenen Bestellungen</p>
           ) : (
             <>
+              <div className="mb-3 inline-flex rounded-xl bg-paper2 p-1">
+                {([
+                  ['total', 'Gesamtrechnung'],
+                  ['split', 'Aufteilen'],
+                ] as const).map(([mode, label]) => (
+                  <button
+                    key={mode}
+                    onClick={() => setBillMode(mode)}
+                    className={cn(
+                      'rounded-lg px-3 py-1.5 text-xs font-semibold transition-all',
+                      billMode === mode ? 'bg-white text-ink shadow-warm-sm' : 'text-ink2',
+                    )}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
               {activeOrders.map(order => (
                 <div key={order.id} className="mb-4 rounded-xl bg-paper p-3.5 border border-paper2">
-                  <p className="text-xs font-semibold text-ink mb-2">Bestellung #{order.orderNumber}</p>
+                  <div className="mb-2 flex items-center justify-between gap-3">
+                    <p className="text-xs font-semibold text-ink">Bestellung #{order.orderNumber}</p>
+                    <p className="text-xs font-bold text-diwan-gold">{formatEur(order.totalAmount)}</p>
+                  </div>
                   {order.items?.map(item => (
                     <div key={item.id} className="flex justify-between text-xs text-ink2 py-0.5">
                       <span>{item.quantity}× {item.menuItem?.nameDe}</span>
                       <span>{formatEur(Number(item.unitPrice) * item.quantity)}</span>
                     </div>
                   ))}
+                  {billMode === 'split' && (
+                    <div className="mt-3 flex justify-end border-t border-paper2 pt-3">
+                      <HoldButton
+                        variant="success"
+                        size="md"
+                        onCommit={() => payOrder(order.id)}
+                      >
+                        Diese Bestellung zahlen
+                      </HoldButton>
+                    </div>
+                  )}
                 </div>
               ))}
-              <div className="flex items-center justify-between mb-5">
-                <div>
-                  <p className="text-xs text-ink2">Gesamtbetrag</p>
-                  <p className="text-2xl font-bold text-ink">{formatEur(billTotal)}</p>
+              {billMode === 'total' && (
+                <div className="flex items-center justify-between mb-5">
+                  <div>
+                    <p className="text-xs text-ink2">Gesamtbetrag</p>
+                    <p className="text-2xl font-bold text-ink">{formatEur(billTotal)}</p>
+                  </div>
+                  <HoldButton
+                    variant="success"
+                    size="lg"
+                    onCommit={payAllOrders}
+                  >
+                    Alles bezahlt
+                  </HoldButton>
                 </div>
-                <HoldButton
-                  variant="success"
-                  size="lg"
-                  onCommit={() => {
-                    activeOrders.forEach(o => ordersApi.pay(o.id));
-                    qc.invalidateQueries({ queryKey: ['orders'] });
-                    qc.invalidateQueries({ queryKey: ['tables'] });
-                    onClose();
-                  }}
-                >
-                  Bezahlt ✓
-                </HoldButton>
-              </div>
+              )}
             </>
           )}
         </div>
@@ -244,12 +299,31 @@ function TableSheet({ table, onClose }: { table: Table | null; onClose: () => vo
 export function FloorPlan() {
   const qc = useQueryClient();
   const [selected, setSelected] = useState<Table | null>(null);
+  const [calledTables, setCalledTables] = useState<Set<string>>(() => new Set());
 
   const { data: tables = [], isLoading, refetch } = useQuery<Table[]>({
     queryKey: ['tables'],
     queryFn:  tablesApi.list,
     refetchInterval: 12_000,
   });
+
+  useEffect(() => {
+    function handleCall(event: Event) {
+      const detail = (event as CustomEvent<{ tableId: string }>).detail;
+      if (!detail?.tableId) return;
+      setCalledTables(prev => new Set(prev).add(detail.tableId));
+      window.setTimeout(() => {
+        setCalledTables(prev => {
+          const next = new Set(prev);
+          next.delete(detail.tableId);
+          return next;
+        });
+      }, 60_000);
+    }
+
+    window.addEventListener('diwan:waiter-call', handleCall);
+    return () => window.removeEventListener('diwan:waiter-call', handleCall);
+  }, []);
 
   return (
     <div className="h-full flex flex-col">
@@ -289,7 +363,11 @@ export function FloorPlan() {
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ ...springs.gentle, delay: i * 0.025 }}
                 >
-                  <TableTile table={table} onTap={() => setSelected(table)} />
+                  <TableTile
+                    table={table}
+                    called={calledTables.has(table.id)}
+                    onTap={() => setSelected(table)}
+                  />
                 </motion.div>
               ))}
             </AnimatePresence>

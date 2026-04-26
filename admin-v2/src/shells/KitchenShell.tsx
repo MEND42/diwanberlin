@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
-import { Wifi, WifiOff, LogOut, Maximize2 } from 'lucide-react';
+import { Wifi, WifiOff, LogOut, Maximize2, Volume2, VolumeX } from 'lucide-react';
 import { useAuth }   from '@/hooks/useAuth';
 import { useSocket } from '@/hooks/useSocket';
+import { useKdsSound } from '@/hooks/useKdsSound';
 import { cn }        from '@/lib/utils';
 
 function LiveClock() {
@@ -21,6 +22,7 @@ function LiveClock() {
 export function KitchenShell() {
   const { logout }   = useAuth();
   const { status }   = useSocket();
+  const sound         = useKdsSound();
   const navigate     = useNavigate();
 
   function toggleFullscreen() {
@@ -57,6 +59,20 @@ export function KitchenShell() {
           </div>
 
           {/* Fullscreen */}
+          <button
+            onClick={sound.toggle}
+            title={sound.enabled ? 'Ton ausschalten' : 'Ton einschalten'}
+            aria-pressed={sound.enabled}
+            className={cn(
+              'w-7 h-7 flex items-center justify-center rounded-lg transition-colors',
+              sound.enabled
+                ? 'text-kds-text/80 bg-white/6 hover:bg-white/10'
+                : 'text-kds-text/35 hover:text-kds-text/70 hover:bg-white/5',
+            )}
+          >
+            {sound.enabled ? <Volume2 size={13} /> : <VolumeX size={13} />}
+          </button>
+
           <button
             onClick={toggleFullscreen}
             title="Vollbild"

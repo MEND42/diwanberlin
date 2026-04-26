@@ -1,8 +1,11 @@
+import type { LucideIcon } from 'lucide-react';
+
 export type Role = 'OWNER' | 'MANAGER' | 'WAITER' | 'KITCHEN';
 
 export interface AdminUser {
   id: string;
   username: string;
+  email?: string;
   displayName?: string;
   role: Role;
   avatarUrl?: string;
@@ -14,7 +17,7 @@ export interface NavItem {
   path: string;
   title: string;
   meta: string;
-  icon: React.ComponentType<{ size?: number; className?: string }>;
+  icon: LucideIcon;
   roles: Role[];
   badgeKey?: 'reservations' | 'events';
   section: 'service' | 'planning' | 'management';
@@ -48,12 +51,14 @@ export interface MenuItem {
 
 export interface MenuCategory {
   id: string;
+  parentId?: string | null;
   nameDe: string;
   nameFa: string;
   slug: string;
   sortOrder: number;
   isActive: boolean;
   items: MenuItem[];
+  subcategories?: MenuCategory[];
 }
 
 // ── Orders ──────────────────────────────────────────────
@@ -126,14 +131,30 @@ export interface EventListing {
   titleDe: string;
   titleFa?: string;
   description?: string;
+  descriptionFull?: string;
+  descriptionFa?: string;
   eventDate: string;
   eventTime: string;
   isPublished: boolean;
   sortOrder: number;
   imageUrl?: string;
   registrationOpen?: boolean;
+  location?: string;
   maxAttendees?: number;
   price?: number;
+  registrationsCount?: number;
+}
+
+export interface EventRegistration {
+  id: string;
+  eventListingId: string;
+  name: string;
+  email: string;
+  phone?: string;
+  guests: number;
+  message?: string;
+  status: 'PENDING' | 'CONFIRMED' | 'CANCELLED';
+  createdAt: string;
 }
 
 // ── Customers ────────────────────────────────────────────
@@ -164,6 +185,7 @@ export interface Discount {
 export interface TeamMember {
   id: string;
   username: string;
+  email?: string;
   displayName?: string;
   role: Role;
   isActive: boolean;
@@ -189,4 +211,10 @@ export interface SocketEvents {
   'order:updated': Order;
   'table:updated': Table;
   'reservation:new': Reservation;
+  'waiter:call': {
+    tableId: string;
+    tableNumber: number;
+    label?: string;
+    createdAt: string;
+  };
 }

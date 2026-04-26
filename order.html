@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#180e04">
+  <title>Bestellen · Cafe Diwan Berlin</title>
+  <style>
+    :root{--bg:#180e04;--panel:#241306;--panel2:#2d1909;--gold:#c8922a;--gold2:#efc66a;--cream:#fff4df;--muted:#c9b99b;--line:rgba(200,146,42,.22);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    *{box-sizing:border-box}body{margin:0;min-height:100svh;background:radial-gradient(circle at 50% -10%,rgba(200,146,42,.22),transparent 28rem),var(--bg);color:var(--cream)}button,input,textarea{font:inherit}
+    header{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 16px;background:rgba(24,14,4,.9);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+    .brand{display:flex;align-items:center;gap:10px}.brand img{width:40px;height:40px;border-radius:12px;object-fit:contain}.brand strong{display:block;font-size:14px}.brand span{display:block;color:var(--muted);font-size:12px}
+    .status-pill{border:1px solid var(--line);border-radius:999px;color:var(--gold);padding:8px 10px;font-size:12px}
+    main{padding:18px 16px 112px;max-width:760px;margin:0 auto}.hero{padding:18px 0 22px}.hero h1{margin:0;font-size:clamp(32px,10vw,56px);line-height:.95;letter-spacing:0}.hero p{margin:12px 0 0;color:var(--muted);line-height:1.55}
+    .tabs{display:flex;gap:8px;overflow-x:auto;padding:4px 0 16px;scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}.tab{flex-shrink:0;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--muted);border-radius:999px;padding:10px 14px;font-size:13px}.tab.active{background:var(--gold);border-color:var(--gold);color:#160d04;font-weight:800}
+    .grid{display:grid;grid-template-columns:1fr;gap:10px}.item{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;padding:14px;border:1px solid rgba(200,146,42,.16);border-radius:18px;background:rgba(255,255,255,.045)}.item h3{margin:0;font-size:17px}.item .fa{display:block;direction:rtl;color:var(--gold);font-size:14px;margin-top:3px}.item p{margin:6px 0 0;color:var(--muted);font-size:13px;line-height:1.45}.price{margin-top:8px;color:var(--gold);font-weight:800}
+    .qty{display:flex;align-items:center;gap:8px}.qty button{width:34px;height:34px;border:1px solid var(--line);border-radius:50%;background:rgba(200,146,42,.1);color:var(--gold);font-size:20px;font-weight:800}.qty span{min-width:18px;text-align:center;font-weight:900}
+    .cart-bar{position:fixed;left:0;right:0;bottom:0;z-index:10;padding:12px 16px max(12px,env(safe-area-inset-bottom));background:linear-gradient(180deg,rgba(24,14,4,.2),rgba(24,14,4,.96) 22%);display:flex;justify-content:center}.cart-btn{width:min(100%,760px);min-height:62px;border:0;border-radius:20px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#160d04;font-weight:900;display:flex;align-items:center;justify-content:space-between;padding:0 20px;box-shadow:0 18px 48px rgba(200,146,42,.25)}
+    .sheet{position:fixed;inset:auto 0 0;z-index:20;max-height:82svh;background:linear-gradient(180deg,var(--panel2),var(--bg));border-radius:28px 28px 0 0;border:1px solid var(--line);box-shadow:0 -24px 80px rgba(0,0,0,.45);transform:translateY(105%);transition:transform .32s cubic-bezier(.2,.8,.2,1);padding:22px 16px max(22px,env(safe-area-inset-bottom));overflow:auto}.sheet.open{transform:translateY(0)}.sheet-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}.sheet h2{margin:0;font-size:24px}.close{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--cream);font-size:22px}
+    .cart-line{display:grid;grid-template-columns:1fr auto;gap:10px;border-bottom:1px solid rgba(200,146,42,.12);padding:12px 0}.cart-line strong{font-size:15px}.cart-line span{color:var(--muted);font-size:13px}.notes{width:100%;min-height:72px;border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.04);color:var(--cream);padding:12px;margin:14px 0;outline:none}.total{display:flex;justify-content:space-between;align-items:center;margin:18px 0;font-size:22px;font-weight:900}.hold{position:relative;overflow:hidden;width:100%;min-height:66px;border:0;border-radius:20px;background:var(--gold);color:#160d04;font-weight:900}.hold::before{content:"";position:absolute;inset:0 auto 0 0;width:var(--progress,0%);background:rgba(255,255,255,.32);transition:width .08s linear}.hold span{position:relative}
+    .success{display:none;text-align:center;padding:64px 16px}.success.open{display:block}.success .check{width:74px;height:74px;margin:0 auto 18px;border-radius:50%;display:grid;place-items:center;background:rgba(200,146,42,.14);color:var(--gold);font-size:42px}.success h1{margin:0;font-size:42px}.success p{color:var(--muted);line-height:1.6}.progress{display:flex;justify-content:center;gap:8px;margin-top:20px}.step{width:10px;height:10px;border-radius:50%;background:rgba(200,146,42,.25)}.step.active{background:var(--gold)}
+    .error{color:#ffb4a8;background:rgba(255,90,70,.08);border:1px solid rgba(255,90,70,.18);padding:14px;border-radius:16px}.hidden{display:none!important}
+    @media(min-width:660px){.grid{grid-template-columns:1fr 1fr}.item{min-height:150px}}
+    @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <img src="/uploads/diwan-logo-new.png" alt="Cafe Diwan Berlin">
+      <div><strong>Cafe Diwan</strong><span id="tableLabel">Tisch wird geladen...</span></div>
+    </div>
+    <span class="status-pill" id="liveStatus">Speisekarte</span>
+  </header>
+
+  <main id="app">
+    <section class="hero">
+      <h1 id="headline">Willkommen</h1>
+      <p>Wählen Sie Ihre Speisen und Getränke. Die Bestellung geht direkt an unser Team.</p>
+    </section>
+    <div class="tabs" id="tabs"></div>
+    <div class="grid" id="items"></div>
+  </main>
+
+  <section class="success" id="success">
+    <div class="check">✓</div>
+    <h1>Bestellung gesendet</h1>
+    <p id="successText"></p>
+    <div class="progress" aria-label="Bestellstatus">
+      <span class="step active"></span><span class="step"></span><span class="step"></span><span class="step"></span>
+    </div>
+  </section>
+
+  <div class="cart-bar">
+    <button class="cart-btn" id="cartButton" type="button" disabled><span>Warenkorb</span><strong id="cartCount">0 · € 0,00</strong></button>
+  </div>
+
+  <aside class="sheet" id="cartSheet">
+    <div class="sheet-head"><h2>Warenkorb</h2><button class="close" id="closeSheet" type="button">×</button></div>
+    <div id="cartLines"></div>
+    <textarea class="notes" id="orderNotes" placeholder="Notiz für die Küche (optional)"></textarea>
+    <div class="total"><span>Gesamt</span><strong id="cartTotal">€ 0,00</strong></div>
+    <button class="hold" id="submitOrder" type="button"><span>Zum Bestellen gedrückt halten</span></button>
+    <p id="orderError" class="error hidden"></p>
+  </aside>
+
+  <script>
+    const API = location.hostname === 'localhost' ? 'http://localhost:3000/api' : '/api';
+    const token = new URLSearchParams(location.search).get('t') || location.pathname.split('/').filter(Boolean).pop();
+    const state = { table: null, categories: [], active: null, cart: JSON.parse(localStorage.getItem(`diwanCart_${token}`) || '{}'), lastOrderId: null };
+    const fmt = n => `€ ${Number(n || 0).toFixed(2).replace('.', ',')}`;
+    const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+    const allItems = () => state.categories.flatMap(c => [...(c.items || []), ...(c.subcategories || []).flatMap(s => s.items || [])]);
+
+    async function json(url, options) {
+      const res = await fetch(url, options);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Fehler');
+      return data;
+    }
+
+    function saveCart() {
+      localStorage.setItem(`diwanCart_${token}`, JSON.stringify(state.cart));
+      renderCart();
+    }
+
+    function qty(id) { return state.cart[id]?.quantity || 0; }
+    function setQty(item, next) {
+      if (next <= 0) delete state.cart[item.id];
+      else state.cart[item.id] = { menuItemId: item.id, quantity: next, name: item.nameDe, price: Number(item.price) };
+      saveCart();
+      renderItems();
+      if (navigator.vibrate) navigator.vibrate(8);
+    }
+
+    function renderTabs() {
+      document.getElementById('tabs').innerHTML = state.categories.map((cat, i) =>
+        `<button class="tab ${cat.id === state.active || (!state.active && i === 0) ? 'active' : ''}" data-id="${cat.id}">${esc(cat.nameDe)}</button>`
+      ).join('');
+      document.querySelectorAll('.tab').forEach(tab => tab.addEventListener('click', () => {
+        state.active = tab.dataset.id;
+        renderTabs();
+        renderItems();
+      }));
+    }
+
+    function renderItems() {
+      const active = state.categories.find(c => c.id === state.active) || state.categories[0];
+      if (!active) return;
+      const items = [...(active.items || []), ...(active.subcategories || []).flatMap(s => s.items || [])].filter(i => i.isAvailable !== false);
+      document.getElementById('items').innerHTML = items.map(item => `
+        <article class="item">
+          <div>
+            <h3>${esc(item.nameDe)}${item.nameFa ? `<span class="fa">${esc(item.nameFa)}</span>` : ''}</h3>
+            <p>${esc(item.descriptionDe || '')}</p>
+            <div class="price">${fmt(item.price)}</div>
+          </div>
+          <div class="qty">
+            <button type="button" data-minus="${item.id}">−</button>
+            <span>${qty(item.id)}</span>
+            <button type="button" data-plus="${item.id}">+</button>
+          </div>
+        </article>
+      `).join('');
+      items.forEach(item => {
+        document.querySelector(`[data-minus="${item.id}"]`)?.addEventListener('click', () => setQty(item, qty(item.id) - 1));
+        document.querySelector(`[data-plus="${item.id}"]`)?.addEventListener('click', () => setQty(item, qty(item.id) + 1));
+      });
+    }
+
+    function cartSummary() {
+      return Object.values(state.cart).reduce((acc, line) => {
+        acc.count += line.quantity;
+        acc.total += line.quantity * line.price;
+        return acc;
+      }, { count: 0, total: 0 });
+    }
+
+    function renderCart() {
+      const summary = cartSummary();
+      document.getElementById('cartCount').textContent = `${summary.count} · ${fmt(summary.total)}`;
+      document.getElementById('cartTotal').textContent = fmt(summary.total);
+      document.getElementById('cartButton').disabled = summary.count === 0;
+      document.getElementById('cartLines').innerHTML = Object.values(state.cart).map(line => `
+        <div class="cart-line">
+          <div><strong>${line.quantity}× ${esc(line.name)}</strong><br><span>${fmt(line.price)}</span></div>
+          <strong>${fmt(line.quantity * line.price)}</strong>
+        </div>
+      `).join('');
+    }
+
+    function openSheet(open) { document.getElementById('cartSheet').classList.toggle('open', open); }
+
+    function initHoldButton() {
+      const button = document.getElementById('submitOrder');
+      let timer = null, started = 0, raf = null;
+      function reset() { clearTimeout(timer); cancelAnimationFrame(raf); button.style.setProperty('--progress', '0%'); }
+      function tick() {
+        const progress = Math.min(1, (Date.now() - started) / 700);
+        button.style.setProperty('--progress', `${progress * 100}%`);
+        if (progress < 1) raf = requestAnimationFrame(tick);
+      }
+      function start() {
+        if (!cartSummary().count) return;
+        started = Date.now();
+        tick();
+        timer = setTimeout(submitOrder, 700);
+      }
+      button.addEventListener('pointerdown', start);
+      button.addEventListener('pointerup', reset);
+      button.addEventListener('pointerleave', reset);
+      button.addEventListener('pointercancel', reset);
+    }
+
+    async function submitOrder() {
+      const error = document.getElementById('orderError');
+      error.classList.add('hidden');
+      try {
+        const payload = {
+          items: Object.values(state.cart).map(line => ({ menuItemId: line.menuItemId, quantity: line.quantity })),
+          notes: document.getElementById('orderNotes').value,
+        };
+        const order = await json(`${API}/public/order/${encodeURIComponent(token)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        state.lastOrderId = order.orderId;
+        state.cart = {};
+        saveCart();
+        openSheet(false);
+        document.getElementById('app').classList.add('hidden');
+        document.querySelector('.cart-bar').classList.add('hidden');
+        document.getElementById('success').classList.add('open');
+        document.getElementById('successText').textContent = `Bestellnummer #${order.orderNumber}. Wir bereiten alles vor.`;
+        localStorage.removeItem(`diwanCart_${token}`);
+        if (navigator.vibrate) navigator.vibrate([20, 60, 20]);
+        pollStatus(order.orderId);
+      } catch (err) {
+        error.textContent = err.message || 'Bestellung konnte nicht gesendet werden.';
+        error.classList.remove('hidden');
+      }
+    }
+
+    async function pollStatus(orderId) {
+      const map = { NEW: 1, PREPARING: 2, READY: 3, SERVED: 4 };
+      const id = setInterval(async () => {
+        try {
+          const order = await json(`${API}/public/order/${encodeURIComponent(token)}/status/${encodeURIComponent(orderId)}`);
+          const active = map[order.status] || 1;
+          document.querySelectorAll('.step').forEach((step, index) => step.classList.toggle('active', index < active));
+          if (['READY','SERVED','PAID'].includes(order.status)) clearInterval(id);
+        } catch {}
+      }, 10000);
+    }
+
+    async function init() {
+      if (!token) {
+        document.getElementById('items').innerHTML = '<p class="error">Ungültiger QR-Code.</p>';
+        return;
+      }
+      try {
+        const data = await json(`${API}/public/order/${encodeURIComponent(token)}/menu`);
+        state.table = data.table;
+        state.categories = data.categories || [];
+        state.active = state.categories[0]?.id;
+        document.getElementById('headline').textContent = `Willkommen am Tisch ${state.table.number}`;
+        document.getElementById('tableLabel').textContent = state.table.label ? `Tisch ${state.table.number} · ${state.table.label}` : `Tisch ${state.table.number}`;
+        renderTabs();
+        renderItems();
+        renderCart();
+      } catch (err) {
+        document.getElementById('items').innerHTML = `<p class="error">${esc(err.message || 'Speisekarte konnte nicht geladen werden.')}</p>`;
+      }
+    }
+
+    document.getElementById('cartButton').addEventListener('click', () => openSheet(true));
+    document.getElementById('closeSheet').addEventListener('click', () => openSheet(false));
+    initHoldButton();
+    init();
+  </script>
+</body>
+</html>

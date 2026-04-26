@@ -4,6 +4,7 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const socketService = require('../services/socket');
 const { sendEmail } = require('../services/email');
+const pushService = require('../services/push');
 
 // POST a new event inquiry
 router.post('/', async (req, res) => {
@@ -35,6 +36,12 @@ router.post('/', async (req, res) => {
     // Notify dashboard
     const io = socketService.getIO();
     io.emit('event:new', event);
+    pushService.notifyRoles(['OWNER', 'MANAGER'], {
+      title: 'Neue Event-Anfrage',
+      body: `${name} · ${eventType} · ${numberOfPeople} Gäste`,
+      url: '/admin/management/events',
+      type: 'event',
+    });
 
     // Send email to owner
     await sendEmail({

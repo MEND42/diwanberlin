@@ -32,6 +32,7 @@ export function useSocket() {
     socket.on('order:new', (order) => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
       queryClient.invalidateQueries({ queryKey: ['tables'] });
+      window.dispatchEvent(new CustomEvent('diwan:kds-order', { detail: order }));
       setBadge('activeOrders', (useAppStore.getState().activeOrders ?? 0) + 1);
       addNotification({
         type: 'order',
@@ -59,6 +60,16 @@ export function useSocket() {
         type: 'reservation',
         title: 'Neue Reservierung',
         body: `${res.name} · ${res.date} ${res.time} · ${res.guests} Gäste`,
+      });
+    });
+
+    socket.on('waiter:call', (call) => {
+      queryClient.invalidateQueries({ queryKey: ['tables'] });
+      window.dispatchEvent(new CustomEvent('diwan:waiter-call', { detail: call }));
+      addNotification({
+        type: 'waiter',
+        title: `Tisch ${call.tableNumber} ruft`,
+        body: call.label ? call.label : '🔔 Kellner wird gerufen',
       });
     });
 

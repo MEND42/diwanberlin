@@ -4,6 +4,7 @@ import { motion }    from 'framer-motion';
 import {
   ShoppingBag, Grid3X3, CalendarDays, Ticket,
   TrendingUp, Users, ChefHat, ArrowRight,
+  type LucideIcon,
 } from 'lucide-react';
 import { dashboardApi } from '@/lib/api';
 import { formatEur, springs } from '@/lib/utils';
@@ -14,7 +15,7 @@ function MetricCard({
   label, value, sub, icon: Icon, color, onClick, delay = 0,
 }: {
   label: string; value: string | number; sub?: string;
-  icon: React.ComponentType<{ size?: number; className?: string }>;
+  icon: LucideIcon;
   color: string; onClick?: () => void; delay?: number;
 }) {
   return (
@@ -40,7 +41,7 @@ function MetricCard({
 }
 
 function QuickAction({ label, icon: Icon, path, badge }: {
-  label: string; icon: React.ComponentType<{ size?: number; className?: string }>;
+  label: string; icon: LucideIcon;
   path: string; badge?: number;
 }) {
   const navigate = useNavigate();
@@ -98,7 +99,7 @@ export function Dashboard() {
       </motion.div>
 
       {/* Metrics grid */}
-      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4" data-tour="dashboard-overview">
         {isLoading ? (
           Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)
         ) : (
@@ -147,7 +148,7 @@ export function Dashboard() {
           transition={{ ...springs.gentle, delay: 0.2 }}
         >
           <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-ink2 mb-3">Schnellzugriff</h3>
-          <div className="space-y-2">
+          <div className="space-y-2" data-tour="quick-actions">
             <QuickAction label="Tische & Bestellungen" icon={Grid3X3}      path="/management/tables" />
             <QuickAction label="Küchen-Display"        icon={ChefHat}       path="/kitchen" />
             <QuickAction label="Reservierungen"        icon={CalendarDays}  path="/management/reservations" badge={pendingRes} />
