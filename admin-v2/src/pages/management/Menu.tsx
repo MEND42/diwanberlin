@@ -3,7 +3,7 @@ import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   BookOpen, Plus, Pencil, Trash2, ChevronRight,
-  ToggleLeft, ToggleRight, FolderTree,
+  ToggleLeft, ToggleRight, FolderTree, Database, AlertCircle, RefreshCw,
 } from 'lucide-react';
 import { menuApi } from '@/lib/api';
 import { BottomSheet } from '@/components/primitives/BottomSheet';
@@ -112,14 +112,18 @@ export function Menu() {
   const [deletingItem, setDeletingItem] = useState<MenuItem | null>(null);
   const [deletingCategory, setDeletingCategory] = useState<MenuCategory | null>(null);
   const [imageUploading, setImageUploading] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
 
-  const { data: categories = [], isLoading } = useQuery<MenuCategory[]>({
+  const { data: categories = [], isLoading, isError, error, refetch } = useQuery<MenuCategory[]>({
     queryKey: ['menu-categories'],
     queryFn:  menuApi.categories,
   });
 
-  const activeCat = categories.find(c => c.id === activeCatId) ?? categories[0];
   const parentCategories = categories.filter(c => !c.parentId).sort((a, b) => a.sortOrder - b.sortOrder);
+  const navigationCategories = parentCategories.length > 0
+    ? parentCategories
+    : [...categories].sort((a, b) => a.sortOrder - b.sortOrder);
+  const activeCat = categories.find(c => c.id === activeCatId) ?? navigationCategories[0] ?? categories[0];
   const childrenByParent = categories.reduce<Record<string, MenuCategory[]>>((acc, cat) => {
     if (!cat.parentId) return acc;
     acc[cat.parentId] = [...(acc[cat.parentId] ?? []), cat].sort((a, b) => a.sortOrder - b.sortOrder);
@@ -127,16 +131,35 @@ export function Menu() {
   }, {});
 
   const saveItem = useMutation({
-    mutationFn: () => {
+    mutationFn: async () => {
       const payload = { ...itemForm, categoryId: activeCat?.id ?? '' };
-      return editItem
+      const saved = editItem
         ? menuApi.updateItem(editItem.id, payload)
         : menuApi.createItem(payload);
+      const item = await saved;
+      if (imageFile) {
+        setImageUploading(true);
+        try {
+          await menuApi.uploadItemImage(item.id, imageFile);
+        } finally {
+          setImageUploading(false);
+        }
+      }
+      return item;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['menu-categories'] });
       setItemSheet(false);
       setEditItem(null);
+      setImageFile(null);
+    },
+    onError: () => setImageUploading(false),
+  });
+
+  const seedDefaults = useMutation({
+    mutationFn: menuApi.seedDefaults,
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: ['menu-categories'] });
     },
   });
 
@@ -190,12 +213,14 @@ export function Menu() {
 
   function openNewItem() {
     setEditItem(null);
+    setImageFile(null);
     setItemForm({ ...ITEM_EMPTY, categoryId: activeCat?.id ?? '' });
     setItemSheet(true);
   }
 
   function openEditItem(item: MenuItem) {
     setEditItem(item);
+    setImageFile(null);
     setItemForm({ 
       ...ITEM_EMPTY,
       ...item, 
@@ -216,6 +241,40 @@ export function Menu() {
     );
   }
 
+  if (isError) {
+    return (
+      <div className="p-6 max-w-4xl">
+        <div className="rounded-3xl border border-red-200 bg-red-50 p-6">
+          <div className="flex items-start gap-4">
+            <AlertCircle className="mt-1 text-red-500" size={24} />
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-red-500 mb-1">Speisekarte konnte nicht geladen werden</p>
+              <h2 className="font-display text-2xl text-ink mb-2">API-Verbindung prüfen</h2>
+              <p className="text-sm text-ink2">
+                {(error as Error)?.message ?? 'Die Kategorien und Artikel konnten nicht vom Backend geladen werden.'}
+              </p>
+              <div className="mt-5 flex flex-wrap gap-2">
+                <button
+                  onClick={() => refetch()}
+                  className="inline-flex items-center gap-2 rounded-xl bg-diwan-gold px-4 py-2 text-sm font-bold text-diwan-bg"
+                >
+                  <RefreshCw size={14} /> Erneut laden
+                </button>
+                <button
+                  onClick={() => seedDefaults.mutate()}
+                  disabled={seedDefaults.isPending}
+                  className="inline-flex items-center gap-2 rounded-xl border border-diwan-gold/25 px-4 py-2 text-sm font-bold text-ink disabled:opacity-50"
+                >
+                  <Database size={14} /> {seedDefaults.isPending ? 'Wird eingefügt…' : 'Startkarte einfügen'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 space-y-5 max-w-5xl">
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center justify-between">
@@ -223,13 +282,81 @@ export function Menu() {
           <p className="text-[10px] tracking-[0.18em] uppercase text-diwan-gold font-medium mb-1">Verwaltung</p>
           <h2 className="font-display text-ink text-2xl font-normal">Speisekarte</h2>
         </div>
+        <button
+          onClick={() => seedDefaults.mutate()}
+          disabled={seedDefaults.isPending}
+          className="inline-flex items-center gap-2 rounded-xl border border-diwan-gold/20 bg-white px-3 py-2 text-xs font-bold text-ink shadow-sm hover:border-diwan-gold/40 hover:text-diwan-gold disabled:opacity-50"
+        >
+          <Database size={14} />
+          {seedDefaults.isPending ? 'Startkarte wird eingefügt…' : 'Startkarte einfügen'}
+        </button>
       </motion.div>
 
+      {categories.length === 0 ? (
+        <div className="rounded-3xl border border-diwan-gold/12 bg-white p-8 text-center shadow-sm">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-diwan-gold/10 text-diwan-gold">
+            <BookOpen size={28} />
+          </div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-diwan-gold mb-2">Noch keine Speisekarte</p>
+          <h3 className="font-display text-2xl text-ink">Startkarte mit Kategorien und Artikeln einfügen</h3>
+          <p className="mx-auto mt-2 max-w-xl text-sm text-ink2">
+            Dadurch werden Getränke, Kaffee, Tee, Softdrinks, saisonale Säfte, alkoholische Getränke,
+            Snacks und afghanische Snacks mit editierbaren Beispielartikeln angelegt.
+          </p>
+          <div className="mt-6 flex justify-center gap-3">
+            <button
+              onClick={() => seedDefaults.mutate()}
+              disabled={seedDefaults.isPending}
+              className="inline-flex items-center gap-2 rounded-xl bg-diwan-gold px-5 py-3 text-sm font-bold text-diwan-bg hover:bg-diwan-gold2 disabled:opacity-50"
+            >
+              <Database size={16} />
+              {seedDefaults.isPending ? 'Wird eingefügt…' : 'Startkarte einfügen'}
+            </button>
+            <button
+              onClick={() => setAddingCat(true)}
+              className="inline-flex items-center gap-2 rounded-xl border border-diwan-gold/20 px-5 py-3 text-sm font-bold text-ink hover:border-diwan-gold/40"
+            >
+              <Plus size={16} /> Leere Kategorie erstellen
+            </button>
+          </div>
+          {addingCat && (
+            <div className="mx-auto mt-5 grid max-w-2xl gap-2 rounded-2xl border border-diwan-gold/12 bg-paper p-4 text-left sm:grid-cols-3">
+              <input
+                autoFocus
+                value={newCatName}
+                onChange={e => setNewCatName(e.target.value)}
+                placeholder="Kategorie DE"
+                className="rounded-xl border border-diwan-gold/20 bg-white px-3 py-2 text-sm text-ink outline-none focus:ring-2 focus:ring-diwan-gold/20"
+              />
+              <input
+                value={newCatNameFa}
+                onChange={e => setNewCatNameFa(e.target.value)}
+                placeholder="نام فارسی"
+                dir="rtl"
+                className="rounded-xl border border-diwan-gold/20 bg-white px-3 py-2 text-sm text-ink outline-none focus:ring-2 focus:ring-diwan-gold/20"
+              />
+              <input
+                value={newCatNameEn}
+                onChange={e => setNewCatNameEn(e.target.value)}
+                placeholder="Category EN"
+                className="rounded-xl border border-diwan-gold/20 bg-white px-3 py-2 text-sm text-ink outline-none focus:ring-2 focus:ring-diwan-gold/20"
+              />
+              <button
+                onClick={() => newCatName && addCategory.mutate()}
+                disabled={!newCatName || addCategory.isPending}
+                className="sm:col-span-3 rounded-xl bg-diwan-gold px-4 py-2 text-sm font-bold text-diwan-bg disabled:opacity-50"
+              >
+                {addCategory.isPending ? 'Wird erstellt…' : 'Kategorie speichern'}
+              </button>
+            </div>
+          )}
+        </div>
+      ) : (
       <div className="flex gap-6">
         {/* Category sidebar */}
         <div className="w-48 flex-shrink-0 space-y-1">
           <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-ink2/60 px-2 mb-2">Kategorien</p>
-          {parentCategories.map(parent => {
+          {navigationCategories.map(parent => {
             const children = childrenByParent[parent.id] ?? [];
             const parentActive = activeCat?.id === parent.id;
             return (
@@ -416,35 +543,43 @@ export function Menu() {
           )}
         </div>
       </div>
+      )}
 
       {/* Item edit/create sheet */}
       <BottomSheet
         isOpen={itemSheet}
-        onClose={() => { setItemSheet(false); setEditItem(null); }}
+        onClose={() => { setItemSheet(false); setEditItem(null); setImageFile(null); }}
         title={editItem ? 'Artikel bearbeiten' : 'Neuer Artikel'}
       >
         <div className="px-5 pb-8 space-y-5">
           <ItemForm value={itemForm} onChange={setItemForm} />
-          {editItem && (
-            <label className="block rounded-xl border border-diwan-gold/15 bg-paper p-3">
-              <span className="block text-[10px] font-medium uppercase tracking-[0.14em] text-ink2 mb-2">
-                Bild hochladen
-              </span>
-              <input
-                type="file"
-                accept="image/*"
-                disabled={imageUploading}
-                onChange={(event) => {
-                  const file = event.currentTarget.files?.[0];
-                  if (file) uploadImage(file);
-                }}
-                className="block w-full text-xs text-ink2 file:mr-3 file:rounded-lg file:border-0 file:bg-diwan-gold file:px-3 file:py-2 file:text-xs file:font-bold file:text-diwan-bg"
-              />
-              <p className="mt-2 text-[10px] text-ink2/60">
-                {imageUploading ? 'Bild wird optimiert…' : 'Bilder werden als WebP optimiert und im Upload-Ordner gespeichert.'}
-              </p>
-            </label>
-          )}
+          <label className="block rounded-xl border border-diwan-gold/15 bg-paper p-3">
+            <span className="block text-[10px] font-medium uppercase tracking-[0.14em] text-ink2 mb-2">
+              Bild hochladen
+            </span>
+            <input
+              type="file"
+              accept="image/*"
+              disabled={imageUploading || saveItem.isPending}
+              onChange={(event) => {
+                const file = event.currentTarget.files?.[0];
+                if (!file) return;
+                if (editItem) {
+                  uploadImage(file);
+                } else {
+                  setImageFile(file);
+                }
+              }}
+              className="block w-full text-xs text-ink2 file:mr-3 file:rounded-lg file:border-0 file:bg-diwan-gold file:px-3 file:py-2 file:text-xs file:font-bold file:text-diwan-bg"
+            />
+            <p className="mt-2 text-[10px] text-ink2/60">
+              {imageUploading
+                ? 'Bild wird optimiert…'
+                : imageFile
+                  ? `${imageFile.name} wird nach dem Speichern optimiert hochgeladen.`
+                  : 'Bilder werden als WebP optimiert und im Upload-Ordner gespeichert.'}
+            </p>
+          </label>
           <button
             onClick={() => saveItem.mutate()}
             disabled={saveItem.isPending || !itemForm.nameDe || itemForm.price <= 0}

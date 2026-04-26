@@ -9,6 +9,7 @@ const multer = require('multer');
 const sharp = require('sharp');
 const path = require('path');
 const fs = require('fs');
+const { seedDefaultMenu } = require('../../utils/defaultMenu');
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -63,6 +64,18 @@ router.get('/categories', async (req, res) => {
     res.json(categories);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch menu categories' });
+  }
+});
+
+router.post('/seed-defaults', managers, async (req, res) => {
+  try {
+    const result = await seedDefaultMenu(prisma);
+    touchSitemap();
+    emitMenuUpdated({ seeded: true, ...result });
+    res.json({ success: true, ...result });
+  } catch (error) {
+    console.error('Default menu seed error:', error);
+    res.status(500).json({ error: 'Failed to insert starter menu' });
   }
 });
 

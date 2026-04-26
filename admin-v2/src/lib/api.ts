@@ -91,6 +91,7 @@ export const ordersApi = {
 // ── Menu ──────────────────────────────────────────────────
 export const menuApi = {
   categories:   ()             => request<import('@/types').MenuCategory[]>('/menu/categories'),
+  seedDefaults: ()             => request<{ success: boolean; categoriesCount: number; createdItems: number; updatedItems: number }>('/menu/seed-defaults', 'POST'),
   createCategory: (data: unknown) => request<import('@/types').MenuCategory>('/menu/categories', 'POST', data),
   updateCategory: (id: string, data: unknown) => request<import('@/types').MenuCategory>(`/menu/categories/${id}`, 'PUT', data),
   deleteCategory: (id: string) => request<void>(`/menu/categories/${id}`, 'DELETE'),
