@@ -86,7 +86,7 @@ router.post('/', async (req, res) => {
 
     const menuItemIds = [...new Set(items.map(item => item.menuItemId).filter(Boolean))];
     const menuItems = await prisma.menuItem.findMany({
-      where: { id: { in: menuItemIds }, isAvailable: true },
+      where: { id: { in: menuItemIds }, isAvailable: true, isArchived: false },
       include: {
         variants: {
           where: { isActive: true },

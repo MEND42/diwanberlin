@@ -49,6 +49,7 @@ export interface MenuItem {
   isAvailable: boolean;
   sortOrder: number;
   imageUrl?: string;
+  isArchived?: boolean;
   variants?: MenuItemVariant[];
 }
 

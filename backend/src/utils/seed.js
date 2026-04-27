@@ -34,7 +34,7 @@ async function main() {
   const eventListings = [
     {
       titleDe: 'Persischer Poesieabend',
-      titleFa: 'شب شعر دری',
+      titleFa: 'شب شعر فارسی',
       description: 'Gedichte auf Persisch und Deutsch in warmer Cafe-Atmosphäre',
       eventDate: new Date('2026-05-24T19:00:00.000Z'),
       eventTime: '19:00 Uhr',

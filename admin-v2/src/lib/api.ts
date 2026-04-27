@@ -99,7 +99,7 @@ export const menuApi = {
   updateItem:   (id: string, data: unknown) => request<import('@/types').MenuItem>(`/menu/items/${id}`, 'PUT', data),
   replaceItemVariants: (id: string, variants: unknown[]) =>
     request<import('@/types').MenuItemVariant[]>(`/menu/items/${id}/variants`, 'PUT', { variants }),
-  deleteItem:   (id: string)    => request<void>(`/menu/items/${id}`, 'DELETE'),
+  deleteItem:   (id: string)    => request<{ success: boolean; archived?: boolean }>(`/menu/items/${id}`, 'DELETE'),
   toggleItem:   (id: string, isAvailable: boolean) =>
     request<import('@/types').MenuItem>(`/menu/items/${id}/availability`, 'PATCH', { isAvailable }),
   uploadItemImage: async (id: string, file: File) => {

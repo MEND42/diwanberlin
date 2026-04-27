@@ -36,7 +36,7 @@ async function loadPublicMenu() {
         orderBy: { sortOrder: 'asc' },
         include: {
           items: {
-            where: { isAvailable: true },
+            where: { isAvailable: true, isArchived: false },
             orderBy: { sortOrder: 'asc' },
             include: {
               variants: {
@@ -48,7 +48,7 @@ async function loadPublicMenu() {
         }
       },
       items: {
-        where: { isAvailable: true },
+        where: { isAvailable: true, isArchived: false },
         orderBy: { sortOrder: 'asc' },
         include: {
           variants: {
@@ -235,7 +235,7 @@ async function placeOrder(req, res) {
     // Fetch all requested items from the DB (use DB prices — never trust client prices)
     const menuItemIds = [...new Set(items.map(i => i.menuItemId))];
     const menuItems = await prisma.menuItem.findMany({
-      where: { id: { in: menuItemIds }, isAvailable: true },
+      where: { id: { in: menuItemIds }, isAvailable: true, isArchived: false },
       include: {
         variants: {
           where: { isActive: true },

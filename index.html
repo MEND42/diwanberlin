@@ -233,9 +233,10 @@ html[lang="fa"] .hl-slogan{display:block}
 .sdot{width:6px;height:6px;border-radius:50%;background:var(--gold);animation:bdot 2s infinite}
 
 /* cinematic video */
-.hr{position:absolute;inset:0;overflow:hidden;opacity:0;animation:fu 1.2s .3s forwards;z-index:1;transform-style:preserve-3d;background:var(--bg)}
-.hero-video,.hr img.hero-photo{width:100%;height:100%;object-fit:cover;object-position:center center;transform:scale(1.015);animation:zoomOut 9s 1s ease-out forwards}
-.hero-video{display:block}
+.hr{position:absolute;inset:0;overflow:hidden;opacity:0;animation:fu 1.2s .3s forwards;z-index:1;transform-style:preserve-3d;background:var(--bg);--hero-scroll:0;--hero-drift:0px}
+.hero-video,.hr img.hero-photo{width:100%;height:100%;object-fit:cover;object-position:center center;transform:translate3d(0,var(--hero-drift),0) scale(calc(1.02 + (var(--hero-scroll) * .045)));transition:transform .08s linear;animation:zoomOut 9s 1s ease-out forwards}
+.hero-video{display:block;background:var(--bg)}
+.hero-video.is-ready{animation:none}
 .hr::before{content:'';position:absolute;inset:0;z-index:2;background:radial-gradient(circle at 62% 44%,transparent 0 24%,rgba(24,14,4,.12) 46%,rgba(24,14,4,.58) 100%);pointer-events:none}
 .hr::after{content:'';position:absolute;right:0;bottom:0;z-index:3;width:min(26vw,220px);height:min(13vw,112px);background:linear-gradient(135deg,rgba(24,14,4,0),rgba(24,14,4,.92) 52%,rgba(24,14,4,.98));pointer-events:none}
 @keyframes zoomOut{from{transform:scale(1.06)}to{transform:scale(1)}}
@@ -819,7 +820,6 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
 
 @media(prefers-reduced-motion:reduce){
   .hl-logo img,.hl-logo::after,.hero-cup::after,.bean,.hero-photo,.hero-video,.hero-stage,.hero-grid,.hero-orb{animation:none!important;transition:none!important;transform:none!important}
-  .hero-video{display:none}
   .hr{background:url('uploads/hero-poster.jpg') center/cover no-repeat}
   #mobile-overlay{transition:none}
   .hamburger span{transition:none}
@@ -937,10 +937,7 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
 
   <!-- Full-bleed hero video -->
   <div class="hr" data-parallax="0.2">
-    <video class="hero-video" autoplay muted loop playsinline preload="metadata" poster="uploads/hero-poster.jpg" aria-label="Cafe Diwan coffee animation">
-      <source src="uploads/hero-mobile.mp4" type="video/mp4" media="(max-width: 700px)">
-      <source src="uploads/hero-optimized.mp4" type="video/mp4">
-    </video>
+    <video class="hero-video" autoplay muted loop playsinline preload="auto" poster="uploads/hero-poster.jpg" aria-label="Cafe Diwan coffee animation" data-desktop-src="uploads/hero-optimized.mp4" data-mobile-src="uploads/hero-mobile.mp4"></video>
   </div>
   <div class="hscroll"><div class="sdot"></div><span data-i18n="heroScroll">Entdecken</span></div>
 </section>
@@ -1286,7 +1283,8 @@ window.addEventListener('scroll',()=>nav.classList.toggle('on',scrollY>60));
 // Hero depth
 const hero=document.getElementById('hero');
 const reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-if(hero && !reducedMotion && window.innerWidth>900){
+const hasDepthLayers=hero?.querySelector('[data-depth]');
+if(hero && hasDepthLayers && !reducedMotion && window.innerWidth>900){
   const layers=[...hero.querySelectorAll('[data-depth]')];
   const heroPhotoWrap=hero.querySelector('.hr');
   const heroText=hero.querySelector('.hl');
@@ -1367,13 +1365,6 @@ function handleSubmit(e){e.preventDefault();document.getElementById('form-ok').s
   // Escape key
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMenu(); });
 
-  // Mobile lang button mirrors the desktop langToggle
-  if (mobileLang) {
-    mobileLang.addEventListener('click', () => {
-      document.getElementById('langToggle')?.click();
-      closeMenu();
-    });
-  }
 })();
 
 

@@ -8,6 +8,7 @@ import {
 import { menuApi } from '@/lib/api';
 import { BottomSheet } from '@/components/primitives/BottomSheet';
 import { ConfirmDialog } from '@/components/primitives/ConfirmDialog';
+import { useToast } from '@/components/Toast';
 import { cn, springs, formatEur } from '@/lib/utils';
 import type { MenuCategory, MenuItem } from '@/types';
 
@@ -22,7 +23,7 @@ type ItemDraft = typeof ITEM_EMPTY;
 function variantsToText(item?: MenuItem | null) {
   return (item?.variants ?? [])
     .sort((a, b) => a.sortOrder - b.sortOrder)
-    .map(v => [v.labelDe, Number(v.price).toFixed(2), v.labelEn || '', v.labelFa || ''].join('|'))
+    .map(v => [v.labelDe, Number(v.price).toFixed(2), v.labelFa || ''].join('|'))
     .join('\n');
 }
 
@@ -30,14 +31,14 @@ function parseVariants(text: string) {
   return text
     .split('\n')
     .map((line, index) => {
-      const [labelDe, price, labelEn, labelFa] = line.split('|').map(part => part?.trim() ?? '');
+      const [labelDe, price, labelFa] = line.split('|').map(part => part?.trim() ?? '');
       if (!labelDe || !price) return null;
       const value = Number(price.replace(',', '.'));
       if (!Number.isFinite(value) || value < 0) return null;
       return {
         labelDe,
         labelFa: labelFa || labelDe,
-        labelEn: labelEn || labelDe,
+        labelEn: labelDe,
         price: value,
         sortOrder: index + 1,
         isDefault: index === 0,
@@ -54,18 +55,14 @@ function ItemForm({ value, onChange }: { value: ItemDraft; onChange: (v: ItemDra
   return (
     <div className="space-y-4">
       {/* Name fields */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div>
           <label className={labelCls}>Name (DE)</label>
           <input value={value.nameDe} onChange={e => set('nameDe', e.target.value)} className={inputCls} placeholder="Name auf Deutsch" />
         </div>
         <div>
-          <label className={labelCls}>Name (FA) 🇮🇷</label>
+          <label className={labelCls}>Name (FA)</label>
           <input value={value.nameFa} onChange={e => set('nameFa', e.target.value)} className={inputCls} placeholder="نام" dir="rtl" />
-        </div>
-        <div>
-          <label className={labelCls}>Name (EN) 🇬🇧</label>
-          <input value={value.nameEn} onChange={e => set('nameEn', e.target.value)} className={inputCls} placeholder="Name in English" />
         </div>
       </div>
       
@@ -74,15 +71,9 @@ function ItemForm({ value, onChange }: { value: ItemDraft; onChange: (v: ItemDra
         <label className={labelCls}>Beschreibung (DE)</label>
         <textarea value={value.descriptionDe} onChange={e => set('descriptionDe', e.target.value)} rows={2} className={cn(inputCls, 'resize-none')} placeholder="Kurze Beschreibung…" />
       </div>
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className={labelCls}>Beschreibung (FA) 🇮🇷</label>
-          <textarea value={value.descriptionFa} onChange={e => set('descriptionFa', e.target.value)} rows={2} className={cn(inputCls, 'resize-none')} placeholder="توضیحات" dir="rtl" />
-        </div>
-        <div>
-          <label className={labelCls}>Beschreibung (EN) 🇬🇧</label>
-          <textarea value={value.descriptionEn} onChange={e => set('descriptionEn', e.target.value)} rows={2} className={cn(inputCls, 'resize-none')} placeholder="Description in English" />
-        </div>
+      <div>
+        <label className={labelCls}>Beschreibung (FA)</label>
+        <textarea value={value.descriptionFa} onChange={e => set('descriptionFa', e.target.value)} rows={2} className={cn(inputCls, 'resize-none')} placeholder="توضیحات" dir="rtl" />
       </div>
       
       {/* Image upload */}
@@ -121,10 +112,10 @@ function ItemForm({ value, onChange }: { value: ItemDraft; onChange: (v: ItemDra
           onChange={e => set('variantsText', e.target.value)}
           rows={4}
           className={cn(inputCls, 'resize-none font-mono text-xs leading-5')}
-          placeholder={'Klein|3.50|Small|کوچک\nMittel|4.20|Medium|متوسط\nGroß|4.90|Large|بزرگ'}
+          placeholder={'Klein|3.50|کوچک\nMittel|4.20|متوسط\nGroß|4.90|بزرگ'}
         />
         <p className="mt-1 text-[10px] text-ink2/70">
-          Optional. Eine Variante pro Zeile: Deutsch|Preis|English|Persisch. Wenn Varianten vorhanden sind, werden diese Preise beim QR- und Service-Bestellen verwendet.
+          Optional. Eine Variante pro Zeile: Deutsch|Preis|Persisch. Wenn Varianten vorhanden sind, werden diese Preise beim QR- und Service-Bestellen verwendet.
         </p>
       </div>
       <label className="flex items-center gap-3 cursor-pointer">
@@ -142,13 +133,13 @@ function ItemForm({ value, onChange }: { value: ItemDraft; onChange: (v: ItemDra
 
 export function Menu() {
   const qc = useQueryClient();
+  const { showToast } = useToast();
   const [activeCatId, setActiveCatId] = useState<string>('');
   const [itemSheet,   setItemSheet]   = useState(false);
   const [editItem,    setEditItem]    = useState<MenuItem | null>(null);
   const [itemForm,    setItemForm]    = useState<ItemDraft>(ITEM_EMPTY);
   const [newCatName,  setNewCatName]  = useState('');
   const [newCatNameFa, setNewCatNameFa] = useState('');
-  const [newCatNameEn, setNewCatNameEn] = useState('');
   const [newCatParentId, setNewCatParentId] = useState('');
   const [addingCat,   setAddingCat]   = useState(false);
   const [deletingItem, setDeletingItem] = useState<MenuItem | null>(null);
@@ -213,14 +204,21 @@ export function Menu() {
 
   const removeItem = useMutation({
     mutationFn: (id: string) => menuApi.deleteItem(id),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['menu-categories'] }); setDeletingItem(null); },
+    onSuccess: (result) => {
+      qc.invalidateQueries({ queryKey: ['menu-categories'] });
+      setDeletingItem(null);
+      showToast('success', result.archived ? 'Artikel wurde aus der aktiven Speisekarte entfernt.' : 'Artikel wurde gelöscht.');
+    },
+    onError: (error) => {
+      showToast('error', (error as Error)?.message || 'Artikel konnte nicht entfernt werden.');
+    },
   });
 
   const addCategory = useMutation({
     mutationFn: () => menuApi.createCategory({
       nameDe: newCatName,
       nameFa: newCatNameFa,
-      nameEn: newCatNameEn,
+      nameEn: newCatName,
       slug: newCatName.toLowerCase().trim().replace(/\s+/g, '-'),
       sortOrder: categories.length,
       isActive: true,
@@ -231,7 +229,6 @@ export function Menu() {
       setActiveCatId(cat.id);
       setNewCatName('');
       setNewCatNameFa('');
-      setNewCatNameEn('');
       setNewCatParentId('');
       setAddingCat(false);
     },
@@ -364,7 +361,7 @@ export function Menu() {
             </button>
           </div>
           {addingCat && (
-            <div className="mx-auto mt-5 grid max-w-2xl gap-2 rounded-2xl border border-diwan-gold/12 bg-paper p-4 text-left sm:grid-cols-3">
+            <div className="mx-auto mt-5 grid max-w-2xl gap-2 rounded-2xl border border-diwan-gold/12 bg-paper p-4 text-left sm:grid-cols-2">
               <input
                 autoFocus
                 value={newCatName}
@@ -379,16 +376,10 @@ export function Menu() {
                 dir="rtl"
                 className="rounded-xl border border-diwan-gold/20 bg-white px-3 py-2 text-sm text-ink outline-none focus:ring-2 focus:ring-diwan-gold/20"
               />
-              <input
-                value={newCatNameEn}
-                onChange={e => setNewCatNameEn(e.target.value)}
-                placeholder="Category EN"
-                className="rounded-xl border border-diwan-gold/20 bg-white px-3 py-2 text-sm text-ink outline-none focus:ring-2 focus:ring-diwan-gold/20"
-              />
               <button
                 onClick={() => newCatName && addCategory.mutate()}
                 disabled={!newCatName || addCategory.isPending}
-                className="sm:col-span-3 rounded-xl bg-diwan-gold px-4 py-2 text-sm font-bold text-diwan-bg disabled:opacity-50"
+                className="sm:col-span-2 rounded-xl bg-diwan-gold px-4 py-2 text-sm font-bold text-diwan-bg disabled:opacity-50"
               >
                 {addCategory.isPending ? 'Wird erstellt…' : 'Kategorie speichern'}
               </button>
@@ -458,12 +449,6 @@ export function Menu() {
                 onChange={e => setNewCatNameFa(e.target.value)}
                 placeholder="نام فارسی…"
                 dir="rtl"
-                className="w-full px-3 py-2 text-sm rounded-xl bg-white border border-diwan-gold/20 text-ink outline-none focus:ring-2 focus:ring-diwan-gold/20"
-              />
-              <input
-                value={newCatNameEn}
-                onChange={e => setNewCatNameEn(e.target.value)}
-                placeholder="English name…"
                 className="w-full px-3 py-2 text-sm rounded-xl bg-white border border-diwan-gold/20 text-ink outline-none focus:ring-2 focus:ring-diwan-gold/20"
               />
               <select
@@ -649,7 +634,7 @@ export function Menu() {
       <ConfirmDialog
         open={Boolean(deletingItem)}
         title="Artikel löschen?"
-        description={deletingItem ? `${deletingItem.nameDe} wird dauerhaft aus der Speisekarte entfernt.` : ''}
+        description={deletingItem ? `${deletingItem.nameDe} wird aus der aktiven Speisekarte entfernt. Historische Bestellungen bleiben erhalten.` : ''}
         loading={removeItem.isPending}
         onCancel={() => setDeletingItem(null)}
         onConfirm={() => deletingItem && removeItem.mutate(deletingItem.id)}

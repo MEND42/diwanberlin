@@ -15,21 +15,22 @@ import { useAppStore }  from '@/store/appStore';
 import { cn, getInitials, ROLE_LABELS, springs } from '@/lib/utils';
 import { WaiterCallBanner } from '@/components/WaiterCallBanner';
 import { TourOverlay } from '@/components/TourOverlay';
+import { useAdminI18n, type AdminI18nKey } from '@/lib/adminI18n';
 import type { NavItem, Role } from '@/types';
 
-const NAV: NavItem[] = [
-  { view: 'dashboard',      path: '/management/dashboard',      title: 'Dashboard',       meta: 'Überblick & Kennzahlen', icon: LayoutDashboard, roles: ['OWNER','MANAGER','WAITER'], section: 'service' },
-  { view: 'tables',         path: '/management/tables',         title: 'Tische',          meta: 'Belegung & Status',      icon: Grid3X3,         roles: ['OWNER','MANAGER','WAITER'], section: 'service' },
-  { view: 'orders',         path: '/kitchen',                   title: 'Küchen-KDS',      meta: 'Live Bestellungen',      icon: ChefHat,         roles: ['OWNER','MANAGER'],          section: 'service' },
-  { view: 'reservations',   path: '/management/reservations',   title: 'Reservierungen',  meta: 'Tische zuweisen',        icon: CalendarDays,    roles: ['OWNER','MANAGER','WAITER'], section: 'planning', badgeKey: 'reservations' },
-  { view: 'events',         path: '/management/events',         title: 'Event-Anfragen',  meta: 'Anfragen bearbeiten',    icon: Ticket,          roles: ['OWNER','MANAGER'],          section: 'planning', badgeKey: 'events' },
-  { view: 'event-listings', path: '/management/event-listings', title: 'Eventkalender',   meta: 'Website Events',         icon: CalendarRange,   roles: ['OWNER','MANAGER'],          section: 'planning' },
-  { view: 'menu',           path: '/management/menu',           title: 'Speisekarte',     meta: 'Kategorien & Artikel',   icon: BookOpen,        roles: ['OWNER','MANAGER'],          section: 'management' },
-  { view: 'customers',      path: '/management/customers',      title: 'Kunden & Rabatte',meta: 'Treue und Codes',        icon: Users,           roles: ['OWNER','MANAGER'],          section: 'management' },
-  { view: 'hr',             path: '/management/hr',             title: 'Team & Zeiten',   meta: 'Planung und Schichten',  icon: Clock,           roles: ['OWNER','MANAGER','WAITER'], section: 'management' },
-  { view: 'website',        path: '/management/website',        title: 'Website',         meta: 'Texte ohne Code',        icon: Globe,           roles: ['OWNER','MANAGER'],          section: 'management' },
-  { view: 'team',           path: '/management/team',           title: 'Teamkonten',      meta: 'Rollen und Zugriff',     icon: UserCog,         roles: ['OWNER'],                    section: 'management' },
-  { view: 'settings',       path: '/management/settings',       title: 'Einstellungen',   meta: 'Kapazitäten & mehr',    icon: Settings,        roles: ['OWNER','MANAGER'],          section: 'management' },
+const NAV: (NavItem & { titleKey: AdminI18nKey; metaKey: AdminI18nKey })[] = [
+  { view: 'dashboard',      path: '/management/dashboard',      title: 'Dashboard',       titleKey: 'dashboard',      meta: 'Überblick & Kennzahlen', metaKey: 'dashboardMeta', icon: LayoutDashboard, roles: ['OWNER','MANAGER','WAITER'], section: 'service' },
+  { view: 'tables',         path: '/management/tables',         title: 'Tische',          titleKey: 'tables',         meta: 'Belegung & Status',      metaKey: 'tablesMeta',      icon: Grid3X3,         roles: ['OWNER','MANAGER','WAITER'], section: 'service' },
+  { view: 'orders',         path: '/kitchen',                   title: 'Küchen-KDS',      titleKey: 'orders',         meta: 'Live Bestellungen',      metaKey: 'ordersMeta',      icon: ChefHat,         roles: ['OWNER','MANAGER'],          section: 'service' },
+  { view: 'reservations',   path: '/management/reservations',   title: 'Reservierungen',  titleKey: 'reservations',   meta: 'Tische zuweisen',        metaKey: 'reservationsMeta', icon: CalendarDays,    roles: ['OWNER','MANAGER','WAITER'], section: 'planning', badgeKey: 'reservations' },
+  { view: 'events',         path: '/management/events',         title: 'Event-Anfragen',  titleKey: 'events',         meta: 'Anfragen bearbeiten',    metaKey: 'eventsMeta',       icon: Ticket,          roles: ['OWNER','MANAGER'],          section: 'planning', badgeKey: 'events' },
+  { view: 'event-listings', path: '/management/event-listings', title: 'Eventkalender',   titleKey: 'eventListings',  meta: 'Website Events',         metaKey: 'eventListingsMeta', icon: CalendarRange,   roles: ['OWNER','MANAGER'],          section: 'planning' },
+  { view: 'menu',           path: '/management/menu',           title: 'Speisekarte',     titleKey: 'menu',           meta: 'Kategorien & Artikel',   metaKey: 'menuMeta',         icon: BookOpen,        roles: ['OWNER','MANAGER'],          section: 'management' },
+  { view: 'customers',      path: '/management/customers',      title: 'Kunden & Rabatte',titleKey: 'customers',      meta: 'Treue und Codes',        metaKey: 'customersMeta',    icon: Users,           roles: ['OWNER','MANAGER'],          section: 'management' },
+  { view: 'hr',             path: '/management/hr',             title: 'Team & Zeiten',   titleKey: 'hr',             meta: 'Planung und Schichten',  metaKey: 'hrMeta',           icon: Clock,           roles: ['OWNER','MANAGER','WAITER'], section: 'management' },
+  { view: 'website',        path: '/management/website',        title: 'Website',         titleKey: 'website',        meta: 'Texte ohne Code',        metaKey: 'websiteMeta',      icon: Globe,           roles: ['OWNER','MANAGER'],          section: 'management' },
+  { view: 'team',           path: '/management/team',           title: 'Teamkonten',      titleKey: 'team',           meta: 'Rollen und Zugriff',     metaKey: 'teamMeta',         icon: UserCog,         roles: ['OWNER'],                    section: 'management' },
+  { view: 'settings',       path: '/management/settings',       title: 'Einstellungen',   titleKey: 'settings',       meta: 'Kapazitäten & mehr',     metaKey: 'settingsMeta',     icon: Settings,        roles: ['OWNER','MANAGER'],          section: 'management' },
 ];
 
 const SECTIONS = [
@@ -76,12 +77,13 @@ function NavItemRow({ item, active, badge }: { item: NavItem; active: boolean; b
 }
 
 function CommandPalette({ onClose }: { onClose: () => void }) {
+  const { t } = useAdminI18n();
   const [q, setQ] = useState('');
   const navigate  = useNavigate();
 
   const results = NAV.filter(n =>
-    n.title.toLowerCase().includes(q.toLowerCase()) ||
-    n.meta.toLowerCase().includes(q.toLowerCase()),
+    t(n.titleKey).toLowerCase().includes(q.toLowerCase()) ||
+    t(n.metaKey).toLowerCase().includes(q.toLowerCase()),
   );
 
   return (
@@ -108,14 +110,14 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
             autoFocus
             value={q}
             onChange={e => setQ(e.target.value)}
-            placeholder="Suchen oder navigieren…"
+            placeholder={t('searchPlaceholder')}
             className="flex-1 bg-transparent text-diwan-cream text-sm placeholder-diwan-dim/50 outline-none"
           />
           <kbd className="text-[10px] text-diwan-dim/50 border border-white/10 rounded px-1.5 py-0.5">ESC</kbd>
         </div>
         <div className="p-2 max-h-72 overflow-y-auto">
           {results.length === 0 && (
-            <p className="text-center text-diwan-dim text-sm py-6">Keine Ergebnisse</p>
+            <p className="text-center text-diwan-dim text-sm py-6">{t('noResults')}</p>
           )}
           {results.map(item => {
             const Icon = item.icon;
@@ -127,8 +129,8 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
               >
                 <Icon size={15} className="text-diwan-gold flex-shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium">{item.title}</div>
-                  <div className="text-[11px] text-diwan-dim/70">{item.meta}</div>
+                  <div className="text-sm font-medium">{t(item.titleKey)}</div>
+                  <div className="text-[11px] text-diwan-dim/70">{t(item.metaKey)}</div>
                 </div>
                 <ChevronRight size={13} className="text-diwan-dim/40 group-hover:text-diwan-dim transition-colors" />
               </button>
@@ -141,6 +143,7 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
 }
 
 export function ManagementShell() {
+  const { lang, setLang, t } = useAdminI18n();
   const { user, logout }   = useAuth();
   const { status }         = useSocket();
   const location           = useLocation();
@@ -178,7 +181,8 @@ export function ManagementShell() {
     return () => window.removeEventListener('keydown', handler);
   });
 
-  const currentTitle = visibleNav.find(n => location.pathname.startsWith(n.path))?.title ?? 'Dashboard';
+  const current = visibleNav.find(n => location.pathname.startsWith(n.path));
+  const currentTitle = current ? t(current.titleKey) : t('dashboard');
 
   return (
     <div className="flex h-screen overflow-hidden bg-paper">
@@ -193,7 +197,7 @@ export function ManagementShell() {
           </div>
           <div>
             <div className="text-diwan-cream font-display text-base leading-tight">Diwan Berlin</div>
-            <div className="text-diwan-dim text-[10px] tracking-wide">Restaurant Admin</div>
+            <div className="text-diwan-dim text-[10px] tracking-wide">{t('adminLabel')}</div>
           </div>
         </div>
 
@@ -202,8 +206,8 @@ export function ManagementShell() {
           <div className="px-3 py-3 border-b border-white/6" data-tour="shell-switcher">
             <div className="grid grid-cols-2 gap-1">
               {[
-                { label: 'Verwaltung', path: '/management/dashboard' },
-                { label: 'Service',    path: '/service/floor' },
+                { label: t('management'), path: '/management/dashboard' },
+                { label: t('service'),    path: '/service/floor' },
               ].map(({ label, path }) => (
                 <button
                   key={path}
@@ -224,17 +228,17 @@ export function ManagementShell() {
 
         {/* Nav */}
         <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-5">
-          {SECTIONS.map(({ key, label }) => {
+          {SECTIONS.map(({ key }) => {
             const items = visibleNav.filter(n => n.section === key);
             if (items.length === 0) return null;
             return (
               <div key={key}>
-                <p className="text-[9px] font-bold tracking-[0.18em] uppercase text-diwan-dim/40 px-3 mb-1.5">{label}</p>
+                <p className="text-[9px] font-bold tracking-[0.18em] uppercase text-diwan-dim/40 px-3 mb-1.5">{t(key)}</p>
                 <div className="space-y-0.5">
                   {items.map(item => (
                     <NavItemRow
                       key={item.view}
-                      item={item}
+                      item={{ ...item, title: t(item.titleKey), meta: t(item.metaKey) }}
                       active={location.pathname.startsWith(item.path)}
                       badge={getBadge(item)}
                     />
@@ -255,7 +259,7 @@ export function ManagementShell() {
           >
             <img src="/uploads/partners/gandom-ai-logo.png" alt="Gandom AI" className="h-5 w-5 rounded object-cover" />
             <span className="text-[10px] leading-tight text-diwan-dim">
-              Developed by <span className="text-diwan-cream">Gandom AI</span>
+              {t('developedBy')} <span className="text-diwan-cream">Gandom AI</span>
             </span>
           </a>
           <button
@@ -279,7 +283,7 @@ export function ManagementShell() {
             className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-diwan-dim hover:text-red-400 hover:bg-red-500/6 transition-colors text-xs"
           >
             <LogOut size={13} />
-            Abmelden
+            {t('logout')}
           </button>
         </div>
       </aside>
@@ -299,7 +303,7 @@ export function ManagementShell() {
               className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-ink2 hover:bg-paper2 transition-colors text-xs border border-diwan-gold/10"
             >
               <Search size={13} />
-              <span className="hidden sm:inline">Suchen</span>
+              <span className="hidden sm:inline">{t('search')}</span>
               <kbd className="hidden sm:inline text-[9px] opacity-50 border border-ink2/20 rounded px-1">⌘K</kbd>
             </button>
 
@@ -314,8 +318,15 @@ export function ManagementShell() {
                 ? <Wifi size={11} />
                 : <WifiOff size={11} />
               }
-              <span className="hidden sm:inline">{status === 'connected' ? 'Live' : 'Offline'}</span>
+              <span className="hidden sm:inline">{status === 'connected' ? t('live') : t('offline')}</span>
             </div>
+
+            <button
+              onClick={() => setLang(lang === 'de' ? 'fa' : 'de')}
+              className="min-w-12 rounded-xl border border-diwan-gold/15 px-3 py-1.5 text-xs font-bold text-ink2 hover:bg-paper2 hover:text-ink transition-colors"
+            >
+              {lang === 'de' ? 'فارسی' : 'DE'}
+            </button>
 
             {/* Notifications */}
             <div className="relative">

@@ -16,7 +16,7 @@ async function getActiveMenu() {
           orderBy: { sortOrder: 'asc' },
           include: {
             items: {
-              where: { isAvailable: true },
+              where: { isAvailable: true, isArchived: false },
               orderBy: { sortOrder: 'asc' },
               include: {
                 variants: {
@@ -28,7 +28,7 @@ async function getActiveMenu() {
           }
         },
         items: {
-          where: { isAvailable: true },
+          where: { isAvailable: true, isArchived: false },
           orderBy: { sortOrder: 'asc' },
           include: {
             variants: {

@@ -106,6 +106,7 @@ router.get('/', async (req, res) => {
       orderBy: { sortOrder: 'asc' },
       include: {
         items: {
+          where: { isArchived: false },
           orderBy: { sortOrder: 'asc' },
           include: itemInclude(),
         }
@@ -124,6 +125,7 @@ router.get('/categories', async (req, res) => {
       orderBy: { sortOrder: 'asc' },
       include: {
         items: {
+          where: { isArchived: false },
           orderBy: { sortOrder: 'asc' },
           include: itemInclude(),
         }
@@ -309,11 +311,22 @@ router.put('/items/:id/variants', managers, async (req, res) => {
 router.delete('/items/:id', managers, async (req, res) => {
   try {
     const { id } = req.params;
+    const orderItemCount = await prisma.orderItem.count({ where: { menuItemId: id } });
+    if (orderItemCount > 0) {
+      await prisma.menuItem.update({
+        where: { id },
+        data: { isArchived: true, isAvailable: false },
+      });
+      touchSitemap();
+      emitMenuUpdated({ id, archived: true, deleted: true });
+      return res.json({ success: true, archived: true });
+    }
     await prisma.menuItem.delete({ where: { id } });
     touchSitemap();
     emitMenuUpdated({ id, deleted: true });
-    res.json({ success: true });
+    res.json({ success: true, archived: false });
   } catch (error) {
+    console.error('Menu item delete error:', error);
     res.status(500).json({ error: 'Failed to delete item' });
   }
 });

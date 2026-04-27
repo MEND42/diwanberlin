@@ -1,0 +1,1 @@
+ALTER TABLE "MenuItem" ADD COLUMN "isArchived" BOOLEAN NOT NULL DEFAULT false;

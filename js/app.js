@@ -511,7 +511,7 @@ async function renderSiteContent() {
       const value = activeLang === 'fa'
         ? (block.valueFa || block.valueDe)
         : activeLang === 'en'
-          ? block.valueEn
+          ? (block.valueEn || block.valueDe || block.valueFa)
           : (block.valueDe || block.valueFa);
       if (!value) return;
       document.querySelectorAll(`[data-content-key="${key}"]`).forEach(el => {
@@ -549,28 +549,50 @@ function initMobileNav() {
 
 function initHeroMotion() {
   const hero = document.getElementById('hero');
-  if (!hero || reduceMotion) return;
+  if (!hero) return;
 
-  const stage = hero.querySelector('.hero-stage') || hero.querySelector('.hr');
-  const photo = hero.querySelector('.hero-photo');
+  const video = hero.querySelector('.hero-video');
+  const stage = hero.querySelector('.hr');
   const text = hero.querySelector('.hl');
-  const cards = hero.querySelectorAll('.hero-card');
+  const scrollCue = hero.querySelector('.hscroll');
   let current = 0;
   let target = 0;
   let ticking = false;
 
+  function selectHeroVideo() {
+    if (!video) return;
+    const mobile = window.matchMedia('(max-width: 700px)').matches;
+    const nextSrc = mobile ? video.dataset.mobileSrc : video.dataset.desktopSrc;
+    if (!nextSrc || video.getAttribute('src') === nextSrc) return;
+    video.classList.remove('is-ready');
+    video.setAttribute('src', nextSrc);
+    video.muted = true;
+    video.playsInline = true;
+    video.load();
+    const play = () => video.play().catch(() => {});
+    video.addEventListener('canplay', play, { once: true });
+    play();
+  }
+
+  selectHeroVideo();
+  window.addEventListener('resize', selectHeroVideo, { passive: true });
+  video?.addEventListener('playing', () => video.classList.add('is-ready'));
+
+  if (reduceMotion) return;
+
   function render() {
     current += (target - current) * 0.08;
-    const y = current;
-    if (stage) stage.style.transform = stage.classList.contains('hero-stage')
-      ? `translateY(calc(-48% + ${y * -0.04}px))`
-      : `translateY(${y * -0.035}px)`;
-    if (photo) photo.style.transform = `translateY(${y * -0.02}px) scale(1.015)`;
-    if (text) text.style.transform = `translateY(${y * 0.045}px)`;
-    cards.forEach((card, index) => {
-      const x = index % 2 === 0 ? -8 : 8;
-      card.style.transform = `translate(${x}px, ${y * (0.05 + index * 0.012)}px)`;
-    });
+    const rect = hero.getBoundingClientRect();
+    const progress = Math.min(1, Math.max(0, -rect.top / Math.max(1, rect.height)));
+    if (stage) {
+      stage.style.setProperty('--hero-scroll', progress.toFixed(3));
+      stage.style.setProperty('--hero-drift', `${current * -0.035}px`);
+    }
+    if (text) {
+      text.style.transform = `translate3d(0,${current * 0.045}px,0)`;
+      text.style.opacity = String(Math.max(0.2, 1 - progress * 1.15));
+    }
+    if (scrollCue) scrollCue.style.opacity = String(Math.max(0, 1 - progress * 3));
     ticking = Math.abs(target - current) > 0.2;
     if (ticking) requestAnimationFrame(render);
   }
@@ -584,16 +606,6 @@ function initHeroMotion() {
       requestAnimationFrame(render);
     }
   }, { passive: true });
-
-  cards.forEach((card, index) => {
-    card.style.opacity = '0';
-    card.style.transition = 'opacity .75s ease, transform .75s cubic-bezier(0.34,1.56,0.64,1)';
-    card.style.transform = `translate(${index === 0 ? -20 : 20}px, 16px)`;
-    setTimeout(() => {
-      card.style.opacity = '1';
-      card.style.transform = '';
-    }, 280 + index * 140);
-  });
 }
 
 function initForms() {
