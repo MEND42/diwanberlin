@@ -194,12 +194,13 @@ nav.on{background:rgba(24,14,4,.97);backdrop-filter:blur(14px);padding:14px 60px
 .ncta:hover{background:var(--gold2)}
 
 /* ── HERO ── */
-#hero{min-height:100vh;display:flex;align-items:center;overflow:hidden;background:var(--bg);position:relative;perspective:1400px;isolation:isolate}
-#hero::before{content:'';position:absolute;inset:0;background:linear-gradient(to right,rgba(24,14,4,.88) 0%,rgba(24,14,4,.55) 45%,rgba(24,14,4,.1) 100%);pointer-events:none;z-index:2}
+#hero{min-height:100svh;display:flex;align-items:center;overflow:hidden;background:var(--bg);position:relative;perspective:1400px;isolation:isolate}
+#hero::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,rgba(18,10,4,.96) 0%,rgba(18,10,4,.76) 36%,rgba(18,10,4,.34) 66%,rgba(18,10,4,.18) 100%);pointer-events:none;z-index:2}
+#hero::after{content:'';position:absolute;inset:auto 0 0;height:36%;z-index:2;background:linear-gradient(to top,rgba(24,14,4,.88),transparent);pointer-events:none}
 .hero-grid,.hero-orb,.hero-stage{display:none}
 
 /* left */
-.hl{display:flex;flex-direction:column;justify-content:center;padding:140px 56px 80px;position:relative;z-index:4;width:100%;max-width:750px;transform-style:preserve-3d}
+.hl{display:flex;flex-direction:column;justify-content:center;padding:148px 56px 92px;position:relative;z-index:4;width:100%;max-width:760px;transform-style:preserve-3d}
 .hl-logo{display:none}
 .hl-h{margin-bottom:18px;opacity:0;animation:fu .8s .6s forwards}
 .hl-h .ln{display:block;font-family:'Bebas Neue',sans-serif;font-size:clamp(60px,8vw,112px);line-height:.92;letter-spacing:.01em;color:var(--cream)}
@@ -210,24 +211,33 @@ nav.on{background:rgba(24,14,4,.97);backdrop-filter:blur(14px);padding:14px 60px
 .hl-acts{transform:translateZ(50px)}
 .hl-slogan{font-family:'Amiri',serif;direction:rtl;font-size:clamp(22px,2.5vw,34px);color:var(--gold2);line-height:1.8;margin-bottom:22px;opacity:0;animation:fu .7s .78s forwards;display:none;font-weight:700}
 html[lang="fa"] .hl-slogan{display:block}
-.hl-sub{font-size:15px;line-height:1.8;color:var(--dim);max-width:380px;margin-bottom:42px;opacity:0;animation:fu .7s .9s forwards}
-.hl-acts{display:flex;align-items:center;gap:22px;opacity:0;animation:fu .7s 1.05s forwards}
-.btn-g{display:flex;align-items:center;gap:12px;background:var(--gold);color:var(--bg);padding:13px 26px 13px 30px;border-radius:100px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;letter-spacing:.09em;text-transform:uppercase;text-decoration:none;border:none;cursor:pointer;transition:background .25s,transform .2s}
-.btn-g .ac{width:26px;height:26px;border-radius:50%;background:var(--bg);color:var(--gold);display:flex;align-items:center;justify-content:center;font-size:12px}
-.btn-g:hover{background:var(--gold2);transform:translateY(-2px)}
-.btn-o{display:flex;align-items:center;gap:12px;color:var(--cream);font-size:13px;letter-spacing:.08em;text-transform:uppercase;text-decoration:none;transition:color .25s}
-.btn-o .pl{width:44px;height:44px;border-radius:50%;border:1px solid rgba(242,228,200,.25);display:flex;align-items:center;justify-content:center;font-size:12px;transition:border-color .25s}
-.btn-o:hover{color:var(--gold)}.btn-o:hover .pl{border-color:var(--gold);color:var(--gold)}
+.hl-sub{font-size:16px;line-height:1.85;color:rgba(242,228,200,.78);max-width:460px;margin-bottom:34px;opacity:0;animation:fu .7s .9s forwards}
+.hl-acts{display:flex;align-items:center;gap:14px;flex-wrap:wrap;opacity:0;animation:fu .7s 1.05s forwards}
+.btn-g,.btn-o{min-height:48px;display:inline-flex;align-items:center;justify-content:center;gap:12px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;text-decoration:none;cursor:pointer;transition:background .25s,transform .2s,border-color .25s,color .25s,box-shadow .25s}
+.btn-g{background:var(--gold);color:var(--bg);padding:14px 24px;border:1px solid var(--gold);box-shadow:0 18px 44px rgba(200,146,42,.22)}
+.btn-g .ac,.btn-g .arr{width:24px;height:24px;border-radius:50%;background:rgba(24,14,4,.92);color:var(--gold);display:flex;align-items:center;justify-content:center;font-size:12px}
+.btn-g:hover{background:var(--gold2);border-color:var(--gold2);transform:translateY(-2px);box-shadow:0 22px 52px rgba(224,174,85,.25)}
+.btn-o{position:relative;color:var(--cream);padding:14px 6px;border:1px solid transparent}
+.btn-o::after{content:'';position:absolute;left:6px;right:6px;bottom:8px;height:1px;background:var(--gold);transform:scaleX(.42);transform-origin:left;transition:transform .25s}
+.btn-o .pl{width:30px;height:30px;border-radius:50%;border:1px solid rgba(242,228,200,.35);display:flex;align-items:center;justify-content:center;font-size:11px;transition:border-color .25s,background .25s,color .25s}
+.btn-o:hover{color:var(--gold)}.btn-o:hover::after{transform:scaleX(1)}.btn-o:hover .pl{border-color:var(--gold);background:rgba(200,146,42,.12);color:var(--gold)}
+.hero-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:24px;opacity:0;animation:fu .7s .45s forwards}
+.hero-pill{display:inline-flex;align-items:center;gap:8px;min-height:34px;border:1px solid rgba(224,174,85,.26);border-radius:999px;background:rgba(24,14,4,.46);backdrop-filter:blur(10px);padding:8px 13px;color:rgba(242,228,200,.86);font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase}
+.hero-pill::before{content:'';width:7px;height:7px;border-radius:50%;background:#44d07b;box-shadow:0 0 0 5px rgba(68,208,123,.13)}
+.hero-social{display:flex;align-items:center;gap:10px;margin-top:28px;opacity:0;animation:fu .7s 1.18s forwards}
+.hero-social a,.social-chip{min-height:42px;display:inline-flex;align-items:center;justify-content:center;gap:9px;border:1px solid rgba(224,174,85,.32);border-radius:999px;background:rgba(24,14,4,.52);backdrop-filter:blur(10px);color:var(--cream);padding:10px 15px;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;text-decoration:none;transition:background .2s,border-color .2s,color .2s,transform .2s}
+.hero-social a:hover,.social-chip:hover{background:rgba(200,146,42,.16);border-color:var(--gold);color:var(--gold2);transform:translateY(-2px)}
 
 /* scroll cue */
 .hscroll{position:absolute;bottom:36px;left:56px;z-index:3;display:flex;align-items:center;gap:10px;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);opacity:0;animation:fu .7s 1.4s forwards}
 .sdot{width:6px;height:6px;border-radius:50%;background:var(--gold);animation:bdot 2s infinite}
 
-/* right — coffee photo */
-.hr{position:absolute;inset:0;overflow:hidden;opacity:0;animation:fu 1.2s .5s forwards;z-index:1;transform-style:preserve-3d}
-.hr img.hero-photo{width:100%;height:100%;object-fit:cover;object-position:center center;transform:scale(1.06);animation:zoomOut 9s 1.5s ease-out forwards}
-.hr::before{content:'';position:absolute;inset:0;z-index:2;background:linear-gradient(to right,rgba(24,14,4,0.95) 0%,rgba(24,14,4,0.4) 50%,transparent 100%);pointer-events:none}
-.hr::after{content:'';position:absolute;inset:0;z-index:2;background:linear-gradient(to top,rgba(24,14,4,.6) 0%,transparent 40%);pointer-events:none}
+/* cinematic video */
+.hr{position:absolute;inset:0;overflow:hidden;opacity:0;animation:fu 1.2s .3s forwards;z-index:1;transform-style:preserve-3d;background:var(--bg)}
+.hero-video,.hr img.hero-photo{width:100%;height:100%;object-fit:cover;object-position:center center;transform:scale(1.015);animation:zoomOut 9s 1s ease-out forwards}
+.hero-video{display:block}
+.hr::before{content:'';position:absolute;inset:0;z-index:2;background:radial-gradient(circle at 62% 44%,transparent 0 24%,rgba(24,14,4,.12) 46%,rgba(24,14,4,.58) 100%);pointer-events:none}
+.hr::after{content:'';position:absolute;right:0;bottom:0;z-index:3;width:min(26vw,220px);height:min(13vw,112px);background:linear-gradient(135deg,rgba(24,14,4,0),rgba(24,14,4,.92) 52%,rgba(24,14,4,.98));pointer-events:none}
 @keyframes zoomOut{from{transform:scale(1.06)}to{transform:scale(1)}}
 .hero-stage{position:absolute;right:7%;top:50%;width:min(34vw,470px);aspect-ratio:1/1.1;transform:translateY(-48%);z-index:3;transform-style:preserve-3d;pointer-events:none}
 .hero-stage::before{content:'';position:absolute;inset:6% 10% 16%;border-radius:32px;background:linear-gradient(145deg,rgba(242,228,200,.06),rgba(224,174,85,.02));border:1px solid rgba(224,174,85,.14);backdrop-filter:blur(10px);box-shadow:0 26px 70px rgba(0,0,0,.34)}
@@ -278,19 +288,6 @@ box-shadow:0 28px 60px rgba(0,0,0,.38),0 0 36px rgba(224,174,85,.18)}
 /* coffee beans decoration */
 .cup-beans{position:absolute;inset:0;pointer-events:none}
 .cb{position:absolute;opacity:.6;animation:cbFloat var(--cbd,6s) var(--cbs,0s) ease-in-out infinite}
-
-/* dark overlay left blend */
-/* removed heavy gradient to make the cup visible completely */
-/* subtle vignette */
-.hr::after{content:'';position:absolute;inset:0;z-index:1;background:linear-gradient(to top,rgba(24,14,4,.6) 0%,transparent 35%);pointer-events:none}
-
-/* ── SLOGAN BANNER ── */
-.slogan-banner{background:var(--gold);padding:18px 60px;overflow:hidden}
-.slogan-track{display:flex;gap:80px;width:max-content;animation:marquee 25s linear infinite;align-items:center}
-.slogan-item{display:flex;align-items:center;gap:20px;white-space:nowrap}
-.slogan-item .s-fa{font-family:'Amiri',serif;direction:rtl;font-size:20px;color:var(--bg);font-weight:700}
-.slogan-item .s-de{font-size:12px;letter-spacing:.15em;text-transform:uppercase;color:rgba(24,14,4,.6)}
-.slogan-item .dot{width:5px;height:5px;border-radius:50%;background:rgba(24,14,4,.3)}
 
 /* ── SHARED ── */
 .section{position:relative}
@@ -411,17 +408,6 @@ h2 em{font-style:italic;color:var(--gold2)}
 .event-registration-status{min-height:20px;color:var(--gold);font-size:13px}.event-registration-status.error{color:#ffb4a8}
 .event-success{display:grid;gap:8px;color:var(--cream);background:rgba(200,146,42,.09);border:1px solid rgba(200,146,42,.22);border-radius:18px;padding:24px}.event-success span{color:var(--gold)}
 
-/* ── TESTIMONIALS ── */
-#testimonials{background:var(--bg);overflow:hidden}
-.ttwrap{margin-top:52px;overflow:hidden;-webkit-mask:linear-gradient(to right,transparent,#000 8%,#000 92%,transparent);mask:linear-gradient(to right,transparent,#000 8%,#000 92%,transparent)}
-.ttrack{display:flex;gap:24px;width:max-content;animation:marquee 44s linear infinite}
-.ttrack:hover{animation-play-state:paused}
-.tc{background:var(--bg2);padding:34px 36px;width:360px;flex-shrink:0;border:1px solid rgba(200,146,42,.1)}
-.ts{color:var(--gold);font-size:13px;letter-spacing:2px;margin-bottom:16px}
-.tt{font-size:15px;line-height:1.85;color:var(--dim);font-style:italic}
-.ta{margin-top:20px;font-size:13px;color:var(--cream);font-weight:500}
-.to{font-size:12px;color:var(--gold);margin-top:2px}
-
 /* ── LOCATION ── */
 #location{background:var(--bg2)}
 .loc-g{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:start;margin-top:56px}
@@ -429,6 +415,8 @@ h2 em{font-style:italic;color:var(--gold2)}
 .map-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:16px}
 .map-actions a{display:inline-flex;align-items:center;justify-content:center;border-radius:999px;border:1px solid rgba(200,146,42,.35);padding:10px 18px;color:var(--cream);text-decoration:none;font-size:12px;letter-spacing:.08em;text-transform:uppercase;transition:background .2s,border-color .2s}
 .map-actions a:hover{background:rgba(200,146,42,.12);border-color:var(--gold)}
+.social-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:26px}
+.social-actions .social-chip{background:rgba(200,146,42,.1);border-color:rgba(224,174,85,.4)}
 .loc-info h3{font-family:'Playfair Display',serif;font-size:26px;font-weight:400;color:var(--cream);margin-bottom:32px}
 .ib{margin-bottom:28px}
 .ilbl{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:8px}
@@ -468,6 +456,7 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
 .flinks{display:flex;gap:22px;justify-content:flex-end}
 .flinks a{font-size:12px;color:var(--dim);text-decoration:none;letter-spacing:.04em;transition:color .25s}
 .flinks a:hover{color:var(--gold)}
+.flinks a.social-chip{color:var(--cream);padding:9px 13px}
 
 /* ── KEYFRAMES ── */
 @keyframes fu{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:translateY(0)}}
@@ -538,22 +527,21 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
   .hamburger{display:flex;width:36px;height:36px;padding:6px}
   
   /* Hero */
-  #hero{min-height:auto;padding:70px 0 40px}
-  .hl{padding:20px 16px 40px}
-  .hl-h .ln{font-size:42px !important;line-height:1.1}
+  #hero{min-height:100svh;padding:76px 0 30px;align-items:flex-end}
+  #hero::before{background:linear-gradient(to top,rgba(18,10,4,.98) 0%,rgba(18,10,4,.86) 36%,rgba(18,10,4,.38) 100%)}
+  .hl{padding:42vh 16px 46px}
+  .hl-h .ln{font-size:48px !important;line-height:1}
   .hl-slogan{font-size:18px}
   .hl-sub{font-size:14px;margin-bottom:24px}
-  .hl-acts{flex-direction:column;gap:12px;align-items:flex-start}
+  .hl-acts{flex-direction:column;gap:10px;align-items:stretch}
   .hl-acts .btn-g,.hl-acts .btn-o{width:100%;justify-content:center}
-  .hr{height:40vh;min-height:280px}
-  .hr img.hero-photo{object-position:center 30%}
+  .hero-meta{margin-bottom:16px}
+  .hero-pill{font-size:10px}
+  .hero-social{gap:8px;flex-wrap:wrap;margin-top:18px}
+  .hero-social a{flex:1 1 calc(50% - 8px);padding:10px 12px}
+  .hr{height:100%;min-height:0}
+  .hero-video,.hr img.hero-photo{object-position:58% center}
   .hscroll{display:none}
-  
-  /* Slogan banner */
-  .slogan-banner{padding:12px 16px}
-  .slogan-track{gap:40px}
-  .slogan-item .s-fa{font-size:16px}
-  .slogan-item .s-de{font-size:10px}
   
   /* Sections */
   .inner{padding:48px 16px}
@@ -684,9 +672,9 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
   .nlogo img{width:52px;height:52px;padding:4px}
   #hero{grid-template-columns:1fr}
   .hero-grid,.hero-stage,.hero-orb{display:none}
-  .hl{padding:80px 24px 48px}
+  .hl{padding-left:24px;padding-right:24px}
   .hl-logo img{width:min(140px,42vw);padding:10px}
-  .hr{height:50vh;min-height:320px}
+  .hr{height:100%;min-height:0}
   .cup-scene{width:220px;height:280px;transform:scale(.7)}
   .inner{padding:60px 24px}
   .about-g,.ev-top,.loc-g,.res-g{grid-template-columns:1fr;gap:32px}
@@ -696,7 +684,6 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
   .ei{grid-template-columns:60px 1fr;gap:16px}.etime{display:none}.event-actions{grid-column:2;justify-self:start;margin-top:8px}
   .frow{grid-template-columns:1fr}
   .rule{margin:0 24px}
-  .slogan-banner{padding:14px 24px}
   .mid-slogan{padding:50px 24px}
   .hamburger{display:flex}
 }
@@ -831,7 +818,9 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
 }
 
 @media(prefers-reduced-motion:reduce){
-  .hl-logo img,.hl-logo::after,.hero-cup::after,.bean,.hero-photo,.hero-stage,.hero-grid,.hero-orb{animation:none!important;transition:none!important;transform:none!important}
+  .hl-logo img,.hl-logo::after,.hero-cup::after,.bean,.hero-photo,.hero-video,.hero-stage,.hero-grid,.hero-orb{animation:none!important;transition:none!important;transform:none!important}
+  .hero-video{display:none}
+  .hr{background:url('uploads/hero-poster.jpg') center/cover no-repeat}
   #mobile-overlay{transition:none}
   .hamburger span{transition:none}
 }
@@ -877,10 +866,10 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
     <li><a href="#reservations" data-i18n="navReserve">Reservieren</a></li>
     <li><a href="#location" data-i18n="navLocation">Lage</a></li>
   </ul>
-  <button class="mo-lang" id="mobileLang">Persian / دری</button>
+  <button class="mo-lang" id="mobileLang">Deutsch</button>
   <div class="mo-social">
-    <a href="https://www.instagram.com/berlin.diwan.cafe" target="_blank" rel="noopener">Instagram</a>
-    <a href="https://www.facebook.com/profile.php?id=61567392711638" target="_blank" rel="noopener">Facebook</a>
+    <a href="https://www.instagram.com/berlin.diwan.cafe" target="_blank" rel="noopener" data-i18n="heroInstagram">Instagram</a>
+    <a href="https://www.facebook.com/profile.php?id=61567392711638" target="_blank" rel="noopener" data-i18n="heroFacebook">Facebook</a>
   </div>
 </div>
 
@@ -926,9 +915,12 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
   <!-- LEFT: Text -->
   <div class="hl">
     <!-- Logo removed from hero section -->
-    <h1 class="hl-h" data-word-reveal>
-      <span class="ln g" data-i18n="heroTitle1">Wo Geschichten</span>
-      <span class="ln" data-i18n="heroTitle2">beginnen.</span>
+    <div class="hero-meta">
+      <span class="hero-pill" data-i18n="heroStatus">Täglich geöffnet · Berlin-Lichtenberg</span>
+    </div>
+    <h1 class="hl-h" data-word-reveal data-i18n="heroTitle">
+      <span class="ln g">Wo Geschichten</span>
+      <span class="ln">beginnen.</span>
     </h1>
     <span class="hl-slogan">چای، قصه، لبخند</span>
     <p class="hl-sub" data-i18n="heroSub">Ein Kulturcafé im Herzen Berlins — wo warme Gastfreundschaft auf echte Kaffeekultur trifft.</p>
@@ -936,29 +928,22 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
       <a href="#menu" class="btn-g" data-magnetic data-i18n="heroBtnMenu">Speisekarte <span class="ac">↗</span></a>
       <a href="#reservations" class="btn-o" data-magnetic data-i18n="heroBtnReserve"><span class="pl">▶</span>Reservieren</a>
     </div>
+    <div class="hero-social" aria-label="Social media">
+      <a href="https://www.instagram.com/berlin.diwan.cafe?igsh=M25vc2dkNWRzOHQ5" target="_blank" rel="noopener" data-i18n="heroInstagram">Instagram</a>
+      <a href="https://www.facebook.com/profile.php?id=61567392711638" target="_blank" rel="noopener" data-i18n="heroFacebook">Facebook</a>
+      <a href="https://www.google.com/maps/dir/?api=1&destination=Cafe%20Diwan%20Berlin%2C%20Rhinstra%C3%9Fe%2079A%2C%2010315%20Berlin" target="_blank" rel="noopener" data-i18n="heroDirections">Route</a>
+    </div>
   </div>
 
-  <!-- RIGHT: Coffee photo -->
+  <!-- Full-bleed hero video -->
   <div class="hr" data-parallax="0.2">
-    <img class="hero-photo" src="uploads/Gemini_Generated_Image_jieachjieachjiea.png" alt="Frischer Kaffee bei Diwan">
+    <video class="hero-video" autoplay muted loop playsinline preload="metadata" poster="uploads/hero-poster.jpg" aria-label="Cafe Diwan coffee animation">
+      <source src="uploads/hero-mobile.mp4" type="video/mp4" media="(max-width: 700px)">
+      <source src="uploads/hero-optimized.mp4" type="video/mp4">
+    </video>
   </div>
-  <div class="hscroll"><div class="sdot"></div>Entdecken</div>
+  <div class="hscroll"><div class="sdot"></div><span data-i18n="heroScroll">Entdecken</span></div>
 </section>
-
-<!-- SLOGAN BANNER -->
-<div class="slogan-banner">
-  <div class="slogan-track">
-    <div class="slogan-item"><span class="s-fa">چای، قصه، لبخند</span><span class="dot"></span><span class="s-de">Tee, Geschichte, Lächeln</span></div>
-    <div class="slogan-item"><span class="s-fa">طعم خانه، دور از خانه</span><span class="dot"></span><span class="s-de">Der Geschmack von Zuhause, fern von Zuhause</span></div>
-    <div class="slogan-item"><span class="s-fa">یک فنجان چای، هزار خاطره</span><span class="dot"></span><span class="s-de">Eine Tasse Tee, tausend Erinnerungen</span></div>
-    <div class="slogan-item"><span class="s-fa">دیوان برلین</span><span class="dot"></span><span class="s-de">Cafe Diwan</span></div>
-    <!-- repeat -->
-    <div class="slogan-item"><span class="s-fa">چای، قصه، لبخند</span><span class="dot"></span><span class="s-de">Tee, Geschichte, Lächeln</span></div>
-    <div class="slogan-item"><span class="s-fa">طعم خانه، دور از خانه</span><span class="dot"></span><span class="s-de">Der Geschmack von Zuhause, fern von Zuhause</span></div>
-    <div class="slogan-item"><span class="s-fa">یک فنجان چای، هزار خاطره</span><span class="dot"></span><span class="s-de">Eine Tasse Tee, tausend Erinnerungen</span></div>
-    <div class="slogan-item"><span class="s-fa">دیوان برلین</span><span class="dot"></span><span class="s-de">Cafe Diwan</span></div>
-  </div>
-</div>
 
 <div class="wave-divider" aria-hidden="true" style="margin-top:-2px">
   <svg viewBox="0 0 1200 120" preserveAspectRatio="none">
@@ -977,13 +962,13 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
         <p data-content-key="aboutIntro" data-i18n="aboutDesc1">Cafe Diwan ist ein warmer, ruhiger Ort im Herzen Berlins. Wir servieren heiße und kalte Getränke, Frühstück und kleine Speisen in einer Atmosphäre, die zum Gespräch und Verweilen einlädt.</p>
         <p data-i18n="aboutDesc2">Diwan ist mehr als ein Café — es ist ein Kulturzentrum. Bei uns finden regelmäßige Musikabende, Geburtstagsfeiern, Poesieabende, Theateraufführungen und interkulturelle Begegnungen statt. Unser Ziel: Solidarität stärken, Dialog fördern, Kunst und Kultur feiern. <strong style="color:var(--gold)" data-i18n="capacityLabel">Kapazität:</strong> <strong style="color:var(--gold)" id="dynamicCapacity">60</strong> <strong style="color:var(--gold)" data-i18n="capacityUnit">Personen.</strong></p>
         <div class="about-slogan">
-          <span class="fa">طعم خانه، دور از خانه</span>
+          <span class="fa" data-i18n="aboutSloganFa">طعم خانه، دور از خانه</span>
           <span class="de" data-i18n="aboutSloganDe">Der Geschmack von Zuhause, fern von Zuhause</span>
         </div>
       </div>
       <div class="about-img r d2">
         <img src="uploads/cafe-atmosphere-about.png" alt="Warme Cafe Diwan Atmosphäre mit Kaffee und Tee">
-        <div class="about-cap">Atmosphäre · فضای کافه</div>
+        <div class="about-cap" data-i18n="aboutCaption">Atmosphäre</div>
       </div>
     </div>
   </div>
@@ -1003,13 +988,13 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
       <div class="feat r">
         <div class="fn">01</div>
         <h3 class="ft" data-i18n="feat1Title">Specialty Coffee</h3>
-        <span class="ffa">قهوه ویژه</span>
+        <span class="ffa" data-i18n="feat1Alt">Kaffee & Tee</span>
         <p class="fb" data-i18n="feat1Desc">Single-Origin-Bohnen, täglich frisch gemahlen — von Espresso bis zum warm gewürzten Kardamom-Kaffee.</p>
       </div>
       <div class="feat r d3">
         <div class="fn">02</div>
         <h3 class="ft" data-i18n="feat2Title">Kultur &amp; Begegnung</h3>
-        <span class="ffa">فرهنگ و دیدار</span>
+        <span class="ffa" data-i18n="feat2Alt">Kultur & Begegnung</span>
         <p class="fb" data-i18n="feat2Desc">Wöchentliche Lesungen, Musikabende und interkulturelle Gespräche — Diwan ist ein lebendiger Treffpunkt.</p>
       </div>
       <div class="feat r d4" style="display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;background:rgba(200,146,42,.03);">
@@ -1036,8 +1021,8 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
 <!-- MENU -->
 <section id="menu" class="section">
   <div class="inner">
-    <div class="lbl r">منوی ما · Unsere Karte</div>
-    <h2 class="r" data-word-reveal>Getränke &amp; <em>Speisen</em><span class="fa-h">نوشیدنی‌ها و غذاها</span></h2>
+    <div class="lbl r" data-i18n="menuEyebrow">Unsere Karte</div>
+    <h2 class="r" data-word-reveal data-i18n="menuTitle">Getränke &amp; <em>Speisen</em></h2>
     <div class="tabs r">
       <!-- Tabs generated by JS -->
     </div>
@@ -1047,8 +1032,8 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
 
 <!-- MID SLOGAN -->
 <div class="mid-slogan r">
-  <span class="fa-big">یک فنجان چای، هزار خاطره</span>
-  <span class="de-small">Eine Tasse Tee — tausend Erinnerungen</span>
+  <span class="fa-big" data-i18n="midSloganMain">Eine Tasse Tee, tausend Erinnerungen</span>
+  <span class="de-small" data-i18n="midSloganSub">Cafe Diwan Berlin</span>
 </div>
 
 <div class="wave-divider" aria-hidden="true" style="margin-top:-2px">
@@ -1063,18 +1048,15 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
   <div class="inner">
     <div class="ev-top">
       <div class="r">
-        <div class="lbl">برنامه فرهنگی · Kulturprogramm</div>
-        <h2 data-word-reveal>Veranstaltungen &amp; <em>Kultur</em><span class="fa-h">رویدادها و فرهنگ</span></h2>
+        <div class="lbl" data-i18n="eventsEyebrow">Kulturprogramm</div>
+        <h2 data-word-reveal data-i18n="eventsTitle">Veranstaltungen &amp; <em>Kultur</em></h2>
       </div>
       <div class="r d2">
-        <p>Diwan ist ein lebendiger Kulturraum. Musikabende, Poesie auf Persisch und Deutsch, Workshops und interkulturelle Gespräche — bei uns ist immer etwas los.</p>
+        <p data-i18n="eventsDesc">Diwan ist ein lebendiger Kulturraum. Musikabende, Poesie, Workshops und interkulturelle Gespräche — bei uns ist immer etwas los.</p>
       </div>
     </div>
     <div class="elist" id="public-events-list">
-      <div class="ei r"><div><div class="eday">24</div><div class="emon">Mai</div></div><div><div class="ename">Persischer Poesieabend</div><div class="edesc">Hafez, Rumi und zeitgenössische Stimmen — Gedichte auf Persisch und Deutsch</div></div><div class="etime">19:00 Uhr</div></div>
-      <div class="ei r d1"><div><div class="eday">31</div><div class="emon">Mai</div></div><div><div class="ename">Musikabend</div><div class="edesc">Live-Musik und Begegnung in warmer Cafe-Atmosphäre</div></div><div class="etime">20:00 Uhr</div></div>
-      <div class="ei r d2"><div><div class="eday">07</div><div class="emon">Jun</div></div><div><div class="ename">Buchclub: Interkulturelle Lektüre</div><div class="edesc">Gemeinsam lesen und diskutieren — ein Buch, viele Perspektiven</div></div><div class="etime">18:30 Uhr</div></div>
-      <div class="ei r d3"><div><div class="eday">14</div><div class="emon">Jun</div></div><div><div class="ename">Kaffee & Kultur Workshop</div><div class="edesc">Geschichten, Gewürze und Cafe-Kultur — für alle Niveaus</div></div><div class="etime">15:00 Uhr</div></div>
+      <div class="ei r"><div class="edesc" data-i18n="eventsLoading">Veranstaltungen werden geladen.</div></div>
     </div>
   </div>
 </section>
@@ -1086,43 +1068,11 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
   </svg>
 </div>
 
-<!-- TESTIMONIALS -->
-<section id="testimonials" class="section">
-  <div class="inner" style="padding-bottom:44px">
-    <div class="lbl r">نظرات مهمانان · Gästestimmen</div>
-    <h2 class="r" data-word-reveal><em>Stimmen</em> aus Berlin<span class="fa-h">صداهایی از برلین</span></h2>
-  </div>
-  <div class="ttwrap">
-    <div class="ttrack">
-      <div class="tc"><div class="ts">★★★★★</div><div class="tt">"Das gemütlichste Café in Berlin. Der Bolani ist phänomenal und der Kardamom-Kaffee macht jeden Morgen perfekt."</div><div class="ta">Sarah K.</div><div class="to">Berlin-Mitte</div></div>
-      <div class="tc"><div class="ts">★★★★★</div><div class="tt">"یک گوشه‌ی دنج در برلین که هر بار می‌خواهی برگردی. قهوه عالی است و فضا مثل خانه گرم است."</div><div class="ta">احمد نظری</div><div class="to">Berlin</div></div>
-      <div class="tc"><div class="ts">★★★★★</div><div class="tt">"Die Poesieabende hier sind unvergesslich. Diwan schafft eine echte Brücke zwischen Kulturen."</div><div class="ta">Lena M.</div><div class="to">Prenzlauer Berg</div></div>
-      <div class="tc"><div class="ts">★★★★★</div><div class="tt">"Bestes Bolani und beste Sambosa westlich von Kabul! Das Personal ist herzlich und das Ambiente wunderschön."</div><div class="ta">Thomas B.</div><div class="to">Charlottenburg</div></div>
-      <div class="tc"><div class="ts">★★★★★</div><div class="tt">"طعم خانه، دور از خانه — این جمله دقیقاً همین کافه را توصیف می‌کند. عالی است."</div><div class="ta">فرزانه رحیمی</div><div class="to">Neukölln</div></div>
-      <div class="tc"><div class="ts">★★★★★</div><div class="tt">"Der Kashmiri Chai ist das Beste, was mir je passiert ist. Ich komme jede Woche wieder."</div><div class="ta">Julia R.</div><div class="to">Friedrichshain</div></div>
-      <!-- duplicates -->
-      <div class="tc"><div class="ts">★★★★★</div><div class="tt">"Das gemütlichste Café in Berlin. Der Bolani ist phänomenal und der Kardamom-Kaffee macht jeden Morgen perfekt."</div><div class="ta">Sarah K.</div><div class="to">Berlin-Mitte</div></div>
-      <div class="tc"><div class="ts">★★★★★</div><div class="tt">"یک گوشه‌ی دنج در برلین که هر بار می‌خواهی برگردی. قهوه عالی است و فضا مثل خانه گرم است."</div><div class="ta">احمد نظری</div><div class="to">Berlin</div></div>
-      <div class="tc"><div class="ts">★★★★★</div><div class="tt">"Die Poesieabende hier sind unvergesslich. Diwan schafft eine echte Brücke zwischen Kulturen."</div><div class="ta">Lena M.</div><div class="to">Prenzlauer Berg</div></div>
-      <div class="tc"><div class="ts">★★★★★</div><div class="tt">"Bestes Bolani und beste Sambosa westlich von Kabul! Das Personal ist herzlich und das Ambiente wunderschön."</div><div class="ta">Thomas B.</div><div class="to">Charlottenburg</div></div>
-      <div class="tc"><div class="ts">★★★★★</div><div class="tt">"طعم خانه، دور از خانه — این جمله دقیقاً همین کافه را توصیف می‌کند. عالی است."</div><div class="ta">فرزانه رحیمی</div><div class="to">Neukölln</div></div>
-      <div class="tc"><div class="ts">★★★★★</div><div class="tt">"Der Kashmiri Chai ist das Beste, was mir je passiert ist. Ich komme jede Woche wieder."</div><div class="ta">Julia R.</div><div class="to">Friedrichshain</div></div>
-    </div>
-  </div>
-</section>
-
-<div class="wave-divider" aria-hidden="true" style="margin-top:-2px">
-  <svg viewBox="0 0 1200 120" preserveAspectRatio="none">
-    <path d="M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z" opacity=".1" fill="var(--gold)"/>
-    <path d="M0,0V15.81C13,36.92,27.64,56.86,47.69,72.05,99.41,111.27,165,111,224.58,91.58c31.15-10.15,60.09-26.07,89.67-39.8,40.92-19,84.73-46,130.83-49.67,36.26-2.85,70.9,9.42,98.6,31.56,31.77,25.39,62.32,62,103.63,73,40.44,10.79,81.35-6.69,119.13-24.28s75.16-39,116.92-43.05c59.73-5.85,113.28,22.88,168.9,38.84,30.2,8.66,59,6.17,87.09-7.5V0Z" fill="var(--bg2)"/>
-  </svg>
-</div>
-
 <!-- LOCATION -->
 <section id="location" class="section">
   <div class="inner">
-    <div class="lbl r" data-i18n="locTitle">کجا هستیم · Wo wir sind</div>
-    <h2 class="r" data-word-reveal data-i18n="locVisit">Besuchen Sie <em>uns</em><span class="fa-h">از ما دیدن کنید</span></h2>
+    <div class="lbl r" data-i18n="locTitle">Wo wir sind</div>
+    <h2 class="r" data-word-reveal data-i18n="locVisit">Besuchen Sie <em>uns</em></h2>
     <div class="loc-g">
       <div class="r">
         <iframe class="map-frame"
@@ -1139,18 +1089,22 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
         <div class="loc-info">
           <h3 data-i18n="locCafeName">Cafe Diwan Berlin</h3>
           <div class="ib">
-            <div class="ilbl" data-i18n="locAddressLabel">Adresse · آدرس</div>
+            <div class="ilbl" data-i18n="locAddressLabel">Adresse</div>
             <div class="ival" data-i18n="locAddress">Rhinstraße 79A<br>10315 Berlin</div>
           </div>
           <div class="ib">
-            <div class="ilbl" data-i18n="locHoursLabel">Öffnungszeiten · ساعات کار</div>
+            <div class="ilbl" data-i18n="locHoursLabel">Öffnungszeiten</div>
             <div>
-              <div class="hrow"><span class="hd" data-i18n="locHoursDaily">Täglich · هر روز</span><span class="ht" data-i18n="locHoursTime">07:00 – 21:00</span></div>
+              <div class="hrow"><span class="hd" data-i18n="locHoursDaily">Täglich</span><span class="ht" data-i18n="locHoursTime">07:00 – 21:00</span></div>
             </div>
           </div>
           <div class="ib">
-            <div class="ilbl" data-i18n="locTransportLabel">Verkehr · حمل و نقل</div>
+            <div class="ilbl" data-i18n="locTransportLabel">Verkehr</div>
             <div class="ival" data-i18n="locTransport">S-Bahn: Lichtenberg (S5, S7)<br>Bus: 108, 296</div>
+          </div>
+          <div class="social-actions" aria-label="Social media">
+            <a class="social-chip" href="https://www.instagram.com/berlin.diwan.cafe?igsh=M25vc2dkNWRzOHQ5" target="_blank" rel="noopener" data-i18n="heroInstagram">Instagram</a>
+            <a class="social-chip" href="https://www.facebook.com/profile.php?id=61567392711638" target="_blank" rel="noopener" data-i18n="heroFacebook">Facebook</a>
           </div>
         </div>
       </div>
@@ -1175,8 +1129,8 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
         <h2 class="r" data-i18n="resTitle" data-word-reveal>Tisch <em>reservieren</em></h2>
         <form id="reservationForm" class="rform r">
           <div class="frow">
-            <div class="fg"><label>Name</label><input type="text" id="resName" data-i18n="resName" required></div>
-            <div class="fg"><label>E-Mail</label><input type="email" id="resEmail" data-i18n="resEmail" required></div>
+            <div class="fg"><label data-i18n="resName">Name</label><input type="text" id="resName" data-i18n="resName" required></div>
+            <div class="fg"><label data-i18n="resEmail">E-Mail</label><input type="email" id="resEmail" data-i18n="resEmail" required></div>
           </div>
           <div class="frow">
             <div class="fg"><label data-i18n="resDate">Datum</label><input type="date" id="resDate"></div>
@@ -1208,13 +1162,12 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
           </div>
           <div class="fg"><label data-i18n="resNotes">Besondere Wünsche (optional)</label><textarea id="resNotes" data-i18n="resNotes"></textarea></div>
           <button type="submit" class="btn-g" data-i18n="resSubmit">Reservierung anfragen <span class="ac">↗</span></button>
-          <div id="form-ok" role="status" aria-live="polite" style="display:none; color: green; margin-top: 10px;">✓ Anfrage gesendet · درخواست شما ثبت شد</div>
+          <div id="form-ok" role="status" aria-live="polite" style="display:none; color: green; margin-top: 10px;" data-i18n="resSuccess">Anfrage gesendet</div>
         </form>
       </div>
       
       <div class="res-info r d2">
-        <p>Ob ein Abend zu zweit, ein Treffen mit Freunden oder eine kleine Feier — wir bereiten alles vor, damit Sie sich wohl fühlen.</p>
-        <span class="res-fa">چه شب دونفره باشد، چه جمع دوستان — همه چیز را آماده می‌کنیم تا احساس خانه کنید</span>
+        <p data-i18n="resInfo">Ob ein Abend zu zweit, ein Treffen mit Freunden oder eine kleine Feier — wir bereiten alles vor, damit Sie sich wohl fühlen.</p>
         <div class="clist">
           <div class="crow"><span class="ck">Tel</span><span class="cv"><a href="tel:+491638953463">+49 163 8953463</a></span></div>
           <div class="crow"><span class="ck">E-Mail</span><span class="cv"><a href="mailto:info@diwanberlin.com">info@diwanberlin.com</a></span></div>
@@ -1253,18 +1206,18 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
 
         <form id="eventForm" class="rform r">
           <div class="frow">
-            <div class="fg"><label>Name</label><input type="text" id="evName" data-i18n="resName" required></div>
-            <div class="fg"><label>E-Mail</label><input type="email" id="evEmail" data-i18n="resEmail" required></div>
+            <div class="fg"><label data-i18n="resName">Name</label><input type="text" id="evName" data-i18n="resName" required></div>
+            <div class="fg"><label data-i18n="resEmail">E-Mail</label><input type="email" id="evEmail" data-i18n="resEmail" required></div>
           </div>
           <div class="frow">
-            <div class="fg"><label>Telefon</label><input type="tel" id="evPhone" data-i18n="resPhone"></div>
+            <div class="fg"><label data-i18n="resPhone">Telefon</label><input type="tel" id="evPhone" data-i18n="resPhone"></div>
           </div>
           <div class="frow">
             <div class="fg"><label data-i18n="resDate">Datum</label><input type="date" id="evDate"></div>
             <div class="fg"><label data-i18n="resTime">Uhrzeit / Dauer</label><input type="text" id="evTiming" placeholder="18:00 - 22:00"></div>
           </div>
           <div class="frow">
-            <div class="fg"><label data-i18n="resGuests">Anzahl Personen</label><input type="number" id="evGuests" placeholder="z.B. 30"></div>
+            <div class="fg"><label data-i18n="resGuests">Anzahl Personen</label><input type="number" id="evGuests" data-i18n-placeholder="eventGuestsPlaceholder" placeholder="z.B. 30"></div>
             <div class="fg"><label data-i18n="eventType">Art der Veranstaltung</label>
               <select id="evType">
                 <option value="Verlobung" data-i18n="eventTypeEng">Verlobung</option>
@@ -1287,7 +1240,7 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
           <div class="fg"><label data-i18n="eventDecor">Dekoration</label><input type="text" id="evDecor" data-i18n="eventDecor"></div>
           <div class="fg"><label data-i18n="resNotes">Sonstige Anmerkungen</label><textarea id="evNotes" data-i18n="resNotes"></textarea></div>
           <button type="submit" class="btn-g" data-i18n="eventSubmit">Anfrage senden <span class="ac">↗</span></button>
-          <div id="event-form-ok" role="status" aria-live="polite" style="display:none; color: green; margin-top: 10px;">✓ Anfrage gesendet · درخواست شما ثبت شد</div>
+          <div id="event-form-ok" role="status" aria-live="polite" style="display:none; color: green; margin-top: 10px;" data-i18n="eventSuccess">Anfrage gesendet</div>
         </form>
       </div>
     </div>
@@ -1305,8 +1258,8 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
     <div class="flinks">
       <a href="/impressum.html" data-i18n="footerImpressum">Impressum</a>
       <a href="/datenschutz.html" data-i18n="footerPrivacy">Datenschutz</a>
-      <a href="https://www.instagram.com/berlin.diwan.cafe?igsh=M25vc2dkNWRzOHQ5" target="_blank" rel="noopener">Instagram</a>
-      <a href="https://www.facebook.com/profile.php?id=61567392711638" target="_blank" rel="noopener">Facebook</a>
+      <a class="social-chip" href="https://www.instagram.com/berlin.diwan.cafe?igsh=M25vc2dkNWRzOHQ5" target="_blank" rel="noopener" data-i18n="heroInstagram">Instagram</a>
+      <a class="social-chip" href="https://www.facebook.com/profile.php?id=61567392711638" target="_blank" rel="noopener" data-i18n="heroFacebook">Facebook</a>
     </div>
   </div>
 </footer>

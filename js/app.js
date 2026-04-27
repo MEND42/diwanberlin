@@ -257,7 +257,7 @@ async function renderMenu() {
   controls.innerHTML = `
     <div class="menu-tools">
       <div class="menu-search-wrap">
-        <input type="search" id="menuSearch" placeholder="${lang() === 'fa' ? 'جستجو...' : 'Suchen...'}" autocomplete="off">
+        <input type="search" id="menuSearch" placeholder="${lang() === 'fa' ? 'جستجو...' : lang() === 'en' ? 'Search...' : 'Suchen...'}" autocomplete="off">
       </div>
       <a href="${API_URL}/menu/pdf" target="_blank" class="btn-o"><span class="pl">↓</span> PDF</a>
       ${stale ? '<span class="menu-stale">Möglicherweise veraltet</span>' : ''}
@@ -507,9 +507,14 @@ async function renderSiteContent() {
   try {
     const content = await fetchJson(`${API_URL}/site-content`);
     Object.entries(content).forEach(([key, block]) => {
-      const value = lang() === 'fa' ? (block.valueFa || block.valueDe) : (block.valueDe || block.valueFa);
+      const activeLang = lang();
+      const value = activeLang === 'fa'
+        ? (block.valueFa || block.valueDe)
+        : activeLang === 'en'
+          ? block.valueEn
+          : (block.valueDe || block.valueFa);
       if (!value) return;
-      document.querySelectorAll(`[data-content-key="${key}"],[data-i18n="${key}"]`).forEach(el => {
+      document.querySelectorAll(`[data-content-key="${key}"]`).forEach(el => {
         el.innerHTML = value;
       });
     });
