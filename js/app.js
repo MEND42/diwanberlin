@@ -175,6 +175,33 @@ function flattenItems(category) {
   return [...direct, ...nested].filter(item => item.isAvailable !== false);
 }
 
+function menuGroups(category) {
+  const groups = [];
+  const direct = Array.isArray(category.items)
+    ? category.items.filter(item => item.isAvailable !== false)
+    : [];
+  if (direct.length) {
+    groups.push({
+      slug: category.slug || category.id || 'category',
+      nameDe: category.nameDe,
+      nameFa: category.nameFa,
+      nameEn: category.nameEn,
+      items: direct,
+    });
+  }
+  if (Array.isArray(category.subcategories)) {
+    category.subcategories.forEach(subcategory => {
+      const items = Array.isArray(subcategory.items)
+        ? subcategory.items.filter(item => item.isAvailable !== false)
+        : [];
+      if (items.length) {
+        groups.push({ ...subcategory, items });
+      }
+    });
+  }
+  return groups;
+}
+
 async function fetchJson(url, options) {
   const res = await fetch(url, options);
   const data = await res.json().catch(() => ({}));
@@ -240,30 +267,52 @@ async function renderMenu() {
 
   visibleCategories.forEach((category, categoryIndex) => {
     const panel = document.createElement('div');
+    const groups = menuGroups(category);
+    const itemCount = category._items.length;
     panel.id = `tab-${category.slug}`;
     panel.className = `panel dynamic-panel ${categoryIndex === 0 ? 'active' : ''}`;
     panel.innerHTML = `
-      <div class="sub-panel">
-        ${category._items.map((item, itemIndex) => {
+      <div class="menu-panel-head">
+        <div>
+          <span>${esc(localized(category, 'name', 'nameDe'))}</span>
+          <strong>${itemCount}</strong>
+        </div>
+      </div>
+      <div class="menu-groups">
+        ${groups.map(group => `
+          <section class="menu-group">
+            <div class="menu-group-head">
+              <h3>${esc(localized(group, 'name', 'nameDe'))}</h3>
+              <span>${group.items.length} ${lang() === 'en' ? 'items' : lang() === 'fa' ? 'گزینه' : 'Artikel'}</span>
+            </div>
+            <div class="sub-panel">
+              ${group.items.map((item, itemIndex) => {
           const title = localized(item, 'name', 'nameDe');
           const desc = localized(item, 'description', 'descriptionDe');
-          const faLine = lang() === 'de' && item.nameFa ? `<span class="mfa">${esc(item.nameFa)}</span>` : '';
+          const secondaryLine = lang() === 'fa'
+            ? (item.nameDe ? `<span class="mfa mlatin">${esc(item.nameDe)}</span>` : '')
+            : (item.nameFa ? `<span class="mfa">${esc(item.nameFa)}</span>` : '');
           const image = item.imageUrl ? `<div class="mi-img"><img src="${esc(item.imageUrl)}" alt="${esc(item.nameDe)}" loading="lazy"></div>` : '';
           const badge = item.isSpecial ? '<span class="mi-badge">Empfehlung</span>' : '';
           return `
-            <article class="mi r d${(itemIndex % 4) + 1} search-item ${item.isSpecial ? 'special-item' : ''}"
+            <article class="mi search-item ${item.isSpecial ? 'special-item' : ''}"
+              style="--item-index:${itemIndex}"
               data-name="${esc(`${item.nameDe} ${item.nameFa || ''}`.toLowerCase())}"
               data-desc="${esc(`${item.descriptionDe || ''} ${item.descriptionFa || ''}`.toLowerCase())}">
               ${badge}
               ${image}
               <div class="mn">${esc(title)}</div>
-              ${faLine}
+              ${secondaryLine}
               <div class="md">${esc(desc)}</div>
               ${variantPriceLine(item)}
             </article>
           `;
-        }).join('')}
+              }).join('')}
+            </div>
+          </section>
+        `).join('')}
       </div>
+      <div class="menu-no-results" hidden>${lang() === 'fa' ? 'موردی پیدا نشد.' : lang() === 'en' ? 'No menu items found.' : 'Keine passenden Artikel gefunden.'}</div>
     `;
     inner.appendChild(panel);
   });
@@ -282,6 +331,15 @@ async function renderMenu() {
     inner.querySelectorAll('.search-item').forEach(item => {
       const hit = item.dataset.name.includes(q) || item.dataset.desc.includes(q);
       item.style.display = hit ? '' : 'none';
+    });
+    inner.querySelectorAll('.menu-group').forEach(group => {
+      const visible = [...group.querySelectorAll('.search-item')].some(item => item.style.display !== 'none');
+      group.style.display = visible ? '' : 'none';
+    });
+    inner.querySelectorAll('.dynamic-panel').forEach(panel => {
+      const visible = [...panel.querySelectorAll('.search-item')].some(item => item.style.display !== 'none');
+      const empty = panel.querySelector('.menu-no-results');
+      if (empty) empty.hidden = visible;
     });
   });
 }
