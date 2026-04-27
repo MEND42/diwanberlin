@@ -332,7 +332,7 @@ function TableDetailSheet({
                   </div>
                   {order.items?.map(item => (
                     <div key={item.id} className="flex justify-between text-xs text-ink2 py-0.5">
-                      <span>{item.quantity}× {item.menuItem?.nameDe}</span>
+                      <span>{item.quantity}× {item.menuItem?.nameDe}{item.variantLabel ? ` · ${item.variantLabel}` : ''}</span>
                       <span>€ {(Number(item.unitPrice) * item.quantity).toFixed(2)}</span>
                     </div>
                   ))}

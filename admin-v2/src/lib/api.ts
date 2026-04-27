@@ -97,6 +97,8 @@ export const menuApi = {
   deleteCategory: (id: string) => request<void>(`/menu/categories/${id}`, 'DELETE'),
   createItem:   (data: unknown) => request<import('@/types').MenuItem>('/menu/items', 'POST', data),
   updateItem:   (id: string, data: unknown) => request<import('@/types').MenuItem>(`/menu/items/${id}`, 'PUT', data),
+  replaceItemVariants: (id: string, variants: unknown[]) =>
+    request<import('@/types').MenuItemVariant[]>(`/menu/items/${id}/variants`, 'PUT', { variants }),
   deleteItem:   (id: string)    => request<void>(`/menu/items/${id}`, 'DELETE'),
   toggleItem:   (id: string, isAvailable: boolean) =>
     request<import('@/types').MenuItem>(`/menu/items/${id}/availability`, 'PATCH', { isAvailable }),

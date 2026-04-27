@@ -194,7 +194,7 @@ router.get('/:id/bill', async (req, res) => {
       where: { tableId: id, status: { not: 'PAID' } },
       include: {
         items: {
-          include: { menuItem: true }
+          include: { menuItem: true, variant: true }
         }
       }
     });
@@ -206,7 +206,9 @@ router.get('/:id/bill', async (req, res) => {
       grandTotal += Number(order.totalAmount);
       order.items.forEach(item => {
         allItems.push({
-          name: item.menuItem.nameDe,
+          name: (item.variantLabel || item.variant?.labelDe)
+            ? `${item.menuItem.nameDe} (${item.variantLabel || item.variant.labelDe})`
+            : item.menuItem.nameDe,
           quantity: item.quantity,
           unitPrice: item.unitPrice,
           subtotal: Number(item.unitPrice) * item.quantity

@@ -14,9 +14,38 @@ import type { MenuCategory, MenuItem } from '@/types';
 const ITEM_EMPTY = { 
   nameDe: '', nameFa: '', nameEn: '', 
   descriptionDe: '', descriptionFa: '', descriptionEn: '', 
-  price: 0, isAvailable: true, sortOrder: 0, imageUrl: '', categoryId: '' 
+  price: 0, isAvailable: true, sortOrder: 0, imageUrl: '', categoryId: '',
+  variantsText: '',
 };
 type ItemDraft = typeof ITEM_EMPTY;
+
+function variantsToText(item?: MenuItem | null) {
+  return (item?.variants ?? [])
+    .sort((a, b) => a.sortOrder - b.sortOrder)
+    .map(v => [v.labelDe, Number(v.price).toFixed(2), v.labelEn || '', v.labelFa || ''].join('|'))
+    .join('\n');
+}
+
+function parseVariants(text: string) {
+  return text
+    .split('\n')
+    .map((line, index) => {
+      const [labelDe, price, labelEn, labelFa] = line.split('|').map(part => part?.trim() ?? '');
+      if (!labelDe || !price) return null;
+      const value = Number(price.replace(',', '.'));
+      if (!Number.isFinite(value) || value < 0) return null;
+      return {
+        labelDe,
+        labelFa: labelFa || labelDe,
+        labelEn: labelEn || labelDe,
+        price: value,
+        sortOrder: index + 1,
+        isDefault: index === 0,
+        isActive: true,
+      };
+    })
+    .filter(Boolean);
+}
 
 function ItemForm({ value, onChange }: { value: ItemDraft; onChange: (v: ItemDraft) => void }) {
   const set = (k: keyof ItemDraft, v: unknown) => onChange({ ...value, [k]: v });
@@ -85,6 +114,19 @@ function ItemForm({ value, onChange }: { value: ItemDraft; onChange: (v: ItemDra
           <input type="number" min={0} value={value.sortOrder} onChange={e => set('sortOrder', Number(e.target.value))} className={inputCls} />
         </div>
       </div>
+      <div>
+        <label className={labelCls}>Größen & Preise</label>
+        <textarea
+          value={value.variantsText}
+          onChange={e => set('variantsText', e.target.value)}
+          rows={4}
+          className={cn(inputCls, 'resize-none font-mono text-xs leading-5')}
+          placeholder={'Klein|3.50|Small|کوچک\nMittel|4.20|Medium|متوسط\nGroß|4.90|Large|بزرگ'}
+        />
+        <p className="mt-1 text-[10px] text-ink2/70">
+          Optional. Eine Variante pro Zeile: Deutsch|Preis|English|Persisch. Wenn Varianten vorhanden sind, werden diese Preise beim QR- und Service-Bestellen verwendet.
+        </p>
+      </div>
       <label className="flex items-center gap-3 cursor-pointer">
         <div
           onClick={() => set('isAvailable', !value.isAvailable)}
@@ -132,7 +174,8 @@ export function Menu() {
 
   const saveItem = useMutation({
     mutationFn: async () => {
-      const payload = { ...itemForm, categoryId: activeCat?.id ?? '' };
+      const { variantsText, ...cleanForm } = itemForm;
+      const payload = { ...cleanForm, categoryId: activeCat?.id ?? '', variants: parseVariants(variantsText) };
       const saved = editItem
         ? menuApi.updateItem(editItem.id, payload)
         : menuApi.createItem(payload);
@@ -227,7 +270,8 @@ export function Menu() {
       nameEn: item.nameEn ?? '',
       descriptionFa: item.descriptionFa ?? '',
       descriptionEn: item.descriptionEn ?? '',
-      imageUrl: item.imageUrl ?? '' 
+      imageUrl: item.imageUrl ?? '',
+      variantsText: variantsToText(item),
     });
     setItemSheet(true);
   }
@@ -509,8 +553,21 @@ export function Menu() {
                           {item.descriptionDe && (
                             <p className="text-[11px] text-ink2 truncate mt-0.5">{item.descriptionDe}</p>
                           )}
+                          {item.variants && item.variants.length > 0 && (
+                            <div className="mt-2 flex flex-wrap gap-1">
+                              {item.variants
+                                .sort((a, b) => a.sortOrder - b.sortOrder)
+                                .map(variant => (
+                                  <span key={variant.id} className="rounded-full bg-diwan-gold/10 px-2 py-0.5 text-[10px] font-semibold text-diwan-gold">
+                                    {variant.labelDe} · {formatEur(variant.price)}
+                                  </span>
+                                ))}
+                            </div>
+                          )}
                         </div>
-                        <p className="text-sm font-bold text-diwan-gold flex-shrink-0">{formatEur(item.price)}</p>
+                        <p className="text-sm font-bold text-diwan-gold flex-shrink-0">
+                          {item.variants?.length ? `${item.variants.length} Größen` : formatEur(item.price)}
+                        </p>
 
                         <div className="flex items-center gap-1 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button

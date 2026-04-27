@@ -10,7 +10,7 @@ async function findOrder(id) {
     where: { id },
     include: {
       table: true,
-      items: { include: { menuItem: true } }
+      items: { include: { menuItem: true, variant: true } }
     }
   });
 }
@@ -21,7 +21,7 @@ async function setOrderStatus(id, status) {
     data: { status },
     include: {
       table: true,
-      items: { include: { menuItem: true } }
+      items: { include: { menuItem: true, variant: true } }
     }
   });
 
@@ -49,7 +49,7 @@ router.get('/', async (req, res) => {
       orderBy: { createdAt: 'desc' },
       include: {
         table: true,
-        items: { include: { menuItem: true } }
+        items: { include: { menuItem: true, variant: true } }
       }
     });
     res.json(orders);
@@ -66,7 +66,7 @@ router.get('/table/:tableId', async (req, res) => {
       orderBy: { createdAt: 'desc' },
       include: {
         table: true,
-        items: { include: { menuItem: true } }
+        items: { include: { menuItem: true, variant: true } }
       }
     });
     res.json(orders);
@@ -80,11 +80,51 @@ router.post('/', async (req, res) => {
   try {
     const { tableId, items, notes } = req.body;
     
-    // Calculate total
-    let totalAmount = 0;
-    for (const item of items) {
-      totalAmount += item.unitPrice * item.quantity;
+    if (!Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ error: 'No order items provided' });
     }
+
+    const menuItemIds = [...new Set(items.map(item => item.menuItemId).filter(Boolean))];
+    const menuItems = await prisma.menuItem.findMany({
+      where: { id: { in: menuItemIds }, isAvailable: true },
+      include: {
+        variants: {
+          where: { isActive: true },
+          orderBy: { sortOrder: 'asc' },
+        },
+      },
+    });
+    const menuItemMap = Object.fromEntries(menuItems.map(item => [item.id, item]));
+
+    let totalAmount = 0;
+    const orderItems = items.map(item => {
+      const menuItem = menuItemMap[item.menuItemId];
+      if (!menuItem) {
+        throw Object.assign(new Error('Menu item is not available'), { statusCode: 400 });
+      }
+      let unitPriceDecimal = menuItem.price;
+      let variantId = null;
+      let variantLabel = null;
+      if (item.variantId) {
+        const variant = menuItem.variants.find(v => v.id === item.variantId);
+        if (!variant) {
+          throw Object.assign(new Error('Menu item variant is not available'), { statusCode: 400 });
+        }
+        unitPriceDecimal = variant.price;
+        variantId = variant.id;
+        variantLabel = variant.labelDe;
+      }
+      const quantity = Math.max(1, Math.min(20, Number(item.quantity) || 1));
+      totalAmount += Number(unitPriceDecimal) * quantity;
+      return {
+        menuItemId: item.menuItemId,
+        variantId,
+        variantLabel,
+        quantity,
+        unitPrice: unitPriceDecimal,
+        notes: item.notes,
+      };
+    });
 
     const order = await prisma.order.create({
       data: {
@@ -92,17 +132,12 @@ router.post('/', async (req, res) => {
         notes,
         totalAmount,
         items: {
-          create: items.map(item => ({
-            menuItemId: item.menuItemId,
-            quantity: item.quantity,
-            unitPrice: item.unitPrice,
-            notes: item.notes
-          }))
+          create: orderItems
         }
       },
       include: {
         table: true,
-        items: { include: { menuItem: true } }
+        items: { include: { menuItem: true, variant: true } }
       }
     });
 
@@ -124,7 +159,7 @@ router.post('/', async (req, res) => {
     res.status(201).json(order);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Failed to create order' });
+    res.status(error.statusCode || 500).json({ error: error.message || 'Failed to create order' });
   }
 });
 

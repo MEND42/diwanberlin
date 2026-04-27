@@ -41,7 +41,24 @@ model MenuItem {
   allergens       String?
   isAvailable     Boolean      @default(true)
   sortOrder       Int          @default(0)
+  variants        MenuItemVariant[]
   orderItems      OrderItem[]
+}
+
+model MenuItemVariant {
+  id          String    @id @default(uuid()) @db.Uuid
+  menuItemId  String    @db.Uuid
+  menuItem    MenuItem  @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+  labelDe     String
+  labelFa     String?
+  labelEn     String?
+  price       Decimal   @db.Decimal(10, 2)
+  sortOrder   Int       @default(0)
+  isDefault   Boolean   @default(false)
+  isActive    Boolean   @default(true)
+  orderItems  OrderItem[]
+
+  @@index([menuItemId])
 }
 
 model Table {
@@ -144,9 +161,14 @@ model OrderItem {
   order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   menuItemId String   @db.Uuid
   menuItem   MenuItem @relation(fields: [menuItemId], references: [id])
+  variantId  String?  @db.Uuid
+  variant    MenuItemVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+  variantLabel String?
   quantity   Int
   unitPrice  Decimal  @db.Decimal(10, 2)
   notes      String?
+
+  @@index([variantId])
 }
 
 model AdminUser {

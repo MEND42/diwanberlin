@@ -6,7 +6,7 @@ import { tablesApi, ordersApi, menuApi } from '@/lib/api';
 import { cn, springs, haptic, formatEur } from '@/lib/utils';
 import { BottomSheet } from '@/components/primitives/BottomSheet';
 import { HoldButton } from '@/components/primitives/HoldButton';
-import type { Table, Order, MenuCategory } from '@/types';
+import type { Table, Order, MenuCategory, MenuItem, MenuItemVariant } from '@/types';
 
 const STATUS_CONFIG: Record<Table['status'], { ring: string; glow?: string; label: string; textColor: string }> = {
   AVAILABLE: { ring: 'ring-2 ring-green-300/60',   label: 'Frei',       textColor: 'text-green-600' },
@@ -54,7 +54,15 @@ function TableTile({ table, called, onTap }: { table: Table; called?: boolean; o
   );
 }
 
-interface OrderDraft { menuItemId: string; nameDe: string; price: number; qty: number; }
+interface OrderDraft {
+  key: string;
+  menuItemId: string;
+  variantId?: string;
+  variantLabel?: string;
+  nameDe: string;
+  price: number;
+  qty: number;
+}
 
 function TableSheet({ table, onClose }: { table: Table | null; onClose: () => void }) {
   const qc = useQueryClient();
@@ -84,18 +92,31 @@ function TableSheet({ table, onClose }: { table: Table | null; onClose: () => vo
   const draftTotal = draft.reduce((s, d) => s + d.price * d.qty, 0);
   const currentCat = cats.find(c => c.id === catId) ?? cats[0];
 
-  function addItem(id: string, name: string, price: number) {
+  function lineKey(itemId: string, variantId?: string) {
+    return `${itemId}:${variantId || 'base'}`;
+  }
+
+  function addItem(item: MenuItem, variant?: MenuItemVariant) {
     haptic('tap');
+    const key = lineKey(item.id, variant?.id);
     setDraft(prev => {
-      const existing = prev.find(d => d.menuItemId === id);
-      if (existing) return prev.map(d => d.menuItemId === id ? { ...d, qty: d.qty + 1 } : d);
-      return [...prev, { menuItemId: id, nameDe: name, price, qty: 1 }];
+      const existing = prev.find(d => d.key === key);
+      if (existing) return prev.map(d => d.key === key ? { ...d, qty: d.qty + 1 } : d);
+      return [...prev, {
+        key,
+        menuItemId: item.id,
+        variantId: variant?.id,
+        variantLabel: variant?.labelDe,
+        nameDe: variant ? `${item.nameDe} · ${variant.labelDe}` : item.nameDe,
+        price: Number(variant?.price ?? item.price),
+        qty: 1,
+      }];
     });
   }
 
-  function removeItem(id: string) {
+  function removeItem(key: string) {
     setDraft(prev => prev
-      .map(d => d.menuItemId === id ? { ...d, qty: d.qty - 1 } : d)
+      .map(d => d.key === key ? { ...d, qty: d.qty - 1 } : d)
       .filter(d => d.qty > 0),
     );
   }
@@ -106,7 +127,7 @@ function TableSheet({ table, onClose }: { table: Table | null; onClose: () => vo
     try {
       await ordersApi.create({
         tableId: table.id,
-        items: draft.map(d => ({ menuItemId: d.menuItemId, quantity: d.qty, unitPrice: d.price })),
+        items: draft.map(d => ({ menuItemId: d.menuItemId, variantId: d.variantId, quantity: d.qty, unitPrice: d.price })),
       });
       haptic('success');
       setDraft([]);
@@ -183,7 +204,7 @@ function TableSheet({ table, onClose }: { table: Table | null; onClose: () => vo
                   </div>
                   {order.items?.map(item => (
                     <div key={item.id} className="flex justify-between text-xs text-ink2 py-0.5">
-                      <span>{item.quantity}× {item.menuItem?.nameDe}</span>
+                      <span>{item.quantity}× {item.menuItem?.nameDe}{item.variantLabel ? ` · ${item.variantLabel}` : ''}</span>
                       <span>{formatEur(Number(item.unitPrice) * item.quantity)}</span>
                     </div>
                   ))}
@@ -243,30 +264,56 @@ function TableSheet({ table, onClose }: { table: Table | null; onClose: () => vo
           {/* Items */}
           <div className="px-5 mt-3 space-y-1.5 max-h-52 overflow-y-auto">
             {currentCat?.items.filter(i => i.isAvailable).map(item => {
-              const inDraft = draft.find(d => d.menuItemId === item.id);
+              const variants = (item.variants ?? []).filter(v => v.isActive !== false);
+              const baseKey = lineKey(item.id);
+              const inDraft = draft.find(d => d.key === baseKey);
               return (
-                <div key={item.id} className="flex items-center justify-between bg-white rounded-xl px-3.5 py-2.5 border border-paper2">
+                <div key={item.id} className="bg-white rounded-xl px-3.5 py-2.5 border border-paper2">
+                  <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-ink truncate">{item.nameDe}</p>
-                    <p className="text-xs text-diwan-gold">{formatEur(item.price)}</p>
+                    <p className="text-xs text-diwan-gold">
+                      {variants.length ? `${variants.length} Größen` : formatEur(item.price)}
+                    </p>
                   </div>
-                  <div className="flex items-center gap-2 ml-3">
-                    {inDraft ? (
+                    {variants.length === 0 && (
+                    <div className="flex items-center gap-2 ml-3">
+                      {inDraft ? (
                       <>
-                        <button onClick={() => removeItem(item.id)}
+                        <button onClick={() => removeItem(baseKey)}
                           className="w-6 h-6 rounded-full bg-paper2 text-ink text-sm flex items-center justify-center font-bold">−</button>
                         <span className="text-sm font-bold text-ink w-4 text-center">{inDraft.qty}</span>
-                        <button onClick={() => addItem(item.id, item.nameDe, Number(item.price))}
+                        <button onClick={() => addItem(item)}
                           className="w-6 h-6 rounded-full bg-diwan-gold text-diwan-bg text-sm flex items-center justify-center font-bold">+</button>
                       </>
                     ) : (
-                      <button onClick={() => addItem(item.id, item.nameDe, Number(item.price))}
+                      <button onClick={() => addItem(item)}
                         className="w-7 h-7 rounded-full bg-diwan-gold/15 text-diwan-gold flex items-center justify-center hover:bg-diwan-gold hover:text-diwan-bg transition-colors">
                         <Plus size={14} />
                       </button>
                     )}
+                    </div>
+                    )}
                   </div>
-                </div>
+                  {variants.length > 0 && (
+                    <div className="mt-2 grid grid-cols-2 gap-1.5">
+                      {variants.map(variant => {
+                        const key = lineKey(item.id, variant.id);
+                        const selected = draft.find(d => d.key === key);
+                        return (
+                          <button
+                            key={variant.id}
+                            onClick={() => addItem(item, variant)}
+                            className="flex items-center justify-between rounded-lg border border-diwan-gold/15 bg-paper px-2.5 py-2 text-left text-xs text-ink transition-colors hover:border-diwan-gold/40"
+                          >
+                            <span className="font-semibold">{variant.labelDe}</span>
+                            <span className="text-diwan-gold">{selected ? `${selected.qty}× ` : ''}{formatEur(variant.price)}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                  </div>
               );
             })}
           </div>

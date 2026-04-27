@@ -17,13 +17,25 @@ async function getActiveMenu() {
           include: {
             items: {
               where: { isAvailable: true },
-              orderBy: { sortOrder: 'asc' }
+              orderBy: { sortOrder: 'asc' },
+              include: {
+                variants: {
+                  where: { isActive: true },
+                  orderBy: { sortOrder: 'asc' },
+                },
+              },
             }
           }
         },
         items: {
           where: { isAvailable: true },
-          orderBy: { sortOrder: 'asc' }
+          orderBy: { sortOrder: 'asc' },
+          include: {
+            variants: {
+              where: { isActive: true },
+              orderBy: { sortOrder: 'asc' },
+            },
+          },
         }
       }
     });
@@ -72,7 +84,10 @@ router.get('/pdf', async (req, res) => {
       doc.moveDown(0.5);
 
       parent.items.forEach(item => {
-        doc.fontSize(12).fillColor('#2a1d10').text(`${item.nameDe} - ${Number(item.price).toFixed(2)}€`);
+        const price = item.variants?.length
+          ? item.variants.map(v => `${v.labelDe} ${Number(v.price).toFixed(2)}€`).join(' · ')
+          : `${Number(item.price).toFixed(2)}€`;
+        doc.fontSize(12).fillColor('#2a1d10').text(`${item.nameDe} - ${price}`);
         if (item.descriptionDe) doc.fontSize(10).fillColor('grey').text(item.descriptionDe);
         doc.moveDown(0.5);
       });
@@ -82,7 +97,10 @@ router.get('/pdf', async (req, res) => {
           doc.fontSize(14).fillColor('#2a1d10').text(sub.nameDe);
           doc.moveDown(0.5);
           sub.items.forEach(item => {
-            doc.fontSize(12).fillColor('#2a1d10').text(`${item.nameDe} - ${Number(item.price).toFixed(2)}€`);
+            const price = item.variants?.length
+              ? item.variants.map(v => `${v.labelDe} ${Number(v.price).toFixed(2)}€`).join(' · ')
+              : `${Number(item.price).toFixed(2)}€`;
+            doc.fontSize(12).fillColor('#2a1d10').text(`${item.nameDe} - ${price}`);
             if (item.descriptionDe) doc.fontSize(10).fillColor('grey').text(item.descriptionDe);
             doc.moveDown(0.5);
           });

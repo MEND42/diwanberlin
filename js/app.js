@@ -29,6 +29,18 @@ function localized(record, field, fallbackField) {
   return record?.[`${field}${suffix}`] || record?.[fallbackField] || record?.[`${field}De`] || '';
 }
 
+function variantPriceLine(item) {
+  const variants = Array.isArray(item.variants)
+    ? item.variants.filter(variant => variant.isActive !== false).sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
+    : [];
+  if (!variants.length) return `<div class="mp">${eur(item.price)}</div>`;
+  return `
+    <div class="mp mi-variants">
+      ${variants.map(variant => `<span>${esc(localized(variant, 'label', 'labelDe'))} · ${eur(variant.price)}</span>`).join('')}
+    </div>
+  `;
+}
+
 const PUBLIC_MENU_FALLBACK = [
   {
     slug: 'drinks',
@@ -247,7 +259,7 @@ async function renderMenu() {
               <div class="mn">${esc(title)}</div>
               ${faLine}
               <div class="md">${esc(desc)}</div>
-              <div class="mp">${eur(item.price)}</div>
+              ${variantPriceLine(item)}
             </article>
           `;
         }).join('')}

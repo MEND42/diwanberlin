@@ -49,6 +49,19 @@ export interface MenuItem {
   isAvailable: boolean;
   sortOrder: number;
   imageUrl?: string;
+  variants?: MenuItemVariant[];
+}
+
+export interface MenuItemVariant {
+  id: string;
+  menuItemId: string;
+  labelDe: string;
+  labelFa?: string;
+  labelEn?: string;
+  price: number;
+  sortOrder: number;
+  isDefault: boolean;
+  isActive: boolean;
 }
 
 export interface MenuCategory {
@@ -71,6 +84,9 @@ export interface OrderItem {
   id: string;
   menuItemId: string;
   menuItem: MenuItem;
+  variantId?: string;
+  variantLabel?: string;
+  variant?: MenuItemVariant;
   quantity: number;
   unitPrice: number;
   notes?: string;

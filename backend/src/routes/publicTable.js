@@ -37,13 +37,25 @@ async function loadPublicMenu() {
         include: {
           items: {
             where: { isAvailable: true },
-            orderBy: { sortOrder: 'asc' }
+            orderBy: { sortOrder: 'asc' },
+            include: {
+              variants: {
+                where: { isActive: true },
+                orderBy: { sortOrder: 'asc' },
+              },
+            },
           }
         }
       },
       items: {
         where: { isAvailable: true },
-        orderBy: { sortOrder: 'asc' }
+        orderBy: { sortOrder: 'asc' },
+        include: {
+          variants: {
+            where: { isActive: true },
+            orderBy: { sortOrder: 'asc' },
+          },
+        },
       }
     }
   });
@@ -127,7 +139,7 @@ async function listActiveOrders(req, res) {
       orderBy: { createdAt: 'desc' },
       include: {
         items: {
-          include: { menuItem: { select: { nameDe: true, nameFa: true } } },
+          include: { menuItem: { select: { nameDe: true, nameFa: true } }, variant: true },
         },
       },
     });
@@ -141,6 +153,7 @@ async function listActiveOrders(req, res) {
       items: o.items.map(i => ({
         nameDe: i.menuItem.nameDe,
         nameFa: i.menuItem.nameFa,
+        variantLabel: i.variantLabel || i.variant?.labelDe || null,
         quantity: i.quantity,
         unitPrice: Number(i.unitPrice),
       })),
@@ -164,7 +177,7 @@ router.get('/order/:token/status/:orderId', async (req, res) => {
       where: { id: req.params.orderId, tableId: table.id },
       include: {
         items: {
-          include: { menuItem: { select: { nameDe: true, nameFa: true } } },
+          include: { menuItem: { select: { nameDe: true, nameFa: true } }, variant: true },
         },
       },
     });
@@ -179,6 +192,7 @@ router.get('/order/:token/status/:orderId', async (req, res) => {
       items: order.items.map(i => ({
         nameDe: i.menuItem.nameDe,
         nameFa: i.menuItem.nameFa,
+        variantLabel: i.variantLabel || i.variant?.labelDe || null,
         quantity: i.quantity,
         unitPrice: Number(i.unitPrice),
       })),
@@ -222,6 +236,12 @@ async function placeOrder(req, res) {
     const menuItemIds = [...new Set(items.map(i => i.menuItemId))];
     const menuItems = await prisma.menuItem.findMany({
       where: { id: { in: menuItemIds }, isAvailable: true },
+      include: {
+        variants: {
+          where: { isActive: true },
+          orderBy: { sortOrder: 'asc' },
+        },
+      },
     });
     const menuItemMap = Object.fromEntries(menuItems.map(m => [m.id, m]));
 
@@ -235,12 +255,26 @@ async function placeOrder(req, res) {
     let totalAmount = 0;
     const orderItems = items.map(item => {
       const menuItem = menuItemMap[item.menuItemId];
-      const unitPrice = Number(menuItem.price);
+      let unitPriceDecimal = menuItem.price;
+      let variantId = null;
+      let variantLabel = null;
+      if (item.variantId) {
+        const variant = menuItem.variants.find(v => v.id === item.variantId);
+        if (!variant) {
+          throw Object.assign(new Error('Ausgewählte Größe ist nicht verfügbar'), { statusCode: 400 });
+        }
+        unitPriceDecimal = variant.price;
+        variantId = variant.id;
+        variantLabel = variant.labelDe;
+      }
+      const unitPrice = Number(unitPriceDecimal);
       totalAmount += unitPrice * item.quantity;
       return {
         menuItemId: item.menuItemId,
+        variantId,
+        variantLabel,
         quantity: item.quantity,
-        unitPrice: menuItem.price,
+        unitPrice: unitPriceDecimal,
         notes: typeof item.notes === 'string' ? item.notes.slice(0, 200) : null,
       };
     });
@@ -254,7 +288,7 @@ async function placeOrder(req, res) {
       },
       include: {
         table: true,
-        items: { include: { menuItem: true } },
+        items: { include: { menuItem: true, variant: true } },
       },
     });
 
@@ -282,13 +316,14 @@ async function placeOrder(req, res) {
       items: order.items.map(i => ({
         nameDe: i.menuItem.nameDe,
         nameFa: i.menuItem.nameFa,
+        variantLabel: i.variantLabel || i.variant?.labelDe || null,
         quantity: i.quantity,
         unitPrice: Number(i.unitPrice),
       })),
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Bestellung konnte nicht aufgenommen werden' });
+    res.status(error.statusCode || 500).json({ error: error.message || 'Bestellung konnte nicht aufgenommen werden' });
   }
 }
 

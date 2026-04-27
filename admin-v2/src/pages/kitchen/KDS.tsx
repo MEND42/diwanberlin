@@ -77,7 +77,9 @@ function TicketCard({ order, onAdvance }: { order: Order; onAdvance: () => void 
       <div className="space-y-1.5">
         {order.items?.map(item => (
           <div key={item.id} className="flex items-baseline justify-between gap-2">
-            <span className="text-[13px] text-kds-text/80 leading-tight flex-1">{item.menuItem?.nameDe}</span>
+            <span className="text-[13px] text-kds-text/80 leading-tight flex-1">
+              {item.menuItem?.nameDe}{item.variantLabel ? ` · ${item.variantLabel}` : ''}
+            </span>
             <span className="text-base font-bold text-kds-text flex-shrink-0">×{item.quantity}</span>
           </div>
         ))}

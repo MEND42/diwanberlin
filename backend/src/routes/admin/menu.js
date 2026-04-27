@@ -9,6 +9,7 @@ const multer = require('multer');
 const sharp = require('sharp');
 const path = require('path');
 const fs = require('fs');
+const { randomUUID } = require('crypto');
 const { ensureDefaultMenu, seedDefaultMenu } = require('../../utils/defaultMenu');
 
 const upload = multer({ storage: multer.memoryStorage() });
@@ -48,6 +49,44 @@ function slugify(value) {
     .replace(/^-+|-+$/g, '') || 'category';
 }
 
+function itemInclude() {
+  return {
+    variants: {
+      orderBy: { sortOrder: 'asc' },
+    },
+  };
+}
+
+function normalizeVariant(input, index) {
+  const labelDe = String(input?.labelDe || input?.label || '').trim();
+  const price = Number(input?.price);
+  if (!labelDe || !Number.isFinite(price) || price < 0) return null;
+  return {
+    labelDe,
+    labelFa: input?.labelFa ? String(input.labelFa).trim() : labelDe,
+    labelEn: input?.labelEn ? String(input.labelEn).trim() : labelDe,
+    price,
+    sortOrder: Number.isFinite(Number(input?.sortOrder)) ? Number(input.sortOrder) : index + 1,
+    isDefault: Boolean(input?.isDefault) || index === 0,
+    isActive: input?.isActive !== false,
+  };
+}
+
+async function replaceItemVariants(itemId, variants = []) {
+  if (!Array.isArray(variants)) return [];
+  const rows = variants.map(normalizeVariant).filter(Boolean);
+  await prisma.menuItemVariant.deleteMany({ where: { menuItemId: itemId } });
+  if (rows.length > 0) {
+    await prisma.menuItemVariant.createMany({
+      data: rows.map(row => ({ id: randomUUID(), ...row, menuItemId: itemId })),
+    });
+  }
+  return prisma.menuItemVariant.findMany({
+    where: { menuItemId: itemId },
+    orderBy: { sortOrder: 'asc' },
+  });
+}
+
 async function uniqueCategorySlug(base) {
   const clean = slugify(base);
   let candidate = clean;
@@ -67,7 +106,8 @@ router.get('/', async (req, res) => {
       orderBy: { sortOrder: 'asc' },
       include: {
         items: {
-          orderBy: { sortOrder: 'asc' }
+          orderBy: { sortOrder: 'asc' },
+          include: itemInclude(),
         }
       }
     });
@@ -84,7 +124,8 @@ router.get('/categories', async (req, res) => {
       orderBy: { sortOrder: 'asc' },
       include: {
         items: {
-          orderBy: { sortOrder: 'asc' }
+          orderBy: { sortOrder: 'asc' },
+          include: itemInclude(),
         }
       }
     });
@@ -181,9 +222,14 @@ router.delete('/categories/:id', managers, async (req, res) => {
 // POST new item
 router.post('/items', managers, async (req, res) => {
   try {
+    const { variants, ...body } = req.body;
     const item = await prisma.menuItem.create({
-      data: req.body
+      data: body,
+      include: itemInclude(),
     });
+    if (Array.isArray(variants)) {
+      item.variants = await replaceItemVariants(item.id, variants);
+    }
     touchSitemap();
     emitMenuUpdated(item);
     res.status(201).json(item);
@@ -196,10 +242,15 @@ router.post('/items', managers, async (req, res) => {
 router.patch('/items/:id', managers, async (req, res) => {
   try {
     const { id } = req.params;
+    const { variants, ...body } = req.body;
     const item = await prisma.menuItem.update({
       where: { id },
-      data: req.body
+      data: body,
+      include: itemInclude(),
     });
+    if (Array.isArray(variants)) {
+      item.variants = await replaceItemVariants(id, variants);
+    }
     touchSitemap();
     emitMenuUpdated(item);
     res.json(item);
@@ -211,10 +262,15 @@ router.patch('/items/:id', managers, async (req, res) => {
 router.put('/items/:id', managers, async (req, res) => {
   try {
     const { id } = req.params;
+    const { variants, ...body } = req.body;
     const item = await prisma.menuItem.update({
       where: { id },
-      data: req.body
+      data: body,
+      include: itemInclude(),
     });
+    if (Array.isArray(variants)) {
+      item.variants = await replaceItemVariants(id, variants);
+    }
     touchSitemap();
     emitMenuUpdated(item);
     res.json(item);
@@ -227,13 +283,25 @@ router.patch('/items/:id/availability', managers, async (req, res) => {
   try {
     const item = await prisma.menuItem.update({
       where: { id: req.params.id },
-      data: { isAvailable: Boolean(req.body.isAvailable) }
+      data: { isAvailable: Boolean(req.body.isAvailable) },
+      include: itemInclude(),
     });
     touchSitemap();
     emitMenuUpdated(item);
     res.json(item);
   } catch (error) {
     res.status(500).json({ error: 'Failed to update item availability' });
+  }
+});
+
+router.put('/items/:id/variants', managers, async (req, res) => {
+  try {
+    const variants = await replaceItemVariants(req.params.id, req.body?.variants ?? []);
+    touchSitemap();
+    emitMenuUpdated({ id: req.params.id, variantsUpdated: true });
+    res.json(variants);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update item variants' });
   }
 });
 
