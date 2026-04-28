@@ -13,7 +13,11 @@
       "Bash(git push *)",
       "Bash(ssh root@72.62.46.132 ' *)",
       "Bash(ping -c 3 72.62.46.132)",
-      "Bash(git status *)"
+      "Bash(git status *)",
+      "Bash(ffprobe -v error -show_entries format_tags=major_brand,compatible_brands -show_entries stream=has_b_frames -show_packets -select_streams v:0 -read_intervals \"%+#5\" /Users/alirezahussaini/Documents/diwanberlin/uploads/hero-optimized.mp4)",
+      "Bash(python3 -c ' *)",
+      "Bash(ffprobe -v quiet -show_entries format=duration,size,bit_rate -show_entries stream=width,height,r_frame_rate,nb_frames -of json /Users/alirezahussaini/Documents/diwanberlin/uploads/hero.mp4 echo \"---\" ls -la /Users/alirezahussaini/Documents/diwanberlin/uploads/animated_images/)",
+      "Bash(ffprobe -v quiet -show_entries stream=codec_name,profile,width,height,r_frame_rate -of json /Users/alirezahussaini/Documents/diwanberlin/uploads/hero-mobile.mp4 echo \"---\" grep -n \"closing-quote\\\\b\\\\|.closing-quote\" /Users/alirezahussaini/Documents/diwanberlin/index.html)"
     ]
   }
 }

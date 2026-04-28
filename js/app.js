@@ -581,30 +581,10 @@ function initHeroMotion() {
     p.then(() => hidePlayBtn()).catch(() => showPlayBtn());
   }
 
-  function selectHeroVideo() {
+  function ensurePlaying() {
     if (!video) return;
-    const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-    const ect = conn?.effectiveType;
-    if (conn?.saveData || ect === 'slow-2g' || ect === '2g') return;
-    const mobile = window.matchMedia('(max-width: 700px)').matches;
-    const nextSrc = (mobile || ect === '3g') ? video.dataset.mobileSrc : video.dataset.desktopSrc;
-    if (!nextSrc) return;
-    const filename = nextSrc.split('/').pop();
-    const alreadyLoaded = video.currentSrc && video.currentSrc.endsWith(filename);
-    if (alreadyLoaded) {
-      // Native autoplay handles it — only intervene if still paused after data arrives
-      if (!video.paused) return;
-      if (video.readyState >= 3) { attemptPlay(); return; }
-      video.addEventListener('canplay', attemptPlay, { once: true });
-      return;
-    }
-    // Switch source (e.g. mobile needs lighter clip)
-    video.classList.remove('is-ready');
-    video.src = nextSrc;
-    video.muted = true;
-    video.playsInline = true;
-    // Setting src triggers load automatically — never call video.load() here,
-    // it would abort the in-flight request and break the play promise chain.
+    if (!video.paused && !video.ended) return;
+    if (video.readyState >= 2) { attemptPlay(); return; }
     video.addEventListener('canplay', attemptPlay, { once: true });
   }
 
@@ -618,6 +598,11 @@ function initHeroMotion() {
     hidePlayBtn();
   });
 
+  // Loop fallback for browsers that drop the loop attribute under autoplay policy
+  video?.addEventListener('ended', () => {
+    try { video.currentTime = 0; video.play().catch(() => {}); } catch (_) {}
+  });
+
   if (playBtn) {
     playBtn.addEventListener('click', () => {
       video.muted = true;
@@ -625,8 +610,7 @@ function initHeroMotion() {
     });
   }
 
-  selectHeroVideo();
-  window.addEventListener('resize', selectHeroVideo, { passive: true });
+  ensurePlaying();
 
   // Parallax scroll effect — skipped for reduced-motion users
   if (reduceMotion) return;
