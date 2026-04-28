@@ -433,6 +433,25 @@ h2 em{font-style:italic;color:var(--gold2)}
 .event-registration-status{min-height:20px;color:var(--gold);font-size:13px}.event-registration-status.error{color:#ffb4a8}
 .event-success{display:grid;gap:8px;color:var(--cream);background:rgba(200,146,42,.09);border:1px solid rgba(200,146,42,.22);border-radius:18px;padding:24px}.event-success span{color:var(--gold)}
 
+/* ── JOBS ── */
+#jobs{background:var(--bg)}
+.jobs-top{display:grid;grid-template-columns:minmax(0,0.9fr) minmax(0,1.1fr);gap:64px;align-items:start}
+.job-card{border:1px solid rgba(200,146,42,.16);background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.018));padding:38px;border-radius:14px}
+.job-kicker{display:inline-flex;align-items:center;min-height:32px;border:1px solid rgba(200,146,42,.24);border-radius:999px;background:rgba(200,146,42,.08);color:var(--gold2);padding:7px 12px;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;margin-bottom:20px}
+.job-card h3{font-family:'Playfair Display',serif;font-size:clamp(26px,3vw,38px);font-weight:400;line-height:1.2;color:var(--cream);margin-bottom:18px}
+.job-card p{font-size:15px;line-height:1.85;color:var(--dim);margin-bottom:26px}
+.job-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-top:4px}
+.job-block{background:rgba(24,14,4,.52);border:1px solid rgba(200,146,42,.12);border-radius:12px;padding:22px}
+.job-block h4{font-family:'Playfair Display',serif;font-size:19px;font-weight:400;color:var(--cream);margin-bottom:14px}
+.job-block ul{display:grid;gap:10px;list-style:none}
+.job-block li{position:relative;padding-left:18px;font-size:14px;line-height:1.65;color:var(--dim)}
+.job-block li::before{content:'';position:absolute;left:0;top:.78em;width:6px;height:6px;border-radius:50%;background:var(--gold)}
+.job-apply{margin-top:26px;padding:24px;border-left:3px solid var(--gold);background:rgba(200,146,42,.07)}
+.job-apply strong{display:block;font-family:'Playfair Display',serif;font-size:21px;font-weight:400;color:var(--cream);margin-bottom:12px}
+.job-contact{display:flex;flex-wrap:wrap;gap:12px;margin-top:18px}
+.job-contact a{display:inline-flex;align-items:center;justify-content:center;min-height:42px;border:1px solid rgba(200,146,42,.35);border-radius:999px;color:var(--cream);padding:9px 15px;text-decoration:none;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;transition:background .2s,border-color .2s,color .2s}
+.job-contact a:hover{background:rgba(200,146,42,.14);border-color:var(--gold);color:var(--gold2)}
+
 /* ── LOCATION ── */
 #location{background:var(--bg2)}
 .loc-g{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:start;margin-top:56px}
@@ -692,6 +711,17 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
   .event-modal__desc{font-size:14px}
   .event-modal__meta{gap:6px}
   .event-modal__meta span{font-size:11px;padding:5px 8px}
+
+  /* Jobs */
+  .jobs-top{gap:24px}
+  .job-card{padding:24px 18px}
+  .job-card h3{font-size:24px}
+  .job-card p{font-size:14px;margin-bottom:20px}
+  .job-grid{grid-template-columns:1fr;gap:12px}
+  .job-block{padding:18px}
+  .job-block h4{font-size:18px}
+  .job-block li{font-size:13px}
+  .job-contact a{width:100%}
   
   /* Counters */
   .feat .r.d4 div:first-child{font-size:48px}
@@ -714,6 +744,7 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
   .cup-scene{width:220px;height:280px;transform:scale(.7)}
   .inner{padding:60px 24px}
   .about-g,.ev-top,.loc-g,.res-g{grid-template-columns:1fr;gap:32px}
+  .jobs-top{grid-template-columns:1fr}
   .feat-g,.panel.active{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
   .cp-grid{grid-template-columns:1fr}
   .fi{grid-template-columns:1fr 1fr;text-align:center;gap:20px}.flinks{justify-content:center}
@@ -875,6 +906,7 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
     <li><a href="#about" data-i18n="navAbout">Über uns</a></li>
     <li><a href="#menu" data-i18n="navMenu">Speisekarte</a></li>
     <li><a href="#events" data-i18n="navEvents">Veranstaltungen</a></li>
+    <li><a href="#jobs" data-i18n="navJobs">Jobs</a></li>
     <li><a href="#location" data-i18n="navLocation">Lage</a></li>
   </ul>
   <div style="display: flex; gap: 12px; align-items: center;">
@@ -900,6 +932,7 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
     <li><a href="#about" data-i18n="navAbout">Über uns</a></li>
     <li><a href="#menu" data-i18n="navMenu">Speisekarte</a></li>
     <li><a href="#events" data-i18n="navEvents">Veranstaltungen</a></li>
+    <li><a href="#jobs" data-i18n="navJobs">Jobs</a></li>
     <li><a href="#reservations" data-i18n="navReserve">Reservieren</a></li>
     <li><a href="#location" data-i18n="navLocation">Lage</a></li>
   </ul>
@@ -1165,6 +1198,68 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
   <svg viewBox="0 0 1200 120" preserveAspectRatio="none">
     <path d="M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z" opacity=".1" fill="var(--gold)"/>
     <path d="M0,0V15.81C13,36.92,27.64,56.86,47.69,72.05,99.41,111.27,165,111,224.58,91.58c31.15-10.15,60.09-26.07,89.67-39.8,40.92-19,84.73-46,130.83-49.67,36.26-2.85,70.9,9.42,98.6,31.56,31.77,25.39,62.32,62,103.63,73,40.44,10.79,81.35-6.69,119.13-24.28s75.16-39,116.92-43.05c59.73-5.85,113.28,22.88,168.9,38.84,30.2,8.66,59,6.17,87.09-7.5V0Z" fill="var(--bg)"/>
+  </svg>
+</div>
+
+<!-- JOBS -->
+<section id="jobs" class="section">
+  <div class="inner">
+    <div class="jobs-top">
+      <div class="r">
+        <div class="lbl" data-i18n="jobsEyebrow">Jobs</div>
+        <h2 data-word-reveal data-i18n="jobsTitle">Bei Diwan <em>mitarbeiten</em></h2>
+      </div>
+      <article class="job-card r d2">
+        <span class="job-kicker">Praktikum Angebot</span>
+        <h3>Praktikum im Café (m/w/d)</h3>
+        <p>Das Café Diwan bietet engagierten und motivierten Personen die Möglichkeit, ein Praktikum in einem kulturellen und sozialen Umfeld zu absolvieren.</p>
+
+        <div class="job-grid">
+          <div class="job-block">
+            <h4>Ihre Aufgaben</h4>
+            <ul>
+              <li>Unterstützung bei der Zubereitung von Getränken und kleinen Speisen</li>
+              <li>Mithilfe im Service und im täglichen Café-Betrieb</li>
+              <li>Betreuung und freundlicher Umgang mit Gästen</li>
+              <li>Einblick in Organisation von kulturellen Veranstaltungen</li>
+            </ul>
+          </div>
+          <div class="job-block">
+            <h4>Ihr Profil</h4>
+            <ul>
+              <li>Interesse an Gastronomie und kultureller Arbeit</li>
+              <li>Deutschkenntnisse (mindestens B1)</li>
+              <li>Freundliches Auftreten und Teamfähigkeit</li>
+              <li>Motivation, Neues zu lernen</li>
+            </ul>
+          </div>
+          <div class="job-block">
+            <h4>Wir bieten</h4>
+            <ul>
+              <li>Einblick in den Café-Betrieb und kulturelle Arbeit</li>
+              <li>Praktische Erfahrungen in einem freundlichen Team</li>
+              <li>Flexible Einsatzzeiten</li>
+              <li>Unterstützung bei der beruflichen Orientierung</li>
+            </ul>
+          </div>
+          <div class="job-apply">
+            <strong>Jetzt bewerben und erste Berufserfahrung sammeln!</strong>
+            <p>Bitte senden Sie Ihre Bewerbung an uns. Für weitere Informationen rufen Sie uns gerne an.</p>
+            <div class="job-contact">
+              <a href="mailto:info@diwanberlin.com?subject=Bewerbung%20Praktikum%20im%20Cafe">info@diwanberlin.com</a>
+              <a href="tel:+4915560217280">015560217280</a>
+            </div>
+          </div>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<div class="wave-divider" aria-hidden="true" style="margin-top:-2px">
+  <svg viewBox="0 0 1200 120" preserveAspectRatio="none">
+    <path d="M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z" opacity=".1" fill="var(--gold)"/>
+    <path d="M0,0V15.81C13,36.92,27.64,56.86,47.69,72.05,99.41,111.27,165,111,224.58,91.58c31.15-10.15,60.09-26.07,89.67-39.8,40.92-19,84.73-46,130.83-49.67,36.26-2.85,70.9,9.42,98.6,31.56,31.77,25.39,62.32,62,103.63,73,40.44,10.79,81.35-6.69,119.13-24.28s75.16-39,116.92-43.05c59.73-5.85,113.28,22.88,168.9,38.84,30.2,8.66,59,6.17,87.09-7.5V0Z" fill="var(--bg2)"/>
   </svg>
 </div>
 
