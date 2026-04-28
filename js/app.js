@@ -584,29 +584,28 @@ function initHeroMotion() {
   function selectHeroVideo() {
     if (!video) return;
     const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-    const saveData = conn?.saveData;
     const ect = conn?.effectiveType;
-    // Slow connection or data-saver: keep poster, skip video entirely
-    if (saveData || ect === 'slow-2g' || ect === '2g') return;
+    if (conn?.saveData || ect === 'slow-2g' || ect === '2g') return;
     const mobile = window.matchMedia('(max-width: 700px)').matches;
-    // 3G or mobile viewport → lightweight clip; otherwise full desktop version
     const nextSrc = (mobile || ect === '3g') ? video.dataset.mobileSrc : video.dataset.desktopSrc;
     if (!nextSrc) return;
-    // Browser may have already selected this source via <source> elements
     const filename = nextSrc.split('/').pop();
     const alreadyLoaded = video.currentSrc && video.currentSrc.endsWith(filename);
     if (alreadyLoaded) {
-      if (video.paused) attemptPlay();
+      // Native autoplay handles it — only intervene if still paused after data arrives
+      if (!video.paused) return;
+      if (video.readyState >= 3) { attemptPlay(); return; }
+      video.addEventListener('canplay', attemptPlay, { once: true });
       return;
     }
+    // Switch source (e.g. mobile needs lighter clip)
     video.classList.remove('is-ready');
     video.src = nextSrc;
     video.muted = true;
     video.playsInline = true;
-    video.load();
-    // Retry on loadeddata in case the immediate play() call is too early
-    video.addEventListener('loadeddata', attemptPlay, { once: true });
-    attemptPlay();
+    // Setting src triggers load automatically — never call video.load() here,
+    // it would abort the in-flight request and break the play promise chain.
+    video.addEventListener('canplay', attemptPlay, { once: true });
   }
 
   // iOS low-power mode blocks autoplay — unlock on first interaction
