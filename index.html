@@ -237,6 +237,10 @@ html[lang="fa"] .hl-slogan{display:block}
 .hero-video,.hr img.hero-photo{width:100%;height:100%;object-fit:cover;object-position:center center;transform:translate3d(0,var(--hero-drift),0) scale(calc(1.02 + (var(--hero-scroll) * .045)));transition:transform .08s linear;animation:zoomOut 9s 1s ease-out forwards}
 .hero-video{display:block;background:var(--bg)}
 .hero-video.is-ready{animation:none}
+.hero-play-btn{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:5;width:64px;height:64px;border-radius:50%;border:2px solid rgba(242,228,200,.6);background:rgba(18,10,4,.52);backdrop-filter:blur(8px);color:var(--cream);display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0;pointer-events:none;transition:opacity .35s,background .2s,border-color .2s}
+.hero-play-btn.visible{opacity:1;pointer-events:auto}
+.hero-play-btn:hover{background:rgba(200,146,42,.28);border-color:var(--gold)}
+.hero-play-btn svg{width:28px;height:28px;margin-left:3px}
 .hr::before{content:'';position:absolute;inset:0;z-index:2;background:radial-gradient(circle at 62% 44%,transparent 0 24%,rgba(24,14,4,.12) 46%,rgba(24,14,4,.58) 100%);pointer-events:none}
 .hr::after{content:'';position:absolute;right:0;bottom:0;z-index:3;width:min(26vw,220px);height:min(13vw,112px);background:linear-gradient(135deg,rgba(24,14,4,0),rgba(24,14,4,.92) 52%,rgba(24,14,4,.98));pointer-events:none}
 @keyframes zoomOut{from{transform:scale(1.06)}to{transform:scale(1)}}
@@ -325,6 +329,28 @@ h2 em{font-style:italic;color:var(--gold2)}
 .ft{font-family:'Playfair Display',serif;font-size:22px;color:var(--cream);margin-bottom:10px}
 .ffa{font-family:'Amiri',serif;direction:rtl;font-size:16px;color:var(--gold);display:block;margin-bottom:10px;line-height:1.8}
 .fb{font-size:14px;color:var(--dim);line-height:1.8}
+
+/* ── CULTURAL PROGRAMME ── */
+#cultural-programme{background:var(--bg2)}
+.cp-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:rgba(200,146,42,.1);margin-top:52px}
+.cp-card{background:var(--bg2);padding:52px 44px;transition:background .3s}
+.cp-card:hover{background:rgba(200,146,42,.04)}
+.cp-num{font-family:'Bebas Neue',sans-serif;font-size:68px;color:rgba(200,146,42,.18);line-height:1;margin-bottom:14px}
+.cp-title{font-family:'Playfair Display',serif;font-size:22px;color:var(--cream);margin-bottom:10px}
+.cp-alt{font-family:'Amiri',serif;direction:rtl;font-size:16px;color:var(--gold);display:block;margin-bottom:14px;line-height:1.8}
+.cp-body{font-size:14px;color:var(--dim);line-height:1.8}
+.cp-cta{display:inline-block;margin-top:18px;padding:12px 24px;background:var(--gold);color:var(--bg);font-size:13px;font-weight:600;border-radius:8px;text-decoration:none;transition:background .2s}
+.cp-cta:hover{background:var(--gold2)}
+.cp-cta .arr{vertical-align:middle}
+
+/* ── CLOSING QUOTE ── */
+.closing-quote{background:var(--bg);padding:88px 60px;text-align:center}
+.closing-quote-inner{max-width:720px;margin:0 auto}
+.closing-quote-lbl{display:flex;align-items:center;justify-content:center;gap:12px;font-size:11px;letter-spacing:.25em;text-transform:uppercase;color:var(--gold);margin-bottom:36px}
+.closing-quote-lbl::before,.closing-quote-lbl::after{content:'';display:block;width:28px;height:1px;background:var(--gold)}
+.closing-quote blockquote{font-family:'Playfair Display',serif;font-size:clamp(17px,2vw,22px);line-height:1.8;color:var(--cream);font-style:italic;margin:0 0 32px;padding:0}
+.closing-quote-address{font-size:13px;color:var(--dim);letter-spacing:.05em;line-height:2}
+.closing-quote-address strong{color:var(--gold2);display:block;font-family:'Playfair Display',serif;font-size:16px;margin-bottom:4px}
 
 /* ── MENU ── */
 #menu{background:var(--bg)}
@@ -498,7 +524,7 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
 }
 .r{opacity:0;transform:translateY(32px);transition:opacity .8s,transform .8s}
 .r.v{opacity:1;transform:translateY(0)}
-.d1{transition-delay:.1s}.d2{transition-delay:.2s}.d3{transition-delay:.3s}.d4{transition-delay:.4s}
+.d1{transition-delay:.1s}.d2{transition-delay:.2s}.d3{transition-delay:.3s}.d4{transition-delay:.4s}.d5{transition-delay:.5s}
 
 /* ── TWEAKS ── */
 #tp{display:none;position:fixed;bottom:24px;right:24px;z-index:9999;background:var(--bg2);border:1px solid rgba(200,146,42,.3);padding:22px;width:250px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
@@ -567,7 +593,18 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
   .ft{font-size:18px}
   .ffa{font-size:14px}
   .fb{font-size:13px}
-  
+
+  /* Cultural Programme */
+  .cp-grid{grid-template-columns:1fr}
+  .cp-card{padding:28px 20px}
+  .cp-num{font-size:48px}
+  .cp-title{font-size:18px}
+  .cp-alt{font-size:14px}
+  .cp-body{font-size:13px}
+
+  /* Closing Quote */
+  .closing-quote{padding:52px 24px}
+
   /* Menu */
   .tabs{margin:24px 0;overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch}
   .tab{padding:10px 16px;font-size:11px;white-space:nowrap}
@@ -680,6 +717,7 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
   .inner{padding:60px 24px}
   .about-g,.ev-top,.loc-g,.res-g{grid-template-columns:1fr;gap:32px}
   .feat-g,.panel.active{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+  .cp-grid{grid-template-columns:1fr}
   .fi{grid-template-columns:1fr 1fr;text-align:center;gap:20px}.flinks{justify-content:center}
   .fl img{margin:0 auto}
   .ei{grid-template-columns:60px 1fr;gap:16px}.etime{display:none}.event-actions{grid-column:2;justify-self:start;margin-top:8px}
@@ -821,6 +859,7 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
 @media(prefers-reduced-motion:reduce){
   .hl-logo img,.hl-logo::after,.hero-cup::after,.bean,.hero-photo,.hero-video,.hero-stage,.hero-grid,.hero-orb{animation:none!important;transition:none!important;transform:none!important}
   .hr{background:url('uploads/hero-poster.jpg') center/cover no-repeat}
+  .hero-play-btn{display:none!important}
   #mobile-overlay{transition:none}
   .hamburger span{transition:none}
 }
@@ -851,14 +890,14 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
     </div>
     <a href="#reservations" class="ncta" data-i18n="navReserve">Reservieren <span class="arr">↗</span></a>
     <!-- Hamburger: mobile only -->
-    <button class="hamburger" id="hamburger" aria-label="Menü öffnen" aria-expanded="false">
+    <button class="hamburger" id="hamburger" data-i18n-aria="hamburgerAria" aria-label="Menü öffnen" aria-expanded="false">
       <span></span><span></span><span></span>
     </button>
   </div>
 </nav>
 
 <!-- Mobile overlay -->
-<div id="mobile-overlay" role="dialog" aria-modal="true" aria-label="Navigation">
+<div id="mobile-overlay" role="dialog" aria-modal="true" data-i18n-aria="mobileNavAria" aria-label="Navigation">
   <ul>
     <li><a href="#about" data-i18n="navAbout">Über uns</a></li>
     <li><a href="#menu" data-i18n="navMenu">Speisekarte</a></li>
@@ -916,14 +955,14 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
   <div class="hl">
     <!-- Logo removed from hero section -->
     <div class="hero-meta">
-      <span class="hero-pill" data-i18n="heroStatus">Täglich geöffnet · Berlin-Lichtenberg</span>
+      <span class="hero-pill" data-i18n="heroStatus">Kulturcafé · Berlin-Lichtenberg</span>
     </div>
     <h1 class="hl-h" data-word-reveal data-i18n="heroTitle">
-      <span class="ln g">Wo Geschichten</span>
-      <span class="ln">beginnen.</span>
+      <span class="ln g">Eine Brücke</span>
+      <span class="ln">zwischen Herz und Gedanke.</span>
     </h1>
     <span class="hl-slogan">چای، قصه، لبخند</span>
-    <p class="hl-sub" data-i18n="heroSub">Ein Kulturcafé im Herzen Berlins — wo warme Gastfreundschaft auf echte Kaffeekultur trifft.</p>
+    <p class="hl-sub" data-i18n="heroSub">Vom Klang von Tar und Lied bis zum grünen Horizont der Geschichten — Diwan ist mehr als ein Café. Es ist ein Ort des Dialogs.</p>
     <div class="hl-acts">
       <a href="#menu" class="btn-g" data-magnetic data-i18n="heroBtnMenu">Speisekarte <span class="ac">↗</span></a>
       <a href="#reservations" class="btn-o" data-magnetic data-i18n="heroBtnReserve"><span class="pl">▶</span>Reservieren</a>
@@ -937,7 +976,13 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
 
   <!-- Full-bleed hero video -->
   <div class="hr" data-parallax="0.2">
-    <video class="hero-video" autoplay muted loop playsinline preload="auto" poster="uploads/hero-poster.jpg" aria-label="Cafe Diwan coffee animation" data-desktop-src="uploads/hero-optimized.mp4" data-mobile-src="uploads/hero-mobile.mp4"></video>
+    <video class="hero-video" autoplay muted loop playsinline preload="auto" poster="uploads/hero-poster.jpg" aria-label="Cafe Diwan coffee animation" data-desktop-src="uploads/hero-optimized.mp4" data-mobile-src="uploads/hero-mobile.mp4">
+      <source src="uploads/hero-mobile.mp4" type="video/mp4" media="(max-width:700px)">
+      <source src="uploads/hero-optimized.mp4" type="video/mp4">
+    </video>
+    <button class="hero-play-btn" type="button" aria-label="Video abspielen">
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+    </button>
   </div>
   <div class="hscroll"><div class="sdot"></div><span data-i18n="heroScroll">Entdecken</span></div>
 </section>
@@ -1003,6 +1048,54 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
           <span data-count="15" id="eventsCount">0</span>+
         </div>
         <div style="font-size:14px;color:var(--dim);letter-spacing:.1em;text-transform:uppercase;" data-i18n="featEvents">Veranstaltungen / Monat</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="wave-divider" aria-hidden="true" style="margin-top:-2px">
+  <svg viewBox="0 0 1200 120" preserveAspectRatio="none">
+    <path d="M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z" opacity=".1" fill="var(--gold)"/>
+    <path d="M0,0V15.81C13,36.92,27.64,56.86,47.69,72.05,99.41,111.27,165,111,224.58,91.58c31.15-10.15,60.09-26.07,89.67-39.8,40.92-19,84.73-46,130.83-49.67,36.26-2.85,70.9,9.42,98.6,31.56,31.77,25.39,62.32,62,103.63,73,40.44,10.79,81.35-6.69,119.13-24.28s75.16-39,116.92-43.05c59.73-5.85,113.28,22.88,168.9,38.84,30.2,8.66,59,6.17,87.09-7.5V0Z" fill="var(--bg2)"/>
+  </svg>
+</div>
+
+<!-- CULTURAL PROGRAMME -->
+<section id="cultural-programme" class="section">
+  <div class="inner">
+    <div class="lbl r" data-i18n="culturalEyebrow">Kulturprogramm</div>
+    <h2 class="r" data-word-reveal data-i18n="culturalTitle">Was uns <em>bewegt</em></h2>
+    <div class="cp-grid">
+      <div class="cp-card r">
+        <div class="cp-num">١</div>
+        <h3 class="cp-title" data-i18n="cpCard1Title">Poesieabende</h3>
+        <span class="cp-alt">شب‌های شعر</span>
+        <p class="cp-body" data-content-key="pillar_poetry">Wir feiern Emotion, Kreativität und einfühlsamen Ausdruck durch Poesieabende — und bewahren so wertvolle literarische Traditionen des Ostens und Westens.</p>
+      </div>
+      <div class="cp-card r d2">
+        <div class="cp-num">٢</div>
+        <h3 class="cp-title" data-i18n="cpCard2Title">Kunst &amp; Musik</h3>
+        <span class="cp-alt">هنر و موسیقی</span>
+        <p class="cp-body" data-content-key="pillar_music">Gitarre, Dambura, Harmonium, Rubab — klassisch und modern sprechen die Instrumente zu Ihnen. Wir schaffen Momente der Intimität durch Musik und das Gedenken an Künstler vergangener und gegenwärtiger Zeit.</p>
+      </div>
+      <div class="cp-card r d3">
+        <div class="cp-num">٣</div>
+        <h3 class="cp-title" data-i18n="cpCard3Title">Literatur &amp; Kultur</h3>
+        <span class="cp-alt">کتاب، متن و دورهمی</span>
+        <p class="cp-body" data-content-key="pillar_literature">Buchlesungen, Erzählabende, Filmvorführungen und Diskussionen. Nowruz, Yaldā-Nacht, Weihnachten, Ostern — wir feiern das kulturelle Erbe aller gemeinsam.</p>
+      </div>
+      <div class="cp-card r d4">
+        <div class="cp-num">٤</div>
+        <h3 class="cp-title" data-i18n="cpCard4Title">Private Feiern</h3>
+        <span class="cp-alt">جشن‌های خودمانی</span>
+        <p class="cp-body" data-content-key="private_celebrations">Geburtstage, Familientreffen und besondere Anlässe — professionell und erschwinglich geplant. Machen Sie Diwan zu Ihrem Kulturzuhause in Berlin.</p>
+      </div>
+      <div class="cp-card r d5">
+        <div class="cp-num">٥</div>
+        <h3 class="cp-title" data-i18n="cpCard5Title">Räume mieten</h3>
+        <span class="cp-alt">اجاره فضا</span>
+        <p class="cp-body" data-content-key="multipurpose_space">Für Workshops, Trainings und kleine Konferenzen steht unser Raum für bis zu 60 Personen zur Verfügung. Alles Nötige inklusive — zu fairen Preisen.</p>
+        <a href="mailto:diwan-cafe-berlin@hotmail.de?subject=Raumanfrage" class="cp-cta" data-i18n="cpCard5Cta">Anfragen <span class="arr">↗</span></a>
       </div>
     </div>
   </div>
@@ -1148,11 +1241,11 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
           <div class="frow">
             <div class="fg"><label data-i18n="resGuests">Personen</label>
               <select id="resGuests">
-                <option value="1">1 Person</option>
-                <option value="2">2 Personen</option>
-                <option value="3">3 Personen</option>
-                <option value="4">4 Personen</option>
-                <option value="5">5+ Personen</option>
+                <option value="1" data-i18n-opt="resGuests1">1 Person</option>
+                <option value="2" data-i18n-opt="resGuests2">2 Personen</option>
+                <option value="3" data-i18n-opt="resGuests3">3 Personen</option>
+                <option value="4" data-i18n-opt="resGuests4">4 Personen</option>
+                <option value="5" data-i18n-opt="resGuests5">5+ Personen</option>
               </select>
             </div>
             <div class="fg"><label data-i18n="resPhone">Telefon</label><input type="tel" id="resPhone" data-i18n="resPhone"></div>
@@ -1166,9 +1259,9 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
       <div class="res-info r d2">
         <p data-i18n="resInfo">Ob ein Abend zu zweit, ein Treffen mit Freunden oder eine kleine Feier — wir bereiten alles vor, damit Sie sich wohl fühlen.</p>
         <div class="clist">
-          <div class="crow"><span class="ck">Tel</span><span class="cv"><a href="tel:+491638953463">+49 163 8953463</a></span></div>
+          <div class="crow"><span class="ck" data-i18n="contactTel">Tel</span><span class="cv"><a href="tel:+491638953463">+49 163 8953463</a></span></div>
           <div class="crow"><span class="ck">E-Mail</span><span class="cv"><a href="mailto:info@diwanberlin.com">info@diwanberlin.com</a></span></div>
-          <div class="crow"><span class="ck">Web</span><span class="cv"><a href="https://diwanberlin.com">diwanberlin.com</a></span></div>
+          <div class="crow"><span class="ck" data-i18n="contactWeb">Web</span><span class="cv"><a href="https://diwanberlin.com">diwanberlin.com</a></span></div>
           <div class="crow"><span class="ck">Instagram</span><span class="cv"><a href="https://www.instagram.com/berlin.diwan.cafe?igsh=M25vc2dkNWRzOHQ5" target="_blank">@berlin.diwan.cafe</a></span></div>
           <div class="crow"><span class="ck">Facebook</span><span class="cv"><a href="https://www.facebook.com/profile.php?id=61567392711638" target="_blank">Cafe Diwan Berlin</a></span></div>
         </div>
@@ -1194,7 +1287,7 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
         <p style="margin-bottom: 30px; font-size: 16px; color: var(--dim);" data-i18n="eventDirectDesc">Für individuelle Planung und Preise kontaktieren Sie uns direkt:</p>
         
         <div class="clist" style="margin-bottom: 40px; display:flex; gap:30px;">
-          <div class="crow"><span class="ck">Tel</span><span class="cv"><a href="tel:+491638953463" style="color:var(--gold);font-size:18px;">+49 163 8953463</a></span></div>
+          <div class="crow"><span class="ck" data-i18n="contactTel">Tel</span><span class="cv"><a href="tel:+491638953463" style="color:var(--gold);font-size:18px;">+49 163 8953463</a></span></div>
           <div class="crow"><span class="ck">E-Mail</span><span class="cv"><a href="mailto:info@diwanberlin.com" style="color:var(--gold);font-size:18px;">info@diwanberlin.com</a></span></div>
         </div>
 
@@ -1211,7 +1304,7 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
           </div>
           <div class="frow">
             <div class="fg"><label data-i18n="resDate">Datum</label><input type="date" id="evDate"></div>
-            <div class="fg"><label data-i18n="resTime">Uhrzeit / Dauer</label><input type="text" id="evTiming" placeholder="18:00 - 22:00"></div>
+            <div class="fg"><label data-i18n="eventTiming">Uhrzeit / Dauer</label><input type="text" id="evTiming" data-i18n-placeholder="eventTimingPlaceholder" placeholder="18:00 - 22:00"></div>
           </div>
           <div class="frow">
             <div class="fg"><label data-i18n="resGuests">Anzahl Personen</label><input type="number" id="evGuests" data-i18n-placeholder="eventGuestsPlaceholder" placeholder="z.B. 30"></div>
@@ -1243,6 +1336,21 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
     </div>
   </div>
 </section>
+
+<!-- CLOSING QUOTE -->
+<div class="closing-quote">
+  <div class="closing-quote-inner">
+    <span class="closing-quote-lbl" data-i18n="closingLabel">Willkommen</span>
+    <blockquote>
+      <p data-content-key="closing_invitation">Diwan verbindet das kulturelle Erbe des Ostens mit der Vielfalt des Westens — ein Raum für gegenseitiges Verstehen, Dialog und kulturelle Harmonie. Menschen aller Kulturen, Sprachen und Hintergründe sind herzlich eingeladen, gemeinsam die unvergesslichsten Momente zu erleben.</p>
+    </blockquote>
+    <p class="closing-quote-address">
+      <strong>Cafe Diwan Berlin</strong>
+      Rhinstraße 79A · 10315 Berlin<br>
+      017632757794 · 015560217280
+    </p>
+  </div>
+</div>
 
 <!-- FOOTER -->
 <footer>

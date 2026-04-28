@@ -13,6 +13,7 @@ router.get('/', async (_req, res) => {
       acc[block.key] = {
         valueDe: block.valueDe,
         valueFa: block.valueFa,
+        valueEn: block.valueEn,
         type: block.type
       };
       return acc;

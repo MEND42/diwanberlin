@@ -555,29 +555,81 @@ function initHeroMotion() {
   const stage = hero.querySelector('.hr');
   const text = hero.querySelector('.hl');
   const scrollCue = hero.querySelector('.hscroll');
+  const playBtn = hero.querySelector('.hero-play-btn');
   let current = 0;
   let target = 0;
   let ticking = false;
+  let playBtnTimer;
+
+  function showPlayBtn() {
+    if (playBtn) playBtn.classList.add('visible');
+  }
+
+  function hidePlayBtn() {
+    clearTimeout(playBtnTimer);
+    if (playBtn) playBtn.classList.remove('visible');
+  }
+
+  function attemptPlay() {
+    if (!video) return;
+    const p = video.play();
+    // Old browsers return undefined — assume playing
+    if (!p) { video.classList.add('is-ready'); hidePlayBtn(); return; }
+    clearTimeout(playBtnTimer);
+    // Show tap-to-play after 2.5 s if video still hasn't started
+    playBtnTimer = setTimeout(() => { if (video.paused) showPlayBtn(); }, 2500);
+    p.then(() => hidePlayBtn()).catch(() => showPlayBtn());
+  }
 
   function selectHeroVideo() {
     if (!video) return;
+    const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    const saveData = conn?.saveData;
+    const ect = conn?.effectiveType;
+    // Slow connection or data-saver: keep poster, skip video entirely
+    if (saveData || ect === 'slow-2g' || ect === '2g') return;
     const mobile = window.matchMedia('(max-width: 700px)').matches;
-    const nextSrc = mobile ? video.dataset.mobileSrc : video.dataset.desktopSrc;
-    if (!nextSrc || video.getAttribute('src') === nextSrc) return;
+    // 3G or mobile viewport → lightweight clip; otherwise full desktop version
+    const nextSrc = (mobile || ect === '3g') ? video.dataset.mobileSrc : video.dataset.desktopSrc;
+    if (!nextSrc) return;
+    // Browser may have already selected this source via <source> elements
+    const filename = nextSrc.split('/').pop();
+    const alreadyLoaded = video.currentSrc && video.currentSrc.endsWith(filename);
+    if (alreadyLoaded) {
+      if (video.paused) attemptPlay();
+      return;
+    }
     video.classList.remove('is-ready');
-    video.setAttribute('src', nextSrc);
+    video.src = nextSrc;
     video.muted = true;
     video.playsInline = true;
     video.load();
-    const play = () => video.play().catch(() => {});
-    video.addEventListener('canplay', play, { once: true });
-    play();
+    // Retry on loadeddata in case the immediate play() call is too early
+    video.addEventListener('loadeddata', attemptPlay, { once: true });
+    attemptPlay();
+  }
+
+  // iOS low-power mode blocks autoplay — unlock on first interaction
+  const iosUnlock = () => { if (video && video.paused) attemptPlay(); };
+  document.addEventListener('touchstart', iosUnlock, { once: true, passive: true });
+  document.addEventListener('scroll',     iosUnlock, { once: true, passive: true });
+
+  video?.addEventListener('playing', () => {
+    video.classList.add('is-ready');
+    hidePlayBtn();
+  });
+
+  if (playBtn) {
+    playBtn.addEventListener('click', () => {
+      video.muted = true;
+      video.play().then(() => hidePlayBtn()).catch(() => {});
+    });
   }
 
   selectHeroVideo();
   window.addEventListener('resize', selectHeroVideo, { passive: true });
-  video?.addEventListener('playing', () => video.classList.add('is-ready'));
 
+  // Parallax scroll effect — skipped for reduced-motion users
   if (reduceMotion) return;
 
   function render() {

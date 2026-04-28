@@ -27,6 +27,7 @@ router.post('/', managers, async (req, res) => {
         type: req.body.type || 'TEXT',
         valueDe: req.body.valueDe || null,
         valueFa: req.body.valueFa || null,
+        valueEn: req.body.valueEn || null,
         isPublished: req.body.isPublished !== false
       }
     });
