@@ -22,7 +22,7 @@
 <meta property="og:url" content="https://diwanberlin.com/">
 <meta property="og:title" content="Cafe Diwan Berlin | Kulturcafé">
 <meta property="og:description" content="Ein Ort des Herzens in Berlin-Lichtenberg. Kardamom-Kaffee, kleine Speisen & Kulturveranstaltungen. Tisch reservieren oder Ihr Event planen.">
-<meta property="og:image" content="https://diwanberlin.com/uploads/diwan-logo-new.png">
+<meta property="og:image" content="https://diwanberlin.com/uploads/diwan-logo-transparent.png">
 <meta property="og:image:alt" content="Cafe Diwan Berlin Logo">
 <meta property="og:locale" content="de_DE">
 <meta property="og:site_name" content="Cafe Diwan Berlin">
@@ -31,7 +31,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Cafe Diwan Berlin | Kulturcafé">
 <meta name="twitter:description" content="Kardamom-Kaffee, Kashmiri Chai & kleine Speisen in Berlin-Lichtenberg. Jetzt Tisch reservieren!">
-<meta name="twitter:image" content="https://diwanberlin.com/uploads/diwan-logo-new.png">
+<meta name="twitter:image" content="https://diwanberlin.com/uploads/diwan-logo-transparent.png">
 
 <!-- ── JSON-LD: Local Business + Restaurant ── -->
 <script type="application/ld+json">
@@ -43,8 +43,8 @@
   "alternateName": "دیوان برلین",
   "description": "Kulturcafé im Herzen Berlins — wo warme Gastfreundschaft auf echte Kaffeekultur trifft. Kardamom-Kaffee, Kashmiri Chai, kleine Speisen und kulturelle Veranstaltungen.",
   "url": "https://diwanberlin.com",
-  "logo": "https://diwanberlin.com/uploads/diwan-logo-new.png",
-  "image": "https://diwanberlin.com/uploads/diwan-logo-new.png",
+  "logo": "https://diwanberlin.com/uploads/diwan-logo-transparent.png",
+  "image": "https://diwanberlin.com/uploads/diwan-logo-transparent.png",
   "telephone": "+491638953463",
   "email": "info@diwanberlin.com",
   "address": {
@@ -106,8 +106,8 @@
 <!-- ── PRECONNECT / PERFORMANCE ── -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="icon" type="image/png" href="uploads/diwan-logo-new.png">
-<link rel="apple-touch-icon" href="uploads/diwan-logo-new.png">
+<link rel="icon" type="image/png" href="uploads/diwan-logo-transparent.png">
+<link rel="apple-touch-icon" href="uploads/diwan-logo-transparent.png">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500&family=Amiri:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 <style>
 /* ── TOKENS ── */
@@ -183,8 +183,8 @@ body::after{
 nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:20px 60px;transition:background .5s,padding .3s}
 nav.on{background:rgba(24,14,4,.97);backdrop-filter:blur(14px);padding:14px 60px;border-bottom:1px solid rgba(200,146,42,.15)}
 .nlogo{display:flex;align-items:center;gap:14px;text-decoration:none}
-.nlogo img{width:62px;height:62px;display:block;object-fit:contain;border-radius:50%;padding:5px;background:radial-gradient(circle at 30% 30%,rgba(242,228,200,.18),rgba(44,26,10,.95) 72%);border:1px solid rgba(224,174,85,.38);box-shadow:0 10px 28px rgba(0,0,0,.32),0 0 0 1px rgba(242,228,200,.04) inset;transition:transform .35s ease,box-shadow .35s ease}
-.nlogo:hover img{transform:translateY(-2px) scale(1.02);box-shadow:0 16px 34px rgba(0,0,0,.4),0 0 24px rgba(224,174,85,.12)}
+.nlogo img{width:142px;height:64px;display:block;object-fit:contain;border-radius:0;filter:drop-shadow(0 10px 18px rgba(0,0,0,.38));transition:transform .35s ease,filter .35s ease}
+.nlogo:hover img{transform:translateY(-2px) scale(1.02);filter:drop-shadow(0 14px 24px rgba(0,0,0,.44)) drop-shadow(0 0 14px rgba(224,174,85,.16))}
 .nname{font-family:'Playfair Display',serif;font-size:22px;color:var(--cream);letter-spacing:0.04em}
 .nlinks{display:flex;gap:32px;list-style:none}
 .nlinks a{color:var(--dim);text-decoration:none;font-size:12px;letter-spacing:.12em;text-transform:uppercase;transition:color .25s}
@@ -235,11 +235,8 @@ html[lang="fa"] .hl-slogan{display:block}
 /* cinematic video */
 .hr{position:absolute;inset:0;overflow:hidden;opacity:0;animation:fu 1.2s .3s forwards;z-index:1;transform-style:preserve-3d;background:var(--bg);--hero-scroll:0;--hero-drift:0px}
 .hero-video,.hr img.hero-photo{width:100%;height:100%;object-fit:cover;object-position:center center;transform:translate3d(0,var(--hero-drift),0) scale(calc(1.02 + (var(--hero-scroll) * .045)));transition:transform .08s linear}
-.hero-video{display:block;background:var(--bg)}
-.hero-play-btn{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:5;width:64px;height:64px;border-radius:50%;border:2px solid rgba(242,228,200,.6);background:rgba(18,10,4,.52);backdrop-filter:blur(8px);color:var(--cream);display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0;pointer-events:none;transition:opacity .35s,background .2s,border-color .2s}
-.hero-play-btn.visible{opacity:1;pointer-events:auto}
-.hero-play-btn:hover{background:rgba(200,146,42,.28);border-color:var(--gold)}
-.hero-play-btn svg{width:28px;height:28px;margin-left:3px}
+.hero-video{display:block;background:var(--bg);pointer-events:none}
+.hero-play-btn{display:none!important}
 .hr::before{content:'';position:absolute;inset:0;z-index:2;background:radial-gradient(circle at 62% 44%,transparent 0 24%,rgba(24,14,4,.12) 46%,rgba(24,14,4,.58) 100%);pointer-events:none}
 .hr::after{content:'';position:absolute;right:0;bottom:0;z-index:3;width:min(26vw,220px);height:min(13vw,112px);background:linear-gradient(135deg,rgba(24,14,4,0),rgba(24,14,4,.92) 52%,rgba(24,14,4,.98));pointer-events:none}
 .hero-stage{position:absolute;right:7%;top:50%;width:min(34vw,470px);aspect-ratio:1/1.1;transform:translateY(-48%);z-index:3;transform-style:preserve-3d;pointer-events:none}
@@ -294,7 +291,7 @@ box-shadow:0 28px 60px rgba(0,0,0,.38),0 0 36px rgba(224,174,85,.18)}
 
 /* ── SHARED ── */
 .section{position:relative}
-.inner{max-width:1240px;margin:0 auto;padding:110px 60px}
+.inner{max-width:1240px;margin:0 auto;padding:104px 60px}
 .lbl{display:flex;align-items:center;gap:12px;font-size:11px;letter-spacing:.25em;text-transform:uppercase;color:var(--gold);margin-bottom:20px}
 .lbl::before{content:'';display:block;width:28px;height:1px;background:var(--gold)}
 h2{font-family:'Playfair Display',serif;font-size:clamp(34px,4.5vw,60px);font-weight:400;line-height:1.1;color:var(--cream)}
@@ -331,8 +328,12 @@ h2 em{font-style:italic;color:var(--gold2)}
 /* ── CULTURAL PROGRAMME ── */
 #cultural-programme{background:var(--bg2)}
 .cp-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:rgba(200,146,42,.1);margin-top:52px}
-.cp-card{background:var(--bg2);padding:52px 44px;transition:background .3s}
+.cp-card{background:var(--bg2);padding:52px 44px;transition:background .3s;min-height:274px}
 .cp-card:hover{background:rgba(200,146,42,.04)}
+.cp-card:last-child{grid-column:1/-1;display:grid;grid-template-columns:minmax(180px,.42fr) 1fr auto;align-items:center;column-gap:28px}
+.cp-card:last-child .cp-num,.cp-card:last-child .cp-title,.cp-card:last-child .cp-alt{margin-bottom:0}
+.cp-card:last-child .cp-body{max-width:620px}
+.cp-card:last-child .cp-cta{margin-top:0;white-space:nowrap}
 .cp-num{font-family:'Bebas Neue',sans-serif;font-size:68px;color:rgba(200,146,42,.18);line-height:1;margin-bottom:14px}
 .cp-title{font-family:'Playfair Display',serif;font-size:22px;color:var(--cream);margin-bottom:10px}
 .cp-alt{font-family:'Amiri',serif;direction:rtl;font-size:16px;color:var(--gold);display:block;margin-bottom:14px;line-height:1.8}
@@ -342,7 +343,7 @@ h2 em{font-style:italic;color:var(--gold2)}
 .cp-cta .arr{vertical-align:middle}
 
 /* ── CLOSING QUOTE ── */
-.closing-quote{background:var(--bg);padding:88px 60px;text-align:center}
+.closing-quote{background:var(--bg);padding:76px 60px;text-align:center}
 .closing-quote-inner{max-width:720px;margin:0 auto}
 .closing-quote-lbl{display:flex;align-items:center;justify-content:center;gap:12px;font-size:11px;letter-spacing:.25em;text-transform:uppercase;color:var(--gold);margin-bottom:36px}
 .closing-quote-lbl::before,.closing-quote-lbl::after{content:'';display:block;width:28px;height:1px;background:var(--gold)}
@@ -395,7 +396,7 @@ h2 em{font-style:italic;color:var(--gold2)}
 @keyframes menuCardIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
 
 /* ── MID SLOGAN ── */
-.mid-slogan{background:var(--bg2);padding:80px 60px;text-align:center}
+.mid-slogan{background:var(--bg2);padding:68px 60px;text-align:center}
 .mid-slogan .fa-big{font-family:'Amiri',serif;direction:rtl;font-size:clamp(32px,5vw,64px);color:var(--gold2);line-height:1.6;display:block;font-weight:700}
 .mid-slogan .de-small{font-size:14px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);margin-top:14px;display:block}
 .mid-slogan .ornament{color:var(--gold);font-size:24px;margin:0 16px;opacity:.4}
@@ -419,7 +420,7 @@ h2 em{font-style:italic;color:var(--gold2)}
 .event-modal{position:fixed;inset:0;z-index:500;display:grid;place-items:center;padding:24px;opacity:0;pointer-events:none;transition:opacity .25s ease}
 .event-modal.open{opacity:1;pointer-events:auto}
 .event-modal__backdrop{position:absolute;inset:0;background:rgba(10,5,1,.72);backdrop-filter:blur(10px)}
-.event-modal__panel{position:relative;width:min(100%,560px);max-height:min(90vh,760px);overflow:auto;border:1px solid rgba(200,146,42,.22);background:linear-gradient(180deg,var(--bg2),var(--bg));box-shadow:0 34px 100px rgba(0,0,0,.48);padding:30px;border-radius:24px}
+.event-modal__panel{position:relative;width:min(100%,560px);max-height:min(90vh,760px);overflow:auto;border:1px solid rgba(200,146,42,.22);background:linear-gradient(180deg,var(--bg2),var(--bg));box-shadow:0 34px 100px rgba(0,0,0,.48);padding:30px;border-radius:16px}
 .event-modal__close{position:absolute;top:12px;right:12px;width:36px;height:36px;border-radius:50%;border:1px solid rgba(200,146,42,.25);background:rgba(24,14,4,.7);color:var(--cream);font-size:22px;cursor:pointer}
 .event-modal__image{width:100%;height:220px;object-fit:cover;border-radius:16px;margin-bottom:20px;filter:sepia(.12) saturate(1.08)}
 .event-modal__date{font-size:12px;color:var(--gold);letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px}
@@ -428,15 +429,15 @@ h2 em{font-style:italic;color:var(--gold2)}
 .event-modal__meta{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
 .event-modal__meta span{border:1px solid rgba(200,146,42,.2);border-radius:999px;color:var(--gold);font-size:12px;padding:7px 10px;background:rgba(200,146,42,.06)}
 .event-registration-form{display:grid;gap:12px}
-.event-registration-form input,.event-registration-form textarea{width:100%;border:1px solid rgba(200,146,42,.18);background:rgba(255,255,255,.04);color:var(--cream);border-radius:14px;padding:13px 14px;font-family:'DM Sans',sans-serif;outline:none}
+.event-registration-form input,.event-registration-form textarea{width:100%;border:1px solid rgba(200,146,42,.18);background:rgba(255,255,255,.04);color:var(--cream);border-radius:10px;padding:13px 14px;font-family:'DM Sans',sans-serif;outline:none}
 .event-registration-form input:focus,.event-registration-form textarea:focus{border-color:rgba(200,146,42,.55)}
 .event-registration-status{min-height:20px;color:var(--gold);font-size:13px}.event-registration-status.error{color:#ffb4a8}
-.event-success{display:grid;gap:8px;color:var(--cream);background:rgba(200,146,42,.09);border:1px solid rgba(200,146,42,.22);border-radius:18px;padding:24px}.event-success span{color:var(--gold)}
+.event-success{display:grid;gap:8px;color:var(--cream);background:rgba(200,146,42,.09);border:1px solid rgba(200,146,42,.22);border-radius:12px;padding:24px}.event-success span{color:var(--gold)}
 
 /* ── JOBS ── */
 #jobs{background:var(--bg)}
 .jobs-top{display:grid;grid-template-columns:minmax(0,0.9fr) minmax(0,1.1fr);gap:64px;align-items:start}
-.job-card{border:1px solid rgba(200,146,42,.16);background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.018));padding:38px;border-radius:14px}
+.job-card{border:1px solid rgba(200,146,42,.16);background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.018));padding:38px;border-radius:12px}
 .job-kicker{display:inline-flex;align-items:center;min-height:32px;border:1px solid rgba(200,146,42,.24);border-radius:999px;background:rgba(200,146,42,.08);color:var(--gold2);padding:7px 12px;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;margin-bottom:20px}
 .job-card h3{font-family:'Playfair Display',serif;font-size:clamp(26px,3vw,38px);font-weight:400;line-height:1.2;color:var(--cream);margin-bottom:18px}
 .job-card p{font-size:15px;line-height:1.85;color:var(--dim);margin-bottom:26px}
@@ -451,6 +452,17 @@ h2 em{font-style:italic;color:var(--gold2)}
 .job-contact{display:flex;flex-wrap:wrap;gap:12px;margin-top:18px}
 .job-contact a{display:inline-flex;align-items:center;justify-content:center;min-height:42px;border:1px solid rgba(200,146,42,.35);border-radius:999px;color:var(--cream);padding:9px 15px;text-decoration:none;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;transition:background .2s,border-color .2s,color .2s}
 .job-contact a:hover{background:rgba(200,146,42,.14);border-color:var(--gold);color:var(--gold2)}
+
+/* ── EVENT REQUEST ── */
+#event-request{background:var(--bg2)}
+.event-request-panel{max-width:920px;margin:0 auto}
+.event-request-intro{margin-bottom:30px;font-size:16px;line-height:1.85;color:var(--dim);max-width:680px}
+.event-direct-list{margin-bottom:36px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.event-direct-list .crow{margin:0;padding:18px 20px;border:1px solid rgba(200,146,42,.14);background:rgba(24,14,4,.35);border-radius:12px}
+.event-direct-list .cv a{color:var(--gold2);font-size:16px}
+.event-or{display:flex;align-items:center;gap:14px;margin:26px 0;color:var(--dim);font-size:11px;letter-spacing:.18em;text-transform:uppercase}
+.event-or::before,.event-or::after{content:'';height:1px;flex:1;background:rgba(200,146,42,.18)}
+.event-request-title{font-family:'Playfair Display',serif;font-size:26px;font-weight:400;color:var(--cream);margin-bottom:20px}
 
 /* ── LOCATION ── */
 #location{background:var(--bg2)}
@@ -493,7 +505,7 @@ select option{background:var(--bg)}
 /* ── FOOTER ── */
 footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146,42,.12)}
 .fi{max-width:1240px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr 1fr;gap:32px;align-items:center}
-.fl img{width:84px;height:84px;display:block;object-fit:contain;border-radius:50%;padding:7px;background:radial-gradient(circle at 30% 30%,rgba(242,228,200,.12),rgba(34,20,8,.96) 74%);border:1px solid rgba(224,174,85,.3);box-shadow:0 12px 28px rgba(0,0,0,.28);opacity:.92}
+.fl img{width:172px;height:98px;display:block;object-fit:contain;filter:drop-shadow(0 12px 24px rgba(0,0,0,.34));opacity:.96}
 .fc{text-align:center}
 .ffa{font-family:'Amiri',serif;direction:rtl;font-size:18px;color:var(--gold);display:block;margin-bottom:6px}
 .fcopy{font-size:12px;color:var(--dim);letter-spacing:.04em}
@@ -556,7 +568,7 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
   /* Navigation */
   nav{padding:14px 16px;flex-wrap:wrap;gap:10px}
   nav.on{padding:10px 16px}
-  .nlogo img{width:44px;height:44px;padding:3px}
+  .nlogo img{width:108px;height:50px}
   .nname{display:none}
   .nlinks{display:none}
   .ncta{padding:8px 14px;font-size:11px}
@@ -614,6 +626,7 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
   /* Cultural Programme */
   .cp-grid{grid-template-columns:1fr}
   .cp-card{padding:28px 20px}
+  .cp-card:last-child{grid-column:auto;display:block}
   .cp-num{font-size:48px}
   .cp-title{font-size:18px}
   .cp-alt{font-size:14px}
@@ -689,6 +702,10 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
   .cv{font-size:13px}
   
   /* Event Request */
+  .event-direct-list{grid-template-columns:1fr;gap:12px}
+  .event-direct-list .crow{padding:16px}
+  .event-request-intro{font-size:14px;margin-bottom:20px}
+  .event-request-title{font-size:22px}
   .clist{flex-direction:column;gap:12px}
   .crow{flex-direction:column;gap:4px}
   .crow .ck,.crow .cv{width:auto}
@@ -696,7 +713,7 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
   /* Footer */
   footer{padding:32px 16px}
   .fi{grid-template-columns:1fr;gap:16px}
-  .fl img{width:60px;height:60px}
+  .fl img{width:140px;height:80px}
   .fc{order:2}
   .fl{order:1}
   .flinks{order:3;flex-wrap:wrap;gap:16px;justify-content:center}
@@ -735,7 +752,7 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
 
 @media(max-width:900px){
   nav{padding:16px 24px}nav.on{padding:12px 24px}.nlinks{display:none}
-  .nlogo img{width:52px;height:52px;padding:4px}
+  .nlogo img{width:124px;height:56px}
   #hero{grid-template-columns:1fr}
   .hero-grid,.hero-stage,.hero-orb{display:none}
   .hl{padding-left:24px;padding-right:24px}
@@ -747,6 +764,7 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
   .jobs-top{grid-template-columns:1fr}
   .feat-g,.panel.active{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
   .cp-grid{grid-template-columns:1fr}
+  .cp-card:last-child{grid-column:auto;display:block}
   .fi{grid-template-columns:1fr 1fr;text-align:center;gap:20px}.flinks{justify-content:center}
   .fl img{margin:0 auto}
   .ei{grid-template-columns:60px 1fr;gap:16px}.etime{display:none}.event-actions{grid-column:2;justify-self:start;margin-top:8px}
@@ -899,7 +917,7 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
 <!-- NAV -->
 <nav id="nav">
   <a href="#" class="nlogo">
-    <img src="uploads/diwan-logo-new.png" alt="Cafe Diwan Berlin Logo">
+    <img src="uploads/diwan-logo-transparent.png" alt="Cafe Diwan Berlin Logo">
     <span class="nname">Cafe Diwan</span>
   </a>
   <ul class="nlinks">
@@ -1007,10 +1025,10 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
 
   <!-- Full-bleed hero video -->
   <div class="hr" data-parallax="0.2">
-    <video class="hero-video" autoplay muted loop playsinline preload="auto" poster="uploads/hero-poster.jpg" aria-label="Cafe Diwan coffee animation" src="uploads/hero-mobile.mp4"></video>
-    <button class="hero-play-btn" type="button" aria-label="Video abspielen">
-      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
-    </button>
+    <video class="hero-video" autoplay muted loop playsinline webkit-playsinline disablepictureinpicture disableremoteplayback preload="auto" poster="uploads/hero-poster.jpg" aria-label="Cafe Diwan coffee animation">
+      <source src="uploads/hero-mobile.mp4" type="video/mp4" media="(max-width: 700px)">
+      <source src="uploads/hero-optimized.mp4" type="video/mp4">
+    </video>
   </div>
   <div class="hscroll"><div class="sdot"></div><span data-i18n="heroScroll">Entdecken</span></div>
 </section>
@@ -1385,19 +1403,19 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
 <!-- EVENT REQUEST -->
 <section id="event-request" class="section">
   <div class="inner">
-    <div class="res-g" style="grid-template-columns: 1fr;">
+    <div class="event-request-panel">
       <div>
         <div class="lbl r" data-i18n="eventEyebrow">Private Feiern</div>
         <h2 class="r" data-i18n="eventTitle">Veranstaltung <em>planen</em></h2>
-        <p style="margin-bottom: 30px; font-size: 16px; color: var(--dim);" data-i18n="eventDirectDesc">Für individuelle Planung und Preise kontaktieren Sie uns direkt:</p>
+        <p class="event-request-intro" data-i18n="eventDirectDesc">Für individuelle Planung und Preise kontaktieren Sie uns direkt:</p>
         
-        <div class="clist" style="margin-bottom: 40px; display:flex; gap:30px;">
-          <div class="crow"><span class="ck" data-i18n="contactTel">Tel</span><span class="cv"><a href="tel:+491638953463" style="color:var(--gold);font-size:18px;">+49 163 8953463</a></span></div>
-          <div class="crow"><span class="ck">E-Mail</span><span class="cv"><a href="mailto:info@diwanberlin.com" style="color:var(--gold);font-size:18px;">info@diwanberlin.com</a></span></div>
+        <div class="event-direct-list clist">
+          <div class="crow"><span class="ck" data-i18n="contactTel">Tel</span><span class="cv"><a href="tel:+491638953463">+49 163 8953463</a></span></div>
+          <div class="crow"><span class="ck">E-Mail</span><span class="cv"><a href="mailto:info@diwanberlin.com">info@diwanberlin.com</a></span></div>
         </div>
 
-        <div style="text-align: center; margin: 30px 0; color: var(--dim);" data-i18n="eventOr">— ODER —</div>
-        <h3 style="color: var(--cream); margin-bottom: 20px; font-family: 'Playfair Display';" data-i18n="eventFormTitle">Unverbindliche Anfrage senden</h3>
+        <div class="event-or" data-i18n="eventOr">Oder</div>
+        <h3 class="event-request-title" data-i18n="eventFormTitle">Unverbindliche Anfrage senden</h3>
 
         <form id="eventForm" class="rform r">
           <div class="frow">
@@ -1445,7 +1463,7 @@ footer{background:var(--bg2);padding:56px 60px;border-top:1px solid rgba(200,146
 <!-- FOOTER -->
 <footer>
   <div class="fi">
-    <div class="fl"><img src="uploads/diwan-logo-new.png" alt="Diwan"></div>
+    <div class="fl"><img src="uploads/diwan-logo-transparent.png" alt="Diwan"></div>
     <div class="fc">
       <span class="ffa" data-i18n="footerSlogan">چای، قصه، لبخند · دیوان برلین</span>
       <div class="fcopy" data-i18n="footerRights">© 2026 Cafe Diwan Berlin · diwanberlin.com</div>

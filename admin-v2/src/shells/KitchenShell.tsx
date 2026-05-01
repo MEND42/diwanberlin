@@ -38,8 +38,8 @@ export function KitchenShell() {
       {/* Slim header */}
       <header className="flex-shrink-0 flex items-center justify-between px-5 py-3 border-b border-kds-border">
         <div className="flex items-center gap-3">
-          <div className="w-6 h-6 rounded-md overflow-hidden opacity-70">
-            <img src="/uploads/diwan-logo-new.png" alt="" className="w-full h-full object-cover" />
+          <div className="w-14 h-8 opacity-80">
+            <img src="/uploads/diwan-logo-transparent.png" alt="" className="w-full h-full object-contain drop-shadow-md" />
           </div>
           <span className="text-kds-text/70 text-sm font-medium tracking-wide">Küche · Cafe Diwan</span>
         </div>

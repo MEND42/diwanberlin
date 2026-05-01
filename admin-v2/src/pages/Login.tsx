@@ -87,10 +87,10 @@ export function Login() {
               initial={{ scale: 0.7, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ ...springs.bounce, delay: 0.1 }}
-              className="w-20 h-20 rounded-full mb-5 overflow-hidden border-2 border-diwan-gold/30"
+              className="w-40 h-24 mb-5"
               style={{ boxShadow: '0 0 32px rgba(200,146,42,0.2)' }}
             >
-              <img src="/uploads/diwan-logo-new.png" alt="Diwan" className="w-full h-full object-cover" />
+              <img src="/uploads/diwan-logo-transparent.png" alt="Diwan" className="w-full h-full object-contain drop-shadow-2xl" />
             </motion.div>
 
             <motion.div

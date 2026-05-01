@@ -555,30 +555,39 @@ function initHeroMotion() {
   const stage = hero.querySelector('.hr');
   const text = hero.querySelector('.hl');
   const scrollCue = hero.querySelector('.hscroll');
-  const playBtn = hero.querySelector('.hero-play-btn');
   let current = 0;
   let target = 0;
   let ticking = false;
-  let playBtnTimer;
+  let retryTimer;
 
-  function showPlayBtn() {
-    if (playBtn) playBtn.classList.add('visible');
-  }
-
-  function hidePlayBtn() {
-    clearTimeout(playBtnTimer);
-    if (playBtn) playBtn.classList.remove('visible');
+  if (reduceMotion && video) {
+    video.pause();
+    video.removeAttribute('autoplay');
+    return;
   }
 
   function attemptPlay() {
     if (!video) return;
-    const p = video.play();
-    // Old browsers return undefined — assume playing
-    if (!p) { video.classList.add('is-ready'); hidePlayBtn(); return; }
-    clearTimeout(playBtnTimer);
-    // Show tap-to-play after 2.5 s if video still hasn't started
-    playBtnTimer = setTimeout(() => { if (video.paused) showPlayBtn(); }, 2500);
-    p.then(() => hidePlayBtn()).catch(() => showPlayBtn());
+    video.muted = true;
+    video.defaultMuted = true;
+    video.loop = true;
+    video.playsInline = true;
+
+    const playPromise = video.play();
+    if (!playPromise) {
+      video.classList.add('is-ready');
+      return;
+    }
+
+    playPromise
+      .then(() => {
+        video.classList.add('is-ready');
+        clearTimeout(retryTimer);
+      })
+      .catch(() => {
+        clearTimeout(retryTimer);
+        retryTimer = setTimeout(attemptPlay, 900);
+      });
   }
 
   function ensurePlaying() {
@@ -588,27 +597,33 @@ function initHeroMotion() {
     video.addEventListener('canplay', attemptPlay, { once: true });
   }
 
-  // iOS low-power mode blocks autoplay — unlock on first interaction
+  // iOS low-power mode can block autoplay. Retry silently when the page is active
+  // instead of exposing native video controls in the cinematic hero.
   const iosUnlock = () => { if (video && video.paused) attemptPlay(); };
-  document.addEventListener('touchstart', iosUnlock, { once: true, passive: true });
-  document.addEventListener('scroll',     iosUnlock, { once: true, passive: true });
+  document.addEventListener('touchstart', iosUnlock, { passive: true });
+  document.addEventListener('pointerdown', iosUnlock, { passive: true });
+  document.addEventListener('scroll', iosUnlock, { passive: true });
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) attemptPlay();
+  });
 
   video?.addEventListener('playing', () => {
     video.classList.add('is-ready');
-    hidePlayBtn();
   });
 
-  // Loop fallback for browsers that drop the loop attribute under autoplay policy
+  video?.addEventListener('pause', () => {
+    if (!document.hidden) retryTimer = setTimeout(attemptPlay, 700);
+  });
+
+  // Loop fallback for browsers that drop the loop attribute under autoplay policy.
   video?.addEventListener('ended', () => {
     try { video.currentTime = 0; video.play().catch(() => {}); } catch (_) {}
   });
 
-  if (playBtn) {
-    playBtn.addEventListener('click', () => {
-      video.muted = true;
-      video.play().then(() => hidePlayBtn()).catch(() => {});
-    });
-  }
+  video?.addEventListener('timeupdate', () => {
+    if (!video.duration || video.duration - video.currentTime > 0.16) return;
+    try { video.currentTime = 0; } catch (_) {}
+  });
 
   ensurePlaying();
 

@@ -19,8 +19,8 @@ self.addEventListener('push', (event) => {
   const title = data.title || 'Cafe Diwan';
   const options: NotificationOptions & { data?: { url?: string }; renotify?: boolean } = {
     body: data.body || '',
-    icon: '/uploads/diwan-logo-new.png',
-    badge: '/uploads/diwan-logo-new.png',
+    icon: '/uploads/diwan-logo-transparent.png',
+    badge: '/uploads/diwan-logo-transparent.png',
     data: { url: data.url || '/admin/' },
     tag: data.type || 'diwan-admin',
     renotify: true,

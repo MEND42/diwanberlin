@@ -22,12 +22,12 @@ export default defineConfig(({ command }) => ({
         orientation: 'any',
         start_url: '/admin/',
         icons: [
-          { src: '/uploads/diwan-logo-new.png', sizes: '192x192', type: 'image/png' },
-          { src: '/uploads/diwan-logo-new.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
+          { src: '/uploads/diwan-logo-transparent.png', sizes: '192x192', type: 'image/png' },
+          { src: '/uploads/diwan-logo-transparent.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
         ],
       },
       injectManifest: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+        globPatterns: ['**/*.{js,css,html,ico,png,jpeg,jpg,svg}'],
       },
     }),
   ],

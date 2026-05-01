@@ -34,8 +34,8 @@ export function ServiceShell() {
         style={{ paddingTop: `max(12px, env(safe-area-inset-top))` }}
       >
         <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-lg overflow-hidden">
-            <img src="/uploads/diwan-logo-new.png" alt="" className="w-full h-full object-cover" />
+          <div className="w-16 h-9">
+            <img src="/uploads/diwan-logo-transparent.png" alt="" className="w-full h-full object-contain drop-shadow-md" />
           </div>
           <div>
             <p className="text-ink text-sm font-semibold leading-tight">Diwan Berlin</p>

@@ -192,8 +192,8 @@ export function ManagementShell() {
       >
         {/* Brand */}
         <div className="flex items-center gap-3 px-5 py-5 border-b border-white/6">
-          <div className="w-8 h-8 rounded-lg overflow-hidden flex-shrink-0">
-            <img src="/uploads/diwan-logo-new.png" alt="" className="w-full h-full object-cover" />
+          <div className="w-16 h-9 flex-shrink-0">
+            <img src="/uploads/diwan-logo-transparent.png" alt="" className="w-full h-full object-contain drop-shadow-md" />
           </div>
           <div>
             <div className="text-diwan-cream font-display text-base leading-tight">Diwan Berlin</div>
