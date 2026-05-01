@@ -88,6 +88,13 @@ docker compose -f "$COMPOSE_FILE" run --rm api npx prisma migrate deploy
 echo "[deploy] Bringing up services..."
 docker compose -f "$COMPOSE_FILE" up -d --remove-orphans
 
+# Keep the API upload volume in sync with repository-provided static media.
+# Some existing VPS nginx configs proxy /uploads/ to Express; this makes hero
+# videos available there too, so production does not fall back to the poster.
+echo "[deploy] Syncing repository uploads into API upload volume..."
+docker compose -f "$COMPOSE_FILE" exec -T api sh -lc 'mkdir -p /app/uploads'
+docker cp "$PROJECT_DIR/uploads/." diwanberlin-api:/app/uploads/
+
 # 6. Health check with auto-rollback
 echo "[deploy] Waiting for health check at $HEALTH_URL..."
 for i in $(seq 1 $HEALTH_RETRIES); do
