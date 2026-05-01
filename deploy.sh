@@ -41,6 +41,22 @@ rsync -av --delete \
   --exclude '*' \
   "$PROJECT_DIR/" /var/www/diwanberlin/
 
+for asset in uploads/hero-mobile.mp4 uploads/hero-optimized.mp4 uploads/hero-poster.jpg; do
+  if [ ! -s "/var/www/diwanberlin/$asset" ]; then
+    echo "[deploy] ✗ Missing required hero asset: /var/www/diwanberlin/$asset"
+    exit 1
+  fi
+done
+
+if [ "$(id -u)" -eq 0 ] && [ -d /etc/nginx/sites-available ]; then
+  if ! cmp -s "$PROJECT_DIR/nginx.conf" /etc/nginx/sites-available/diwanberlin; then
+    echo "[deploy] Updating nginx vhost config..."
+    cp "$PROJECT_DIR/nginx.conf" /etc/nginx/sites-available/diwanberlin
+    nginx -t
+    systemctl reload nginx
+  fi
+fi
+
 echo "[deploy] Building admin-v2..."
 npm ci --prefix "$PROJECT_DIR/admin-v2"
 if [ -f "$PROJECT_DIR/backend/.env" ]; then
